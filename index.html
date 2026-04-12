@@ -5436,6 +5436,9 @@ function toggleStuck(panelId, taskId, stepIdx){
     const who = stuck.who || STUCK_GENERIC[role]?.who || 'Admin';
     const stepTitle = t?.steps?.[stepIdx]?.title || 'this step';
     const aiPrompt = `I'm stuck on the step "${stepTitle}" in the task "${t?.title||taskId}". What are the most common reasons this fails in SmartRecruiters and how do I fix it?`;
+    // Store prompt safely on the element via dataset to avoid quote escaping issues in onclick
+    const promptKey = 'stuck_prompt_'+panelId;
+    window[promptKey] = aiPrompt;
 
     const reasonsHtml = stepReasons.length
       ? `<div><div class="stuck-section-label">Common reasons this fails</div>${stepReasons.map(r=>`<div class="stuck-reason">${r.r}</div>`).join('')}</div>`
@@ -5454,20 +5457,21 @@ function toggleStuck(panelId, taskId, stepIdx){
         ${reasonsHtml}
         ${checksHtml}
         ${whoHtml}
-        <button class="stuck-ask" onclick="stuckAskAI('${aiPrompt.replace(/'/g,"\\'")}')">Ask EX3 about this step →</button>
+        <button class="stuck-ask" data-prompt-key="${promptKey}" onclick="stuckAskAI(window[this.dataset.promptKey])">Ask EX3 about this step →</button>
       </div>`;
   }
   panel.classList.add('open');
 }
 
 function stuckAskAI(prompt){
+  if(!prompt) return;
   const panel = document.getElementById('assistantPanel');
   if(panel && !panel.classList.contains('open')) panel.classList.add('open');
   const input = document.getElementById('assistantQuery');
   if(input) input.value = prompt;
   askAssistant(prompt);
-  // Scroll assistant into view on mobile
-  panel?.scrollIntoView({behavior:'smooth', block:'end'});
+  const floatEl = document.getElementById('assistantFloat');
+  if(floatEl) floatEl.scrollIntoView({behavior:'smooth', block:'end'});
 }
 
 // ─── RELATED TASKS (Feature 6) ─────────────────────
