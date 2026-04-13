@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const OpenAI = require('openai');
 const path = require('path');
+const twilio = require('twilio');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -93,6 +94,55 @@ app.post('/api/ask', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// WhatsApp webhook — Twilio sends POST with body.Body = user message
+app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) => {
+  const userMsg = (req.body.Body || '').trim();
+  const from = req.body.From || '';
+  const twiml = new twilio.twiml.MessagingResponse();
+
+  if (!userMsg) {
+    twiml.message('Hi! Ask me anything about EX3 and SmartRecruiters.');
+    return res.type('text/xml').send(twiml.toString());
+  }
+
+  try {
+    if (!process.env.ASSISTANT_ID) throw new Error('Assistant not configured.');
+
+    const thread = await openai.beta.threads.create();
+    await openai.beta.threads.messages.create(thread.id, {
+      role: 'user',
+      content: userMsg,
+    });
+
+    let run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: process.env.ASSISTANT_ID,
+    });
+
+    const start = Date.now();
+    while (run.status === 'in_progress' || run.status === 'queued') {
+      if (Date.now() - start > 28000) throw new Error('Timed out.');
+      await new Promise(r => setTimeout(r, 1000));
+      run = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+    }
+
+    if (run.status !== 'completed') throw new Error(`Run status: ${run.status}`);
+
+    const messages = await openai.beta.threads.messages.list(thread.id);
+    let answer = messages.data[0]?.content[0]?.text?.value || '';
+    answer = answer.replace(/【[^】]*】/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
+
+    // WhatsApp messages max 1600 chars
+    if (answer.length > 1580) answer = answer.slice(0, 1577) + '…';
+
+    twiml.message(answer || 'Sorry, I could not find an answer.');
+  } catch (err) {
+    console.error('WhatsApp AI error:', err.message);
+    twiml.message('Sorry, something went wrong. Please try again.');
+  }
+
+  res.type('text/xml').send(twiml.toString());
 });
 
 app.listen(PORT, () => {
