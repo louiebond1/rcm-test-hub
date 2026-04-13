@@ -5125,7 +5125,6 @@ setBreadcrumb([{label:'Home',fn:null}]);
 renderRecentSearches();
 onSearchRoleChange();
 enhanceKeyboardAccess();
-renderTips(false);
 
 function toggleTheme(){
   document.body.classList.toggle('dark');
@@ -5474,6 +5473,8 @@ function renderTips(animate){
 }
 
 function shuffleTips(){ renderTips(true); }
+
+renderTips(false);
 
 // Generic fallbacks per role if no specific data exists
 const STUCK_GENERIC = {
