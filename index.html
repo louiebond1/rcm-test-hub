@@ -373,13 +373,17 @@ select{font-family:inherit}
   background:var(--border);border:1px solid var(--border);
   border-radius:8px;overflow:hidden;
 }
-.tip{background:var(--white);padding:20px 22px}
+.tip{background:var(--white);padding:20px 22px;transition:opacity .25s,transform .25s}
+.tip.tip-fade{opacity:0;transform:translateY(4px)}
 .tip-num{
   font-size:var(--f-xs);font-family:'IBM Plex Mono',monospace;
   color:var(--ink-4);margin-bottom:10px;
 }
 .tip-t{font-size:var(--f-sm);font-weight:600;color:var(--ink);margin-bottom:5px;letter-spacing:-.01em}
 .tip-d{font-size:var(--f-sm);color:var(--ink-3);font-weight:300;line-height:1.5}
+.tips-shuffle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tips-shuffle-btn{font-size:var(--f-xs);font-weight:600;color:var(--ink-3);background:none;border:1px solid var(--border);border-radius:20px;padding:4px 12px;cursor:pointer;transition:color .15s,border-color .15s;font-family:inherit}
+.tips-shuffle-btn:hover{color:var(--ink);border-color:var(--border-2)}
 
 /* ═══════════════════════════════════════════════════
    L2 — CATEGORY GRID
@@ -1324,29 +1328,11 @@ body.dark .stuck-head-title{color:#f5a63d}
 
       <hr class="rule">
 
-      <div class="section-label">Quick reference</div>
-      <div class="tips-row">
-        <div class="tip">
-          <div class="tip-num">T.01</div>
-          <div class="tip-t">Set your time zone</div>
-          <div class="tip-d">Settings → My Profile. Controls when interview invites are sent and displayed to candidates.</div>
-        </div>
-        <div class="tip">
-          <div class="tip-num">T.02</div>
-          <div class="tip-t">Tag colleagues with @</div>
-          <div class="tip-d">In any HireLoop note, type @ to tag a colleague — they receive an email notification instantly.</div>
-        </div>
-        <div class="tip">
-          <div class="tip-num">T.03</div>
-          <div class="tip-t">Save candidate searches</div>
-          <div class="tip-d">After filtering in the People tab, save the search. New matches appear on your Home page automatically.</div>
-        </div>
-        <div class="tip">
-          <div class="tip-num">T.04</div>
-          <div class="tip-t">Pipeline at a glance</div>
-          <div class="tip-d">Hover any stage count on the Jobs page to preview candidate names at that step.</div>
-        </div>
+      <div class="tips-shuffle-row">
+        <div class="section-label" style="margin-bottom:0">Did you know?</div>
+        <button class="tips-shuffle-btn" onclick="shuffleTips()">Show me something else ↻</button>
       </div>
+      <div class="tips-row" id="tips-row"></div>
     </div>
 
     <!-- L2 — CATEGORIES -->
@@ -5139,6 +5125,7 @@ setBreadcrumb([{label:'Home',fn:null}]);
 renderRecentSearches();
 onSearchRoleChange();
 enhanceKeyboardAccess();
+renderTips(false);
 
 function toggleTheme(){
   document.body.classList.toggle('dark');
@@ -5412,6 +5399,81 @@ const STUCK = {
     who:'Admin',
   },
 };
+
+// ─── DID YOU KNOW TIPS ────────────────────────────
+const ALL_TIPS = [
+  { t:'Tag colleagues with @', d:'In any HireLoop note, type @ to tag a colleague — they get an email notification instantly.' },
+  { t:'Save candidate searches', d:'After filtering in the People tab, save the search. New matches appear on your Home page automatically.' },
+  { t:'Pipeline at a glance', d:'Hover any stage count on the Jobs page to preview candidate names at that step — no clicking required.' },
+  { t:'Set your time zone', d:'Settings → My Profile. Controls when interview invites are sent and displayed to candidates.' },
+  { t:'Bulk move candidates', d:'Tick multiple candidates in the pipeline, then use the bulk action bar to move or reject them all at once.' },
+  { t:'Keyboard shortcut: new job', d:'Press G then J anywhere in SmartRecruiters to jump straight to your Jobs list.' },
+  { t:'Offer approval chain', d:'If an offer goes back to "Draft" unexpectedly, someone in the approval chain declined it — check HireLoop for the reason.' },
+  { t:'Duplicate a job', d:'On the job detail page, use "Actions → Duplicate" to create an identical copy instead of starting from scratch.' },
+  { t:'Self-schedule slots', d:'Set up self-schedule availability once and reuse the same link across multiple candidates — no need to redo it each time.' },
+  { t:'Interview scorecard before you go in', d:'Open the candidate\'s profile on your phone before the interview — you can submit feedback immediately after without logging back in later.' },
+  { t:'Candidates can re-apply', d:'If you reject a candidate, they can still apply again to a different role. Rejecting doesn\'t block them from the company forever.' },
+  { t:'HireLoop is private to the hiring team', d:'Candidates never see HireLoop notes. Use it freely to share concerns or context with your team.' },
+  { t:'Confidential jobs', d:'Mark a job as Confidential to hide the hiring manager name and restrict who can see it internally.' },
+  { t:'Restrict job visibility with Access Groups', d:'Access Groups control which recruiters can see which jobs — useful for separating teams or regions.' },
+  { t:'Email templates save time', d:'Build reusable templates for common messages (interview invites, rejections, offers) so every email looks consistent.' },
+  { t:'Winston Match scores CVs automatically', d:'When Winston Match is on, every applicant gets a match score the moment they apply — no manual screening needed.' },
+  { t:'Agency portal is separate', d:'Agencies have their own login — they submit candidates directly into your pipeline without needing access to your main account.' },
+  { t:'Candidate Portal status is set by stage', d:'The status a candidate sees in their portal updates automatically as you move them through stages.' },
+  { t:'Approval delegation', d:'If an approver is on leave, an admin can set up delegation so another person receives their approval requests automatically.' },
+  { t:'Job fields drive configurations', d:'Org fields like Department, Location, and Division control everything from access groups to approval chains — keep them clean.' },
+  { t:'Offer letter merge fields', d:'Offer templates use merge fields that auto-fill from the job and candidate record — no manual copy-pasting needed.' },
+  { t:'Interview templates save setup time', d:'Create Interview Templates once (duration, location, calendar link) and reuse them across roles instead of filling it in every time.' },
+  { t:'Reject with care', d:'Always attach a rejection reason code — it feeds compliance reports and ensures candidates receive a timely notification.' },
+  { t:'Candidate Portal login link', d:'Candidates access their portal at your company\'s careers site — there\'s no separate app. Share the URL if they can\'t find it.' },
+  { t:'HireLoop tagging notifies by email', d:'Tagged colleagues get an email even if they\'re not on the hiring team — great for looping in a decision-maker quickly.' },
+  { t:'Use job templates for repeating roles', d:'If you hire the same role often, save it as a job template so the format, questions, and process are pre-filled.' },
+  { t:'Filter by "My jobs" on the Jobs page', d:'Switch to "My Jobs" view to only see roles where you\'re on the hiring team — cuts out the noise on busy accounts.' },
+  { t:'Candidate source is tracked automatically', d:'SmartRecruiters records where each candidate came from (job board, referral, agency) without you having to log it manually.' },
+  { t:'SMS opt-in required for texting candidates', d:'Candidates must opt in before you can send them SMS messages. The opt-in is collected during application if configured.' },
+  { t:'Scorecard ratings are visible to the team', d:'Everyone on the hiring team can see each other\'s scorecard ratings — helps align before making a final decision.' },
+];
+
+let _tipsShown = [];
+
+function _pickTips(n){
+  // Pick n tips we haven't shown recently
+  const pool = ALL_TIPS.filter(t => !_tipsShown.includes(t.t));
+  const chosen = [];
+  const src = pool.length >= n ? pool : [...ALL_TIPS]; // reset if exhausted
+  while(chosen.length < n && src.length){
+    const idx = Math.floor(Math.random() * src.length);
+    chosen.push(src.splice(idx,1)[0]);
+  }
+  _tipsShown = [..._tipsShown, ...chosen.map(t=>t.t)].slice(-12);
+  return chosen;
+}
+
+function renderTips(animate){
+  const row = document.getElementById('tips-row');
+  if(!row) return;
+  const tips = _pickTips(4);
+  if(animate){
+    row.querySelectorAll('.tip').forEach(el=>el.classList.add('tip-fade'));
+    setTimeout(()=>{
+      row.innerHTML = tips.map((tip,i)=>`
+        <div class="tip">
+          <div class="tip-num">T.0${i+1}</div>
+          <div class="tip-t">${tip.t}</div>
+          <div class="tip-d">${tip.d}</div>
+        </div>`).join('');
+    }, 220);
+  } else {
+    row.innerHTML = tips.map((tip,i)=>`
+      <div class="tip">
+        <div class="tip-num">T.0${i+1}</div>
+        <div class="tip-t">${tip.t}</div>
+        <div class="tip-d">${tip.d}</div>
+      </div>`).join('');
+  }
+}
+
+function shuffleTips(){ renderTips(true); }
 
 // Generic fallbacks per role if no specific data exists
 const STUCK_GENERIC = {
