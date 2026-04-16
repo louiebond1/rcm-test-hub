@@ -4,6 +4,8 @@ const OpenAI = require('openai');
 const path = require('path');
 const twilio = require('twilio');
 const fs = require('fs');
+const https = require('https');
+const os = require('os');
 
 const LOGS_DIR = path.join(__dirname, 'logs');
 if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR);
@@ -23,6 +25,32 @@ function saveUserThread(phone, threadId) {
     : {};
   threads[phone] = threadId;
   fs.writeFileSync(THREADS_FILE, JSON.stringify(threads, null, 2));
+}
+
+function downloadAudio(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const auth = Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
+    const file = fs.createWriteStream(destPath);
+    https.get(url, { headers: { Authorization: `Basic ${auth}` } }, res => {
+      if (res.statusCode === 302 || res.statusCode === 301) {
+        file.close();
+        return downloadAudio(res.headers.location, destPath).then(resolve).catch(reject);
+      }
+      res.pipe(file);
+      file.on('finish', () => file.close(resolve));
+    }).on('error', err => {
+      fs.unlink(destPath, () => {});
+      reject(err);
+    });
+  });
+}
+
+async function transcribeAudio(filePath) {
+  const transcription = await openai.audio.transcriptions.create({
+    file: fs.createReadStream(filePath),
+    model: 'whisper-1',
+  });
+  return transcription.text;
 }
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -208,6 +236,81 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
   const userMsg = (req.body.Body || '').trim();
   const from = req.body.From || '';
   const twiml = new twilio.twiml.MessagingResponse();
+
+  // Handle voice messages
+  const numMedia = parseInt(req.body.NumMedia || '0');
+  const mediaType = req.body.MediaContentType0 || '';
+  let isVoice = false;
+
+  if (numMedia > 0 && mediaType.startsWith('audio/')) {
+    isVoice = true;
+    const mediaUrl = req.body.MediaUrl0;
+    twiml.message('Got your voice note! Transcribing and looking that up...');
+    res.type('text/xml').send(twiml.toString());
+
+    const tmpFile = path.join(os.tmpdir(), `voice_${Date.now()}.ogg`);
+    try {
+      await downloadAudio(mediaUrl, tmpFile);
+      const transcribed = await transcribeAudio(tmpFile);
+      fs.unlink(tmpFile, () => {});
+
+      if (!transcribed) {
+        await twilioClient.messages.create({
+          from: 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER,
+          to: from,
+          body: 'Sorry, I couldn\'t make out that voice note. Could you try typing your question?',
+        });
+        return;
+      }
+
+      // Log and answer the transcribed message
+      const start = Date.now();
+      const existingThreadId = getUserThread(from);
+      const thread = existingThreadId ? { id: existingThreadId } : await openai.beta.threads.create();
+      saveUserThread(from, thread.id);
+
+      await openai.beta.threads.messages.create(thread.id, { role: 'user', content: transcribed });
+      let run = await openai.beta.threads.runs.create(thread.id, { assistant_id: process.env.ASSISTANT_ID });
+
+      while (run.status === 'in_progress' || run.status === 'queued') {
+        if (Date.now() - start > 55000) throw new Error('Timed out.');
+        await new Promise(r => setTimeout(r, 1000));
+        run = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      }
+
+      if (run.status !== 'completed') throw new Error(`Run status: ${run.status}`);
+
+      const messages = await openai.beta.threads.messages.list(thread.id);
+      let answer = messages.data[0]?.content[0]?.text?.value || '';
+      answer = answer.replace(/【[^】]*】/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
+      if (answer.length > 1580) answer = answer.slice(0, 1577) + '…';
+
+      await twilioClient.messages.create({
+        from: 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER,
+        to: from,
+        body: `🎤 _"${transcribed}"_\n\n${answer}`,
+      });
+
+      logMessage({
+        ts: new Date().toISOString(),
+        from,
+        question: `[Voice] ${transcribed}`,
+        answer,
+        ms: Date.now() - start,
+        success: true,
+        uncertain: isUncertain(answer),
+      });
+    } catch (err) {
+      console.error('Voice transcription error:', err.message);
+      fs.unlink(tmpFile, () => {});
+      await twilioClient.messages.create({
+        from: 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER,
+        to: from,
+        body: 'Sorry, something went wrong with your voice note. Please try typing your question.',
+      });
+    }
+    return;
+  }
 
   const isGreeting = /^(hi|hey|hello|hiya|howdy|good (morning|afternoon|evening)|sup|yo|helo|hii+)[\s!?.]*$/i.test(userMsg);
 
