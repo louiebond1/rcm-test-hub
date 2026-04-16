@@ -3,6 +3,35 @@ const express = require('express');
 const OpenAI = require('openai');
 const path = require('path');
 const twilio = require('twilio');
+const fs = require('fs');
+
+const LOG_FILE = path.join(__dirname, 'logs', 'whatsapp.jsonl');
+const WEB_LOG_FILE = path.join(__dirname, 'logs', 'web.jsonl');
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+function logMessage(entry) {
+  fs.appendFileSync(LOG_FILE, JSON.stringify(entry) + '\n');
+}
+
+function readLogs() {
+  if (!fs.existsSync(LOG_FILE)) return [];
+  return fs.readFileSync(LOG_FILE, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map(line => JSON.parse(line));
+}
+
+function logWebMessage(entry) {
+  fs.appendFileSync(WEB_LOG_FILE, JSON.stringify(entry) + '\n');
+}
+
+function readWebLogs() {
+  if (!fs.existsSync(WEB_LOG_FILE)) return [];
+  return fs.readFileSync(WEB_LOG_FILE, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map(line => JSON.parse(line));
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +55,7 @@ app.post('/api/ask', async (req, res) => {
     return res.status(500).json({ error: 'Assistant not configured. Run: node setup.js' });
   }
 
+  const start = Date.now();
   try {
     // Reuse existing thread for conversation memory, or create a new one
     let thread;
@@ -51,7 +81,6 @@ app.post('/api/ask', async (req, res) => {
     });
 
     // Poll until complete (with 30s timeout)
-    const start = Date.now();
     while (run.status === 'in_progress' || run.status === 'queued') {
       if (Date.now() - start > 30000) throw new Error('Request timed out.');
       await new Promise(r => setTimeout(r, 1000));
@@ -85,9 +114,28 @@ app.post('/api/ask', async (req, res) => {
       answer = cleaned.replace(/FOLLOWUPS:.*$/m, '').trim();
     }
 
+    logWebMessage({
+      ts: new Date().toISOString(),
+      threadId: thread.id,
+      question: question.trim(),
+      answer,
+      ms: Date.now() - start,
+      success: true,
+      uncertain: isUncertain(answer),
+    });
+
     res.json({ answer, threadId: thread.id, followUps });
   } catch (err) {
     console.error('OpenAI error:', err.message);
+    logWebMessage({
+      ts: new Date().toISOString(),
+      threadId: threadId || null,
+      question: question.trim(),
+      answer: '',
+      ms: 0,
+      success: false,
+      uncertain: false,
+    });
     res.status(500).json({ error: 'AI service error.' });
   }
 });
@@ -102,10 +150,21 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
   const from = req.body.From || '';
   const twiml = new twilio.twiml.MessagingResponse();
 
-  if (!userMsg) {
-    twiml.message('Hi! Ask me anything about EX3 and SmartRecruiters.');
+  const isGreeting = /^(hi|hey|hello|hiya|howdy|good (morning|afternoon|evening)|sup|yo|helo|hii+)[\s!?.]*$/i.test(userMsg);
+
+  if (!userMsg || isGreeting) {
+    twiml.message('Hi! 👋 Ask me anything about EX3 and SmartRecruiters — I\'m here to help.');
     return res.type('text/xml').send(twiml.toString());
   }
+
+  // Acknowledge immediately so Twilio doesn't time out
+  twiml.message('Got it! Looking that up for you...');
+  res.type('text/xml').send(twiml.toString());
+
+  // Process in background and send the real answer as an outbound message
+  const start = Date.now();
+  let answer = '';
+  let success = false;
 
   try {
     if (!process.env.ASSISTANT_ID) throw new Error('Assistant not configured.');
@@ -120,9 +179,8 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
       assistant_id: process.env.ASSISTANT_ID,
     });
 
-    const start = Date.now();
     while (run.status === 'in_progress' || run.status === 'queued') {
-      if (Date.now() - start > 28000) throw new Error('Timed out.');
+      if (Date.now() - start > 55000) throw new Error('Timed out.');
       await new Promise(r => setTimeout(r, 1000));
       run = await openai.beta.threads.runs.retrieve(thread.id, run.id);
     }
@@ -130,19 +188,338 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     if (run.status !== 'completed') throw new Error(`Run status: ${run.status}`);
 
     const messages = await openai.beta.threads.messages.list(thread.id);
-    let answer = messages.data[0]?.content[0]?.text?.value || '';
+    answer = messages.data[0]?.content[0]?.text?.value || '';
     answer = answer.replace(/【[^】]*】/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
 
-    // WhatsApp messages max 1600 chars
     if (answer.length > 1580) answer = answer.slice(0, 1577) + '…';
 
-    twiml.message(answer || 'Sorry, I could not find an answer.');
+    success = true;
+    const uncertain = isUncertain(answer);
+
+    await twilioClient.messages.create({
+      from: 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER,
+      to: from,
+      body: answer || 'Sorry, I could not find an answer.',
+    });
+
+    logMessage({
+      ts: new Date().toISOString(),
+      from,
+      question: userMsg,
+      answer,
+      ms: Date.now() - start,
+      success,
+      uncertain,
+    });
+    return;
   } catch (err) {
     console.error('WhatsApp AI error:', err.message);
-    twiml.message('Sorry, something went wrong. Please try again.');
+    try {
+      await twilioClient.messages.create({
+        from: 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER,
+        to: from,
+        body: 'Sorry, something went wrong. Please try again.',
+      });
+    } catch (e) {
+      console.error('Failed to send error message:', e.message);
+    }
+    logMessage({
+      ts: new Date().toISOString(),
+      from,
+      question: userMsg,
+      answer,
+      ms: Date.now() - start,
+      success: false,
+      uncertain: false,
+    });
+  }
+});
+
+// Analytics dashboard
+app.get('/analytics', (req, res) => {
+  const allLogs = readLogs();
+  const search = (req.query.q || '').trim().replace(/\D/g, ''); // digits only
+  const logs = search ? allLogs.filter(l => l.from.replace(/\D/g, '').includes(search)) : allLogs;
+
+  const total = logs.length;
+  const errors = logs.filter(l => !l.success).length;
+  const uncertain = logs.filter(l => l.uncertain).length;
+  const avgMs = total ? Math.round(logs.reduce((s, l) => s + l.ms, 0) / total) : 0;
+
+  // Questions per day
+  const byDay = {};
+  for (const l of logs) {
+    const day = l.ts.slice(0, 10);
+    byDay[day] = (byDay[day] || 0) + 1;
   }
 
-  res.type('text/xml').send(twiml.toString());
+  // Unique users (phone numbers)
+  const uniqueNumbers = [...new Set(allLogs.map(l => l.from.replace('whatsapp:', '')))];
+  const uniqueUsers = new Set(allLogs.map(l => l.from)).size;
+
+  const rows = logs.slice().reverse().map(l => {
+    const status = !l.success ? '❌ Error' : l.uncertain ? '⚠️ Uncertain' : '✅';
+    const num = l.from.replace('whatsapp:', '');
+    return `
+    <tr>
+      <td>${l.ts.replace('T', ' ').slice(0, 19)}</td>
+      <td><a href="/analytics?q=${encodeURIComponent(num)}" style="color:#4a90e2;text-decoration:none">${num}</a></td>
+      <td>${escHtml(l.question)}</td>
+      <td class="preview" onclick="showAnswer(this)" data-full="${escHtml(l.answer || '—')}">${escHtml(l.answer || '—').slice(0, 120)}${(l.answer || '').length > 120 ? '… <span style="color:#4a90e2;font-size:.8rem">(click to expand)</span>' : ''}</td>
+      <td>${status}</td>
+      <td>${(l.ms / 1000).toFixed(1)}s</td>
+    </tr>`;
+  }).join('');
+
+  const dayRows = Object.entries(byDay).sort().reverse().map(([d, c]) =>
+    `<tr><td>${d}</td><td>${c}</td></tr>`).join('');
+
+  const numberOptions = uniqueNumbers.map(n =>
+    `<option value="${escHtml(n)}" ${search && n.includes(search) ? 'selected' : ''}>${escHtml(n)}</option>`
+  ).join('');
+
+  const searchLabel = search ? `— filtered to <strong>${logs[0]?.from.replace('whatsapp:','') || search}</strong> <a href="/analytics" style="font-size:.85rem;color:#4a90e2">clear</a>` : '';
+
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <title>WhatsApp Analytics</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
+    h1 { color: #333; }
+    .cards { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .card { background: white; border-radius: 8px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); min-width: 140px; }
+    .card .num { font-size: 2rem; font-weight: bold; color: #4a90e2; }
+    .card .label { color: #888; font-size: .85rem; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    th { background: #4a90e2; color: white; padding: .6rem 1rem; text-align: left; }
+    td { padding: .55rem 1rem; border-bottom: 1px solid #eee; font-size: .9rem; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    h2 { margin-top: 2rem; color: #555; }
+    .search-bar { display: flex; gap: .5rem; align-items: center; margin-bottom: 1.5rem; }
+    .search-bar select, .search-bar input { padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .95rem; }
+    .search-bar button { padding: .5rem 1rem; background: #4a90e2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: .95rem; }
+    .preview { cursor: pointer; color: #555; }
+    .preview:hover { color: #4a90e2; }
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:center; justify-content:center; }
+    .modal-bg.open { display:flex; }
+    .modal { background:white; border-radius:10px; padding:1.5rem 2rem; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 4px 24px rgba(0,0,0,.2); }
+    .modal h3 { margin-top:0; color:#333; }
+    .modal p { white-space:pre-wrap; color:#444; line-height:1.6; }
+    .modal button { margin-top:1rem; padding:.4rem 1rem; background:#4a90e2; color:white; border:none; border-radius:6px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <nav style="margin-bottom:1.5rem">
+    <a href="/analytics" style="margin-right:1rem;color:#4a90e2;text-decoration:none;font-weight:bold;border-bottom:2px solid #4a90e2">WhatsApp</a>
+    <a href="/analytics/web" style="color:#4a90e2;text-decoration:none;font-weight:bold">Web Chat</a>
+  </nav>
+  <h1>WhatsApp Analytics ${searchLabel}</h1>
+
+  <form class="search-bar" method="get" action="/analytics">
+    <input name="q" placeholder="Search by phone number..." value="${escHtml(req.query.q || '')}" style="width:240px" />
+    <select onchange="this.form.q.value=this.value;this.form.submit()">
+      <option value="">— or pick a number —</option>
+      ${numberOptions}
+    </select>
+    <button type="submit">Search</button>
+  </form>
+
+  <div class="cards">
+    <div class="card"><div class="num">${total}</div><div class="label">${search ? 'Filtered' : 'Total'} messages</div></div>
+    <div class="card"><div class="num">${uniqueUsers}</div><div class="label">Unique users</div></div>
+    <div class="card"><div class="num">${errors}</div><div class="label">Errors</div></div>
+    <div class="card"><div class="num">${uncertain}</div><div class="label">Uncertain answers</div></div>
+    <div class="card"><div class="num">${(avgMs/1000).toFixed(1)}s</div><div class="label">Avg response time</div></div>
+  </div>
+
+  <h2>Messages per day</h2>
+  <table>
+    <tr><th>Date</th><th>Messages</th></tr>
+    ${dayRows || '<tr><td colspan="2">No data yet</td></tr>'}
+  </table>
+
+  <h2>Recent messages</h2>
+  <table>
+    <tr><th>Time</th><th>From</th><th>Question</th><th>Answer</th><th>OK</th><th>Time</th></tr>
+    ${rows || '<tr><td colspan="6">No messages yet</td></tr>'}
+  </table>
+  <div class="modal-bg" id="modal" onclick="closeModal(event)">
+    <div class="modal">
+      <h3 id="modal-q"></h3>
+      <p id="modal-a"></p>
+      <button onclick="document.getElementById('modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+  <script>
+    function showAnswer(td) {
+      const row = td.closest('tr');
+      const question = row.cells[2].textContent;
+      document.getElementById('modal-q').textContent = question;
+      document.getElementById('modal-a').textContent = td.dataset.full;
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal(e) {
+      if (e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
+    }
+  </script>
+</body>
+</html>`);
+});
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function isUncertain(text) {
+  const patterns = [
+    /i (don'?t|do not) (have|know|find|see)/i,
+    /not (covered|found|available|mentioned|included) in/i,
+    /no (information|details?|data|content) (available|found|provided)/i,
+    /unable to (find|locate|answer|provide)/i,
+    /can'?t (find|answer|help with)/i,
+    /outside (the scope|my knowledge)/i,
+    /not (in|part of) (the|my|this) (document|guide|knowledge)/i,
+    /i can only (assist|help|answer) with/i,
+    /only (assist|help|answer) questions (related|about)/i,
+    /not (able|here) to (help|assist) with that/i,
+    /that('s| is) (outside|beyond|not within)/i,
+    /not (relevant|related) to/i,
+  ];
+  return patterns.some(p => p.test(text));
+}
+
+// Web chatbot analytics page
+app.get('/analytics/web', (req, res) => {
+  const allLogs = readWebLogs();
+  const search = (req.query.q || '').trim();
+  const logs = search ? allLogs.filter(l => l.threadId === search) : allLogs;
+
+  const total = logs.length;
+  const errors = logs.filter(l => !l.success).length;
+  const uncertain = logs.filter(l => l.uncertain).length;
+  const avgMs = total ? Math.round(logs.reduce((s, l) => s + l.ms, 0) / total) : 0;
+
+  const byDay = {};
+  for (const l of logs) {
+    const day = l.ts.slice(0, 10);
+    byDay[day] = (byDay[day] || 0) + 1;
+  }
+
+  const uniqueThreads = [...new Set(allLogs.map(l => l.threadId))];
+
+  const rows = logs.slice().reverse().map(l => {
+    const status = !l.success ? '❌ Error' : l.uncertain ? '⚠️ Uncertain' : '✅';
+    const shortThread = l.threadId ? l.threadId.slice(-8) : '—';
+    return `
+    <tr>
+      <td>${l.ts.replace('T', ' ').slice(0, 19)}</td>
+      <td><a href="/analytics/web?q=${encodeURIComponent(l.threadId || '')}" style="color:#4a90e2;text-decoration:none;font-family:monospace" title="${escHtml(l.threadId || '')}">${shortThread}</a></td>
+      <td>${escHtml(l.question)}</td>
+      <td class="preview" onclick="showAnswer(this)" data-full="${escHtml(l.answer || '—')}">${escHtml(l.answer || '—').slice(0, 120)}${(l.answer || '').length > 120 ? '… <span style="color:#4a90e2;font-size:.8rem">(click to expand)</span>' : ''}</td>
+      <td>${status}</td>
+      <td>${(l.ms / 1000).toFixed(1)}s</td>
+    </tr>`;
+  }).join('');
+
+  const dayRows = Object.entries(byDay).sort().reverse().map(([d, c]) =>
+    `<tr><td>${d}</td><td>${c}</td></tr>`).join('');
+
+  const threadOptions = uniqueThreads.map(t =>
+    `<option value="${escHtml(t)}" ${search === t ? 'selected' : ''}>${escHtml(t.slice(-8))} (${allLogs.filter(l => l.threadId === t).length} msgs)</option>`
+  ).join('');
+
+  const searchLabel = search ? `— thread <strong style="font-family:monospace">${escHtml(search.slice(-8))}</strong> <a href="/analytics/web" style="font-size:.85rem;color:#4a90e2">clear</a>` : '';
+
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Web Chat Analytics</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
+    h1 { color: #333; }
+    nav { margin-bottom: 1.5rem; }
+    nav a { margin-right: 1rem; color: #4a90e2; text-decoration: none; font-weight: bold; }
+    nav a.active { border-bottom: 2px solid #4a90e2; }
+    .cards { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .card { background: white; border-radius: 8px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); min-width: 140px; }
+    .card .num { font-size: 2rem; font-weight: bold; color: #4a90e2; }
+    .card .label { color: #888; font-size: .85rem; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    th { background: #4a90e2; color: white; padding: .6rem 1rem; text-align: left; }
+    td { padding: .55rem 1rem; border-bottom: 1px solid #eee; font-size: .9rem; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    h2 { margin-top: 2rem; color: #555; }
+    .search-bar { display: flex; gap: .5rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .search-bar select, .search-bar input { padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .95rem; }
+    .search-bar button { padding: .5rem 1rem; background: #4a90e2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: .95rem; }
+    .preview { cursor: pointer; color: #555; }
+    .preview:hover { color: #4a90e2; }
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:center; justify-content:center; }
+    .modal-bg.open { display:flex; }
+    .modal { background:white; border-radius:10px; padding:1.5rem 2rem; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 4px 24px rgba(0,0,0,.2); }
+    .modal h3 { margin-top:0; color:#333; }
+    .modal p { white-space:pre-wrap; color:#444; line-height:1.6; }
+    .modal button { margin-top:1rem; padding:.4rem 1rem; background:#4a90e2; color:white; border:none; border-radius:6px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/analytics">WhatsApp</a>
+    <a href="/analytics/web" class="active">Web Chat</a>
+  </nav>
+  <h1>Web Chat Analytics ${searchLabel}</h1>
+
+  <form class="search-bar" method="get" action="/analytics/web">
+    <select onchange="this.form.q.value=this.value;this.form.submit()" name="_pick">
+      <option value="">— filter by session —</option>
+      ${threadOptions}
+    </select>
+    <input name="q" type="hidden" value="${escHtml(req.query.q || '')}" />
+    <a href="/analytics/web" style="color:#999;font-size:.9rem">Clear filter</a>
+  </form>
+
+  <div class="cards">
+    <div class="card"><div class="num">${total}</div><div class="label">${search ? 'Session' : 'Total'} messages</div></div>
+    <div class="card"><div class="num">${uniqueThreads.length}</div><div class="label">Sessions</div></div>
+    <div class="card"><div class="num">${errors}</div><div class="label">Errors</div></div>
+    <div class="card"><div class="num">${uncertain}</div><div class="label">Uncertain answers</div></div>
+    <div class="card"><div class="num">${(avgMs/1000).toFixed(1)}s</div><div class="label">Avg response time</div></div>
+  </div>
+
+  <h2>Messages per day</h2>
+  <table>
+    <tr><th>Date</th><th>Messages</th></tr>
+    ${dayRows || '<tr><td colspan="2">No data yet</td></tr>'}
+  </table>
+
+  <h2>Recent messages</h2>
+  <table>
+    <tr><th>Time</th><th>Session</th><th>Question</th><th>Answer</th><th>OK</th><th>Time</th></tr>
+    ${rows || '<tr><td colspan="6">No messages yet</td></tr>'}
+  </table>
+
+  <div class="modal-bg" id="modal" onclick="closeModal(event)">
+    <div class="modal">
+      <h3 id="modal-q"></h3>
+      <p id="modal-a"></p>
+      <button onclick="document.getElementById('modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+  <script>
+    function showAnswer(td) {
+      const row = td.closest('tr');
+      const question = row.cells[2].textContent;
+      document.getElementById('modal-q').textContent = question;
+      document.getElementById('modal-a').textContent = td.dataset.full;
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal(e) {
+      if (e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
+    }
+  </script>
+</body>
+</html>`);
 });
 
 app.listen(PORT, () => {
