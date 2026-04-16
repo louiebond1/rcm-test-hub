@@ -37,12 +37,54 @@ function readWebLogs() {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ANALYTICS_PASSWORD = process.env.ANALYTICS_PASSWORD || '4416';
+
+function requirePassword(req, res, next) {
+  const token = req.cookies?.analytics_auth;
+  if (token === ANALYTICS_PASSWORD) return next();
+
+  if (req.method === 'POST' && req.body?.password === ANALYTICS_PASSWORD) {
+    res.setHeader('Set-Cookie', `analytics_auth=${ANALYTICS_PASSWORD}; Path=/; HttpOnly`);
+    return res.redirect(req.path);
+  }
+
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Analytics — Login</title>
+  <style>
+    body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f9f9f9; }
+    .box { background: white; padding: 2rem 2.5rem; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.1); text-align: center; }
+    h2 { margin-top: 0; color: #333; }
+    input { padding: .6rem 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; width: 180px; margin-bottom: 1rem; text-align: center; letter-spacing: .2rem; }
+    button { display: block; width: 100%; padding: .6rem; background: #4a90e2; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    .error { color: red; font-size: .85rem; margin-bottom: .5rem; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Analytics</h2>
+    ${req.method === 'POST' ? '<p class="error">Incorrect password</p>' : ''}
+    <form method="post">
+      <input type="password" name="password" placeholder="Password" autofocus />
+      <button type="submit">Enter</button>
+    </form>
+  </div>
+</body>
+</html>`);
+}
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use((req, res, next) => {
+  const cookie = req.headers.cookie || '';
+  req.cookies = Object.fromEntries(cookie.split(';').map(c => c.trim().split('=').map(decodeURIComponent)).filter(([k]) => k));
+  next();
+});
 app.use((req, res, next) => { res.setHeader('ngrok-skip-browser-warning', '1'); next(); });
 app.use(express.static(path.join(__dirname)));
 
@@ -238,6 +280,7 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
 });
 
 // Analytics dashboard
+app.all('/analytics', requirePassword);
 app.get('/analytics', (req, res) => {
   const allLogs = readLogs();
   const search = (req.query.q || '').trim().replace(/\D/g, ''); // digits only
@@ -392,6 +435,7 @@ function isUncertain(text) {
 }
 
 // Web chatbot analytics page
+app.all('/analytics/web', requirePassword);
 app.get('/analytics/web', (req, res) => {
   const allLogs = readWebLogs();
   const search = (req.query.q || '').trim();
