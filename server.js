@@ -9,6 +9,21 @@ const LOGS_DIR = path.join(__dirname, 'logs');
 if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR);
 const LOG_FILE = path.join(LOGS_DIR, 'whatsapp.jsonl');
 const WEB_LOG_FILE = path.join(LOGS_DIR, 'web.jsonl');
+const THREADS_FILE = path.join(LOGS_DIR, 'threads.json');
+
+function getUserThread(phone) {
+  if (!fs.existsSync(THREADS_FILE)) return null;
+  const threads = JSON.parse(fs.readFileSync(THREADS_FILE, 'utf8'));
+  return threads[phone] || null;
+}
+
+function saveUserThread(phone, threadId) {
+  const threads = fs.existsSync(THREADS_FILE)
+    ? JSON.parse(fs.readFileSync(THREADS_FILE, 'utf8'))
+    : {};
+  threads[phone] = threadId;
+  fs.writeFileSync(THREADS_FILE, JSON.stringify(threads, null, 2));
+}
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 function logMessage(entry) {
@@ -213,7 +228,12 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
   try {
     if (!process.env.ASSISTANT_ID) throw new Error('Assistant not configured.');
 
-    const thread = await openai.beta.threads.create();
+    const existingThreadId = getUserThread(from);
+    const thread = existingThreadId
+      ? { id: existingThreadId }
+      : await openai.beta.threads.create();
+    saveUserThread(from, thread.id);
+
     await openai.beta.threads.messages.create(thread.id, {
       role: 'user',
       content: userMsg,
