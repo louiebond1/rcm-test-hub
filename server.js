@@ -5,8 +5,10 @@ const path = require('path');
 const twilio = require('twilio');
 const fs = require('fs');
 
-const LOG_FILE = path.join(__dirname, 'logs', 'whatsapp.jsonl');
-const WEB_LOG_FILE = path.join(__dirname, 'logs', 'web.jsonl');
+const LOGS_DIR = path.join(__dirname, 'logs');
+if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR);
+const LOG_FILE = path.join(LOGS_DIR, 'whatsapp.jsonl');
+const WEB_LOG_FILE = path.join(LOGS_DIR, 'web.jsonl');
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 function logMessage(entry) {
