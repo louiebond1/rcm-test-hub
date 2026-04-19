@@ -6049,6 +6049,29 @@ function syncMobRolePill(){
   initOnboarding();
 })();
 
+window.addEventListener('message', function(e){
+  if(!e.data || e.data.type !== 'EX3_DEMO') return;
+  var d = e.data;
+  if(d.action === 'setRole') setRole(d.role);
+  if(d.action === 'openAI'){
+    var panel = document.getElementById('assistantPanel');
+    if(panel && !panel.classList.contains('open')) toggleAssistant();
+  }
+  if(d.action === 'typeAndAsk'){
+    var panel = document.getElementById('assistantPanel');
+    if(panel && !panel.classList.contains('open')) toggleAssistant();
+    var input = document.getElementById('assistantQuery');
+    if(!input) return;
+    input.value = '';
+    var q = d.query, i = 0;
+    var t = setInterval(function(){
+      if(i >= q.length){ clearInterval(t); setTimeout(function(){ submitAssistantQuestion(); }, 400); return; }
+      input.value += q[i++];
+    }, 38);
+  }
+});
+
+
 function applyHash() {
   const hash = window.location.hash.slice(1);
   if (['rec','hm','cand','adm'].includes(hash)) setRole(hash);
