@@ -1349,8 +1349,12 @@ app.get('/consultant/sow-builder', (_req, res) => {
             <div class="opt" onclick="toggleMulti(this,'integrations','video interviewing platform integration')">🎥 Video Interviews</div>
             <div class="opt" onclick="toggleMulti(this,'integrations','payroll system integration')">💰 Payroll</div>
           </div>
-          <div style="margin-top:10px">
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
             <div class="opt" onclick="selectOpt(this,'integrations','no third-party integrations required')">❌ No integrations needed</div>
+            <div class="opt" onclick="toggleCustomMulti(this,'integrations','integrations-other-input')">✏️ Other / not listed</div>
+          </div>
+          <div class="custom-input" id="integrations-other-input">
+            <input type="text" placeholder="e.g. Greenhouse, Workable, Microsoft Teams…" oninput="setCustomMulti('integrations','integrations-other-val',this.value)">
           </div>
         </div>
 
@@ -1369,8 +1373,12 @@ app.get('/consultant/sow-builder', (_req, res) => {
             <div class="opt" onclick="toggleMulti(this,'jobBoards','Adzuna')">Adzuna</div>
             <div class="opt" onclick="toggleMulti(this,'jobBoards','Guardian Jobs')">Guardian Jobs</div>
           </div>
-          <div style="margin-top:10px">
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
             <div class="opt" onclick="selectOpt(this,'jobBoards','no job board connections required at this stage')">❌ None at this stage</div>
+            <div class="opt" onclick="toggleCustomMulti(this,'jobBoards','jobboards-other-input')">✏️ Other / not listed</div>
+          </div>
+          <div class="custom-input" id="jobboards-other-input">
+            <input type="text" placeholder="e.g. Monster, S1 Jobs, Nijobs…" oninput="setCustomMulti('jobBoards','jobboards-other-val',this.value)">
           </div>
         </div>
 
@@ -1404,7 +1412,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <div class="step-num">Step 10 of 12</div>
           <h2>Which training sessions are required?</h2>
           <p>Select all that apply. Each session is role-specific and delivered separately.</p>
-          <div class="options">
+          <div class="options opt-multi">
             <div class="opt" onclick="toggleMulti(this,'training','One Administrator training session (up to 90 minutes, covering system configuration, user management, and reporting)')">🔧 Administrator (90 mins)</div>
             <div class="opt" onclick="toggleMulti(this,'training','One Recruiter training session (up to 60 minutes, covering end-to-end hiring workflow, candidate management, and communication tools)')">📞 Recruiter (60 mins)</div>
             <div class="opt" onclick="toggleMulti(this,'training','One Hiring Manager training session (up to 45 minutes, covering job approval, candidate review, and interview scheduling)')">👔 Hiring Manager (45 mins)</div>
@@ -1487,8 +1495,25 @@ app.get('/consultant/sow-builder', (_req, res) => {
     } else {
       answers[key] = answers[key].filter(v => v !== value);
     }
-    // Deselect "none" option if multi selected
-    el.closest('.step').querySelectorAll('.options:not(.opt-multi) .opt').forEach(o => o.classList.remove('sel'));
+  }
+
+  function toggleCustomMulti(el, key, inputId) {
+    el.classList.toggle('sel');
+    const inp = document.getElementById(inputId);
+    inp.classList.toggle('show', el.classList.contains('sel'));
+    if (el.classList.contains('sel')) inp.querySelector('input').focus();
+    else {
+      // Remove custom value from array
+      if (Array.isArray(answers[key])) {
+        answers[key] = answers[key].filter(v => !v.startsWith('Other:'));
+      }
+    }
+  }
+
+  function setCustomMulti(key, valId, value) {
+    if (!Array.isArray(answers[key])) answers[key] = [];
+    answers[key] = answers[key].filter(v => !v.startsWith('Other:'));
+    if (value.trim()) answers[key].push('Other: ' + value.trim());
   }
 
   function updateProgress() {
