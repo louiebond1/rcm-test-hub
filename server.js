@@ -2061,8 +2061,13 @@ const steps = [
       'Admins: system configuration, user management, permissions, custom fields, reporting',
     ],
     time: '3 min',
-    note: 'Click through each role tab in the guide. Let them see how the content shifts for each audience.',
-    actions: [{ label: 'Open Guide — Role Tabs', url: '/' }],
+    note: 'Click each button to jump straight to that role tab. Let them see how the content shifts for each audience.',
+    actions: [
+      { label: 'Recruiter Tab', url: '/#rec' },
+      { label: 'Hiring Manager Tab', url: '/#hm' },
+      { label: 'Candidate Tab', url: '/#cand' },
+      { label: 'Admin Tab', url: '/#adm' },
+    ],
   },
   {
     tag: 'AI Assistant',
@@ -2076,7 +2081,7 @@ const steps = [
     ],
     time: '4 min',
     note: 'Ask it live: "How do I set up a hiring process in SmartRecruiters?" Watch it respond with steps.',
-    actions: [{ label: 'Open AI Assistant', url: '/' }],
+    actions: [{ label: 'Open AI Assistant', url: '/#ai' }],
   },
   {
     tag: 'AI Memory',
@@ -2090,7 +2095,7 @@ const steps = [
     ],
     time: '2 min',
     note: "Ask a follow-up right after the previous demo. 'What if it's a volume hiring role?' Show it retains context.",
-    actions: [{ label: 'Open AI Assistant', url: '/' }],
+    actions: [{ label: 'Open AI Assistant', url: '/#ai' }],
   },
   {
     tag: 'Customisable Workflows',
@@ -2103,8 +2108,8 @@ const steps = [
       'Means every consultant configures workflows consistently — no more guessing or variation',
     ],
     time: '3 min',
-    note: 'Navigate to the hiring workflow section. Show the depth and specificity of the guidance.',
-    actions: [{ label: 'Open the Guide', url: '/' }],
+    note: 'Navigate to the hiring workflow section in the Admin tab. Show the depth and specificity.',
+    actions: [{ label: 'Admin Tab \u2014 Workflows', url: '/#adm' }],
   },
   {
     tag: 'Pre-Screening Questions',
@@ -2117,8 +2122,8 @@ const steps = [
       'Especially powerful for warehouse, retail, contact centre, and graduate volume campaigns',
     ],
     time: '2 min',
-    note: 'Show the pre-screening section. This is a quick win — something clients love when they discover it.',
-    actions: [{ label: 'Open the Guide', url: '/' }],
+    note: 'Show the pre-screening section in the Recruiter tab. Quick win — clients love this.',
+    actions: [{ label: 'Recruiter Tab \u2014 Pre-Screening', url: '/#rec' }],
   },
   {
     tag: 'WhatsApp Bot',
@@ -2131,8 +2136,8 @@ const steps = [
       'Detects greetings, handles off-topic questions gracefully, never goes down',
     ],
     time: '3 min',
-    note: 'Show your phone or describe it. If possible, send a message live and show the response coming in.',
-    actions: [],
+    note: 'Send a WhatsApp message live using the button below. Show the response coming in on your phone.',
+    actions: [{ label: 'Message the WhatsApp Bot', url: 'https://wa.me/14155238886' }],
   },
   {
     tag: 'Consultant Portal',

@@ -6049,6 +6049,18 @@ function syncMobRolePill(){
   initOnboarding();
 })();
 
+function applyHash() {
+  const hash = window.location.hash.slice(1);
+  if (['rec','hm','cand','adm'].includes(hash)) setRole(hash);
+  if (hash === 'ai') {
+    const panel = document.getElementById('assistantPanel');
+    if (panel && !panel.classList.contains('open')) toggleAssistant();
+    setTimeout(() => document.getElementById('assistantQuery')?.focus(), 300);
+  }
+}
+window.addEventListener('DOMContentLoaded', applyHash);
+window.addEventListener('hashchange', applyHash);
+
 </script>
 <div class="assistant-float" id="assistantFloat">
   <button class="assistant-button" id="assistantToggle" onclick="toggleAssistant()" aria-label="Open EX3 Assistant">EX3</button>
