@@ -1184,6 +1184,125 @@ app.get('/consultant', (req, res) => {
 </html>`);
 });
 
+// SOW AI Generation
+app.post('/consultant/sow-ai', async (req, res) => {
+  const { answers } = req.body;
+  if (!answers) return res.status(400).json({ error: 'No answers provided' });
+
+  const integrations = Array.isArray(answers.integrations) ? answers.integrations.join(', ') : answers.integrations || 'none';
+  const jobBoards = Array.isArray(answers.jobBoards) ? answers.jobBoards.join(', ') : answers.jobBoards || 'none';
+  const training = Array.isArray(answers.training) ? answers.training.join('; ') : answers.training || 'none';
+
+  const prompt = `You are a senior implementation consultant writing a formal Statement of Work for a SmartRecruiters ATS implementation. Write a complete, professional SOW based on these project details:
+
+Client: ${answers.clientName}
+Organisation size: ${answers.orgSize}
+Number of users: ${answers.numUsers}
+Hiring process workflows: ${answers.numProcesses}
+Job templates: ${answers.numTemplates}
+Integrations: ${integrations}
+Job boards: ${jobBoards}
+Career page: ${answers.careerPage}
+Data migration: ${answers.dataMigration}
+Training: ${training}
+Hypercare period: ${answers.hypercare}
+Project timeline: ${answers.timeline}
+
+Write a complete SOW with these sections: 1. Project Overview, 2. In Scope (with subsections), 3. Out of Scope, 4. Client Responsibilities, 5. Assumptions, 6. Change Request Process.
+
+Use formal, specific, commercial language. Be concrete — include the exact numbers, integrations, and timelines provided. Make it ready to send directly to the client. Do not use placeholder text.`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      stream: true,
+    });
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Transfer-Encoding', 'chunked');
+
+    for await (const chunk of completion) {
+      const text = chunk.choices[0]?.delta?.content || '';
+      if (text) res.write(text);
+    }
+    res.end();
+  } catch (err) {
+    console.error('SOW AI error:', err.message);
+    res.status(500).json({ error: 'AI generation failed' });
+  }
+});
+
+// SOW Word Export
+app.post('/consultant/sow-export', async (req, res) => {
+  const { content, clientName } = req.body;
+  if (!content) return res.status(400).json({ error: 'No content' });
+
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = require('docx');
+
+  const lines = content.split('\n');
+  const children = [];
+
+  for (const line of lines) {
+    if (line.startsWith('STATEMENT OF WORK')) {
+      children.push(new Paragraph({ text: line, heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER }));
+    } else if (/^\d+\.\s+[A-Z]/.test(line)) {
+      children.push(new Paragraph({ text: line, heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 100 } }));
+    } else if (line.startsWith('━')) {
+      // skip dividers
+    } else if (line.startsWith('  •')) {
+      children.push(new Paragraph({ text: line.replace('  •', '').trim(), bullet: { level: 0 }, spacing: { after: 60 } }));
+    } else if (line.trim()) {
+      children.push(new Paragraph({ children: [new TextRun({ text: line, size: 24 })], spacing: { after: 120 } }));
+    } else {
+      children.push(new Paragraph({ text: '' }));
+    }
+  }
+
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children,
+    }],
+  });
+
+  const buffer = await Packer.toBuffer(doc);
+  const filename = 'SOW_' + (clientName || 'Client').replace(/[^a-z0-9]/gi, '_') + '.docx';
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+  res.send(buffer);
+});
+
+// SOW Email
+app.post('/consultant/sow-email', async (req, res) => {
+  const { content, clientName, toEmail, fromName } = req.body;
+  if (!content || !toEmail) return res.status(400).json({ error: 'Missing fields' });
+
+  const nodemailer = require('nodemailer');
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  try {
+    await transporter.sendMail({
+      from: '"EX3 Consulting" <' + process.env.EMAIL_USER + '>',
+      to: toEmail,
+      cc: process.env.EMAIL_USER,
+      subject: 'Statement of Work — SmartRecruiters Implementation — ' + clientName,
+      text: content,
+      html: '<pre style="font-family:Arial,sans-serif;font-size:14px;line-height:1.7;white-space:pre-wrap">' + content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>',
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Email error:', err.message);
+    res.status(500).json({ error: 'Failed to send email: ' + err.message });
+  }
+});
+
 // SOW Builder
 app.get('/consultant/sow-builder', (_req, res) => {
   res.send(`<!DOCTYPE html>
@@ -1250,15 +1369,30 @@ app.get('/consultant/sow-builder', (_req, res) => {
   <div class="wizard">
     <div class="wizard-wrap">
 
+      <!-- Risk banner -->
+      <div id="risk-banner" style="display:none;margin-bottom:16px;padding:14px 18px;border-radius:10px;font-size:13px;line-height:1.6"></div>
+
       <!-- SOW Output (shown at end) -->
       <div class="sow-output" id="sow-output">
         <span class="badge">SOW Generated</span>
         <h2 style="font-size:26px;font-weight:700;margin-bottom:6px;letter-spacing:-.02em">Your Statement of Work</h2>
-        <p style="font-size:14px;color:#666;margin-bottom:20px">Review, copy and paste into your document. All sections are editable.</p>
+        <p style="font-size:14px;color:#666;margin-bottom:20px">Review and edit below, then copy, export or email directly to the client.</p>
         <div class="sow-actions">
-          <button class="btn btn-primary" onclick="copySow()">Copy Full SOW</button>
-          <button class="btn btn-secondary" onclick="restartWizard()">Start Again</button>
+          <button class="btn btn-primary" onclick="copySow()">📋 Copy</button>
+          <button class="btn btn-primary" style="background:#0d7c4c" onclick="exportWord()">⬇️ Export Word</button>
+          <button class="btn btn-primary" style="background:#6b21a8" onclick="generateWithAI()">✨ Rewrite with AI</button>
+          <button class="btn btn-secondary" onclick="showEmailForm()">📧 Email to client</button>
+          <button class="btn btn-secondary" onclick="restartWizard()">↩ Start Again</button>
         </div>
+        <div id="email-form" style="display:none;background:#f8f7f4;border:1px solid #e4e2dc;border-radius:10px;padding:20px;margin-bottom:16px">
+          <p style="font-size:13px;font-weight:600;margin-bottom:12px">Send SOW by email</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <input id="email-to" type="email" placeholder="Client email address" style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid #e4e2dc;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            <button class="btn btn-primary" onclick="sendEmail()">Send</button>
+          </div>
+          <p id="email-status" style="font-size:12px;margin-top:8px;color:#888"></p>
+        </div>
+        <div id="ai-status" style="display:none;padding:12px 16px;background:#faf5ff;border:1px solid #ddd6fe;border-radius:8px;margin-bottom:16px;font-size:13px;color:#6b21a8">✨ AI is rewriting your SOW in professional language...</div>
         <div class="sow-doc" id="sow-doc" contenteditable="true"></div>
       </div>
 
@@ -1664,14 +1798,130 @@ Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
     document.getElementById('sow-output').classList.add('show');
     document.getElementById('progress-fill').style.width = '100%';
     document.getElementById('progress-label').textContent = 'Complete ✓';
+    checkRisks();
+  }
+
+  function checkRisks() {
+    const a = answers;
+    const risks = [];
+    const warnings = [];
+    const integrations = Array.isArray(a.integrations) ? a.integrations : [];
+    const hasHRIS = integrations.some(i => i.includes('HRIS'));
+    const hasSSO = integrations.some(i => i.includes('SSO'));
+    const hasMigration = a.dataMigration && !a.dataMigration.includes('not in scope');
+    const shortTimeline = a.timeline === '8 weeks';
+    const medTimeline = a.timeline === '10 weeks';
+    const isEnterprise = a.orgSize && a.orgSize.includes('Enterprise');
+    const isLarge = a.orgSize && (a.orgSize.includes('Large') || a.orgSize.includes('Enterprise'));
+
+    if (shortTimeline && hasHRIS && hasSSO) risks.push('HRIS + SSO + 8 weeks is very aggressive — consider extending to at least 12 weeks');
+    if (shortTimeline && hasMigration) risks.push('Data migration in 8 weeks is high risk — this typically adds 2–4 weeks');
+    if (isEnterprise && (shortTimeline || medTimeline)) risks.push('Enterprise organisations rarely complete in under 12 weeks — consider 16 weeks');
+    if (integrations.length >= 3 && shortTimeline) risks.push(integrations.length + ' integrations in 8 weeks is very tight — each integration can take 1–2 weeks');
+    if (hasHRIS) warnings.push('HRIS integrations require IT involvement early — confirm credentials are available before the build phase');
+    if (hasSSO) warnings.push('SSO setup requires the client\'s IT team — get them in the kickoff call');
+    if (isLarge && a.training && Array.isArray(a.training) && a.training.length < 2) warnings.push('A large organisation with fewer than 2 training sessions may lead to low adoption — consider adding more');
+
+    const banner = document.getElementById('risk-banner');
+    if (risks.length === 0 && warnings.length === 0) { banner.style.display = 'none'; return; }
+
+    let html = '';
+    if (risks.length) {
+      html += '<div style="font-weight:700;color:#991b1b;margin-bottom:8px">🔴 Risk flags</div>';
+      html += risks.map(r => '<div style="margin-bottom:4px">• ' + r + '</div>').join('');
+    }
+    if (warnings.length) {
+      if (risks.length) html += '<div style="margin:10px 0;border-top:1px solid #fde68a"></div>';
+      html += '<div style="font-weight:700;color:#92400e;margin-bottom:8px">⚠️ Things to watch</div>';
+      html += warnings.map(w => '<div style="margin-bottom:4px">• ' + w + '</div>').join('');
+    }
+    banner.innerHTML = html;
+    banner.style.display = 'block';
+    banner.style.background = risks.length ? '#fef2f2' : '#fffbeb';
+    banner.style.border = '1px solid ' + (risks.length ? '#fecaca' : '#fde68a');
+    banner.style.color = risks.length ? '#7f1d1d' : '#78350f';
+  }
+
+  async function generateWithAI() {
+    const aiStatus = document.getElementById('ai-status');
+    aiStatus.style.display = 'block';
+    const doc = document.getElementById('sow-doc');
+    doc.textContent = '';
+
+    try {
+      const res = await fetch('/consultant/sow-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      });
+      if (!res.ok) throw new Error('AI request failed');
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let text = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        text += decoder.decode(value, { stream: true });
+        doc.textContent = text;
+      }
+      aiStatus.style.display = 'none';
+    } catch (err) {
+      aiStatus.textContent = 'AI generation failed — please try again.';
+      aiStatus.style.background = '#fef2f2';
+      aiStatus.style.color = '#991b1b';
+    }
+  }
+
+  async function exportWord() {
+    const content = document.getElementById('sow-doc').textContent;
+    const res = await fetch('/consultant/sow-export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, clientName: answers.clientName }),
+    });
+    if (!res.ok) { alert('Export failed'); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'SOW_' + (answers.clientName || 'Client').replace(/[^a-z0-9]/gi, '_') + '.docx';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function showEmailForm() {
+    const form = document.getElementById('email-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function sendEmail() {
+    const toEmail = document.getElementById('email-to').value.trim();
+    const status = document.getElementById('email-status');
+    if (!toEmail) { status.textContent = 'Please enter an email address'; return; }
+    status.textContent = 'Sending...';
+    const content = document.getElementById('sow-doc').textContent;
+    const res = await fetch('/consultant/sow-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, clientName: answers.clientName, toEmail }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      status.textContent = '✅ Sent successfully!';
+      status.style.color = '#0d7c4c';
+    } else {
+      status.textContent = '❌ ' + (data.error || 'Failed to send');
+      status.style.color = '#991b1b';
+    }
   }
 
   function copySow() {
     const text = document.getElementById('sow-doc').textContent;
     navigator.clipboard.writeText(text).then(() => {
       const btn = event.target;
+      const orig = btn.textContent;
       btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = 'Copy Full SOW', 2000);
+      setTimeout(() => btn.textContent = orig, 2000);
     });
   }
 
