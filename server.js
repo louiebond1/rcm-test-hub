@@ -27,22 +27,15 @@ function saveUserThread(phone, threadId) {
   fs.writeFileSync(THREADS_FILE, JSON.stringify(threads, null, 2));
 }
 
-function downloadAudio(url, destPath) {
-  return new Promise((resolve, reject) => {
-    const auth = Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
-    const file = fs.createWriteStream(destPath);
-    https.get(url, { headers: { Authorization: `Basic ${auth}` } }, res => {
-      if (res.statusCode === 302 || res.statusCode === 301) {
-        file.close();
-        return downloadAudio(res.headers.location, destPath).then(resolve).catch(reject);
-      }
-      res.pipe(file);
-      file.on('finish', () => file.close(resolve));
-    }).on('error', err => {
-      fs.unlink(destPath, () => {});
-      reject(err);
-    });
+async function downloadAudio(url, destPath) {
+  const auth = Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
+  const res = await fetch(url, {
+    headers: { Authorization: `Basic ${auth}` },
+    redirect: 'follow',
   });
+  if (!res.ok) throw new Error(`Failed to download audio: ${res.status}`);
+  const buffer = await res.arrayBuffer();
+  fs.writeFileSync(destPath, Buffer.from(buffer));
 }
 
 async function transcribeAudio(filePath) {
@@ -248,7 +241,8 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     twiml.message('Got your voice note! Transcribing and looking that up...');
     res.type('text/xml').send(twiml.toString());
 
-    const tmpFile = path.join(os.tmpdir(), `voice_${Date.now()}.ogg`);
+    const ext = mediaType.includes('ogg') ? 'ogg' : mediaType.includes('mp4') ? 'mp4' : mediaType.includes('mpeg') ? 'mp3' : 'ogg';
+    const tmpFile = path.join(os.tmpdir(), `voice_${Date.now()}.${ext}`);
     try {
       await downloadAudio(mediaUrl, tmpFile);
       const transcribed = await transcribeAudio(tmpFile);
