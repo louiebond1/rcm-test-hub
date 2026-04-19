@@ -1661,8 +1661,15 @@ app.get('/consultant/sow-builder', (_req, res) => {
   function nextStep() {
     // Validate step 1
     if (current === 1) {
-      const val = document.getElementById('client-name').value.trim();
-      if (!val) { document.getElementById('client-name').focus(); return; }
+      const inp = document.getElementById('client-name');
+      const val = inp.value.trim();
+      if (!val) {
+        inp.style.borderColor = '#ef4444';
+        inp.placeholder = 'Please enter the client name to continue';
+        inp.focus();
+        setTimeout(() => { inp.style.borderColor = '#e4e2dc'; inp.placeholder = 'e.g. Acme Corporation'; }, 3000);
+        return;
+      }
       answers.clientName = val;
     }
     if (current === TOTAL) {
