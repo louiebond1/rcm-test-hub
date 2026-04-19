@@ -1560,8 +1560,8 @@ app.get('/consultant/sow-builder', (_req, res) => {
     <a href="/consultant">← Back to Consultant Portal</a>
   </div>
   <div class="progress-wrap">
-    <div class="progress-label" id="progress-label">Step 1 of 12</div>
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:8%"></div></div>
+    <div class="progress-label" id="progress-label">Step 1 of 19</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:5%"></div></div>
   </div>
 
   <div class="wizard">
@@ -1599,7 +1599,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 1: Client Name -->
         <div class="step active" id="step-1">
-          <div class="step-num">Step 1 of 12</div>
+          <div class="step-num">Step 1 of 19</div>
           <h2>What's the client's name?</h2>
           <p>This will appear throughout the SOW document.</p>
           <input type="text" id="client-name" placeholder="e.g. Acme Corporation" style="width:100%;padding:14px 18px;border:1.5px solid #e4e2dc;border-radius:10px;font-family:inherit;font-size:15px;outline:none" oninput="answers.clientName=this.value" onfocus="this.style.borderColor='#0f0f0f'" onblur="this.style.borderColor='#e4e2dc'">
@@ -1607,7 +1607,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 2: Org Size -->
         <div class="step" id="step-2">
-          <div class="step-num">Step 2 of 12</div>
+          <div class="step-num">Step 2 of 19</div>
           <h2>How large is the organisation?</h2>
           <p>This helps set expectations on implementation complexity.</p>
           <div class="options">
@@ -1620,7 +1620,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 3: Number of users -->
         <div class="step" id="step-3">
-          <div class="step-num">Step 3 of 12</div>
+          <div class="step-num">Step 3 of 19</div>
           <h2>How many users will need access?</h2>
           <p>Include all recruiters, hiring managers, and admins.</p>
           <div class="options">
@@ -1637,7 +1637,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 4: Hiring Processes -->
         <div class="step" id="step-4">
-          <div class="step-num">Step 4 of 12</div>
+          <div class="step-num">Step 4 of 19</div>
           <h2>How many hiring process workflows are needed?</h2>
           <p>Different job types often have different hiring stages (e.g. office vs warehouse vs graduate).</p>
           <div class="options">
@@ -1653,7 +1653,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 5: Job templates -->
         <div class="step" id="step-5">
-          <div class="step-num">Step 5 of 12</div>
+          <div class="step-num">Step 5 of 19</div>
           <h2>How many job templates are required?</h2>
           <p>Job templates speed up requisition creation for common roles.</p>
           <div class="options">
@@ -1670,7 +1670,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 6: Integrations -->
         <div class="step" id="step-6">
-          <div class="step-num">Step 6 of 12</div>
+          <div class="step-num">Step 6 of 19</div>
           <h2>Which integrations are required?</h2>
           <p>Select all that apply. Each integration adds complexity and time.</p>
           <div class="options opt-multi" id="integrations-options">
@@ -1692,7 +1692,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 7: Job Boards -->
         <div class="step" id="step-7">
-          <div class="step-num">Step 7 of 12</div>
+          <div class="step-num">Step 7 of 19</div>
           <h2>Which job boards need connecting?</h2>
           <p>Select all that apply. Job board credentials will need to be provided by the client.</p>
           <div class="options opt-multi" id="jobboards-options">
@@ -1716,7 +1716,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 8: Career Page -->
         <div class="step" id="step-8">
-          <div class="step-num">Step 8 of 12</div>
+          <div class="step-num">Step 8 of 19</div>
           <h2>Is career page branding in scope?</h2>
           <p>This covers setting up the SmartRecruiters hosted careers page with the client's logo, colours, and imagery.</p>
           <div class="options">
@@ -1728,7 +1728,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 9: Data Migration -->
         <div class="step" id="step-9">
-          <div class="step-num">Step 9 of 12</div>
+          <div class="step-num">Step 9 of 19</div>
           <h2>Is data migration required?</h2>
           <p>Moving historical jobs, candidates, or offer data from an existing system into SmartRecruiters.</p>
           <div class="options">
@@ -1741,7 +1741,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 10: Training -->
         <div class="step" id="step-10">
-          <div class="step-num">Step 10 of 12</div>
+          <div class="step-num">Step 10 of 19</div>
           <h2>Which training sessions are required?</h2>
           <p>Select all that apply. Each session is role-specific and delivered separately.</p>
           <div class="options opt-multi">
@@ -1753,7 +1753,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 11: Hypercare -->
         <div class="step" id="step-11">
-          <div class="step-num">Step 11 of 12</div>
+          <div class="step-num">Step 11 of 19</div>
           <h2>How long is the hypercare period?</h2>
           <p>Hypercare is the close-support window immediately after go-live where your team is on hand to resolve issues quickly.</p>
           <div class="options">
@@ -1769,7 +1769,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
         <!-- Step 12: Timeline -->
         <div class="step" id="step-12">
-          <div class="step-num">Step 12 of 12</div>
+          <div class="step-num">Step 12 of 19</div>
           <h2>What is the expected project timeline?</h2>
           <p>From kickoff to go-live. This will appear in the SOW assumptions.</p>
           <div class="options">
@@ -1784,6 +1784,107 @@ app.get('/consultant/sow-builder', (_req, res) => {
           </div>
         </div>
 
+        <!-- Step 13: Requisition Approval Workflows -->
+        <div class="step" id="step-13">
+          <div class="step-num">Step 13 of 19</div>
+          <h2>How are job requisitions approved before posting?</h2>
+          <p>Defines the approval chain a recruiter must go through before a job goes live.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'reqApproval','No approval workflow required — recruiters can post jobs directly without sign-off.')"><span class="opt-icon">⚡</span>No approval — post directly</div>
+            <div class="opt" onclick="selectOpt(this,'reqApproval','A single-level approval workflow is required (e.g. line manager or HR Director approves each requisition before posting).')"><span class="opt-icon">1️⃣</span>Single approver (e.g. HR Director)</div>
+            <div class="opt" onclick="selectOpt(this,'reqApproval','A multi-level approval workflow is required (e.g. Line Manager → HR → Finance). The exact approval chain will be confirmed during discovery.')"><span class="opt-icon">🔗</span>Multi-level (e.g. Manager → HR → Finance)</div>
+            <div class="opt" onclick="selectOpt(this,'reqApproval','Approval workflows vary by role type or department. Configuration of multiple approval chains is in scope, subject to discovery.')"><span class="opt-icon">🗂️</span>Different chains per department/role type</div>
+          </div>
+        </div>
+
+        <!-- Step 14: Offer Management -->
+        <div class="step" id="step-14">
+          <div class="step-num">Step 14 of 19</div>
+          <h2>Is offer management in scope?</h2>
+          <p>SmartRecruiters can manage the full offer lifecycle — templates, approval, e-signature, and candidate acceptance — all in-platform.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'offerMgmt','Offer management is not in scope for this engagement. Offers will be managed outside of SmartRecruiters.')"><span class="opt-icon">❌</span>Not in scope — offers managed externally</div>
+            <div class="opt" onclick="selectOpt(this,'offerMgmt','Configuration of offer letter templates is included in scope. Approval and e-signature are not required.')"><span class="opt-icon">📄</span>Offer templates only</div>
+            <div class="opt" onclick="selectOpt(this,'offerMgmt','Full offer management is in scope: offer letter templates, an offer approval workflow, and integration with e-signature (DocuSign or equivalent).')"><span class="opt-icon">✅</span>Full — templates + approval + e-signature</div>
+            <div class="opt" onclick="selectCustom(this,'offerMgmt-custom')"><span class="opt-icon">✏️</span>Custom — describe below</div>
+          </div>
+          <div class="custom-input" id="offerMgmt-custom">
+            <textarea placeholder="Describe the offer management requirements…" rows="3" oninput="answers.offerMgmt=this.value"></textarea>
+          </div>
+        </div>
+
+        <!-- Step 15: Pre-screening questions -->
+        <div class="step" id="step-15">
+          <div class="step-num">Step 15 of 19</div>
+          <h2>Are pre-screening or knockout questions required?</h2>
+          <p>These are questions candidates must answer when applying — wrong answers can auto-reject them before a recruiter reviews.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'screening','No pre-screening or knockout questions are required at this stage.')"><span class="opt-icon">❌</span>Not required</div>
+            <div class="opt" onclick="selectOpt(this,'screening','Basic knockout questions are required (e.g. right to work, minimum qualifications). Configuration of up to 5 standard screening questions per workflow is in scope.')"><span class="opt-icon">✅</span>Basic knockout questions (right to work, qualifications)</div>
+            <div class="opt" onclick="selectOpt(this,'screening','Role-specific pre-screening question sets are required for each hiring workflow. The exact questions will be agreed during discovery. Configuration of all question sets is in scope.')"><span class="opt-icon">🎯</span>Role-specific screeners per workflow</div>
+            <div class="opt" onclick="selectOpt(this,'screening','A full application form with multi-section screening questions and automatic scoring is required. This will be scoped in detail during the discovery phase.')"><span class="opt-icon">📝</span>Full scored application form</div>
+          </div>
+        </div>
+
+        <!-- Step 16: Reporting & Analytics -->
+        <div class="step" id="step-16">
+          <div class="step-num">Step 16 of 19</div>
+          <h2>What level of reporting is required?</h2>
+          <p>From standard dashboards to fully custom exec-level analytics.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'reporting','Standard SmartRecruiters dashboards and out-of-the-box reports will be used. No custom report configuration is required.')"><span class="opt-icon">📊</span>Standard dashboards only</div>
+            <div class="opt" onclick="selectOpt(this,'reporting','Configuration of custom reports is in scope. Up to 5 custom report templates will be created based on requirements agreed during discovery.')"><span class="opt-icon">📈</span>Custom reports (up to 5 agreed templates)</div>
+            <div class="opt" onclick="selectOpt(this,'reporting','Executive-level dashboards and custom KPI reports are required. Reporting requirements will be captured during discovery and agreed prior to build.')"><span class="opt-icon">🏆</span>Exec dashboards and custom KPIs</div>
+            <div class="opt" onclick="selectOpt(this,'reporting','Business intelligence (BI) tool integration is required (e.g. Power BI, Tableau, Looker). This will be scoped separately.')"><span class="opt-icon">🔌</span>BI tool integration (Power BI, Tableau etc.)</div>
+          </div>
+        </div>
+
+        <!-- Step 17: GDPR & Compliance -->
+        <div class="step" id="step-17">
+          <div class="step-num">Step 17 of 19</div>
+          <h2>What compliance and data privacy configuration is needed?</h2>
+          <p>Select all that apply. GDPR configuration is strongly recommended for all UK/EU clients.</p>
+          <div class="options opt-multi" id="compliance-options">
+            <div class="opt" onclick="toggleMulti(this,'compliance','GDPR data retention policy configuration (automated deletion schedules for candidate records)')">🇪🇺 GDPR data retention</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','Right-to-be-forgotten workflow configuration (candidate data deletion requests)')">🗑️ Right to be forgotten</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','EEO / diversity monitoring data collection setup')">📋 EEO / diversity monitoring</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','Candidate consent and privacy notice configuration')">✅ Candidate consent notices</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','Audit trail and access log configuration')">🔍 Audit trail setup</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','ISO 27001 / SOC 2 evidence documentation support')">🔒 ISO 27001 / SOC 2 support</div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="opt" onclick="selectOpt(this,'compliance','No specific compliance or data privacy configuration is required beyond platform defaults.')">❌ No specific compliance requirements</div>
+          </div>
+        </div>
+
+        <!-- Step 18: Multi-country / International -->
+        <div class="step" id="step-18">
+          <div class="step-num">Step 18 of 19</div>
+          <h2>What is the geographic scope of the implementation?</h2>
+          <p>Multi-country or multilingual setups require additional configuration time.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is for a single country (UK) with a single language. No multi-country or multi-language configuration is required.')"><span class="opt-icon">🇬🇧</span>UK only — single language</div>
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation covers multiple European markets. Multi-country configuration and at least one additional language is in scope. Specific countries and languages will be confirmed during discovery.')"><span class="opt-icon">🇪🇺</span>Multiple European markets</div>
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is global in scope. Multi-region configuration, timezone support, and multiple languages are required. Full scope will be confirmed during discovery.')"><span class="opt-icon">🌍</span>Global — multiple regions and languages</div>
+            <div class="opt" onclick="selectCustom(this,'geoScope-custom')"><span class="opt-icon">✏️</span>Custom — describe below</div>
+          </div>
+          <div class="custom-input" id="geoScope-custom">
+            <input type="text" placeholder="e.g. UK, Ireland, and Germany" oninput="answers.geoScope=this.value">
+          </div>
+        </div>
+
+        <!-- Step 19: Agency / Vendor Portal -->
+        <div class="step" id="step-19">
+          <div class="step-num">Step 19 of 19</div>
+          <h2>Do you work with external recruitment agencies?</h2>
+          <p>SmartRecruiters has a built-in vendor/agency portal for managing third-party recruiters and their submissions.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'agencyPortal','No external recruitment agencies are used. Agency/vendor portal configuration is not in scope.')"><span class="opt-icon">❌</span>No agencies used</div>
+            <div class="opt" onclick="selectOpt(this,'agencyPortal','External agencies are used. Basic vendor portal configuration is in scope, including agency account setup and job sharing. The number of agencies will be confirmed during discovery.')"><span class="opt-icon">🤝</span>Yes — basic agency portal setup</div>
+            <div class="opt" onclick="selectOpt(this,'agencyPortal','External agencies are a core part of the hiring strategy. Full vendor management configuration is in scope: agency tiers, submission rules, fee agreements, and communication workflows.')"><span class="opt-icon">🏢</span>Yes — full vendor management (tiers, fees, rules)</div>
+          </div>
+        </div>
+
         <div class="nav">
           <button class="btn btn-secondary" id="btn-back" onclick="prevStep()" style="display:none">← Back</button>
           <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Next →</button>
@@ -1794,12 +1895,14 @@ app.get('/consultant/sow-builder', (_req, res) => {
   </div>
 
 <script>
-  const TOTAL = 12;
+  const TOTAL = 19;
   let current = 1;
   const answers = {
     clientName: '', orgSize: '', numUsers: '', numProcesses: '',
     numTemplates: '', integrations: [], jobBoards: [], careerPage: '',
-    dataMigration: '', training: [], hypercare: '', timeline: ''
+    dataMigration: '', training: [], hypercare: '', timeline: '',
+    reqApproval: '', offerMgmt: '', screening: '', reporting: '',
+    compliance: [], geoScope: '', agencyPortal: ''
   };
 
   function selectOpt(el, key, value) {
@@ -1898,6 +2001,13 @@ app.get('/consultant/sow-builder', (_req, res) => {
     const trainingList = Array.isArray(a.training) && a.training.length
       ? a.training.map(t => '  • ' + t).join('\\n')
       : '  • No training sessions specified';
+    const complianceList = Array.isArray(a.compliance) && a.compliance.length
+      ? a.compliance.map(c => '  • ' + c).join('\\n')
+      : '  • Standard platform data privacy defaults — no additional compliance configuration required';
+    const hasAgency = a.agencyPortal && !a.agencyPortal.includes('No external');
+    const hasFullOffer = a.offerMgmt && a.offerMgmt.includes('Full offer');
+    const hasMultiApproval = a.reqApproval && (a.reqApproval.includes('multi-level') || a.reqApproval.includes('different chains'));
+    const isMultiCountry = a.geoScope && (a.geoScope.includes('European') || a.geoScope.includes('global') || a.geoScope.includes('Global'));
 
     const sow = \`STATEMENT OF WORK
 SmartRecruiters Implementation — \${a.clientName}
@@ -1910,6 +2020,7 @@ Prepared by: EX3 Consulting
 This Statement of Work defines the scope, deliverables, timeline, and responsibilities for the implementation of SmartRecruiters for \${a.clientName}. EX3 will provide implementation consultancy services to configure, integrate, and deploy the SmartRecruiters platform in accordance with \${a.clientName}'s requirements as agreed during the discovery phase.
 
 Organisation size: \${a.orgSize || 'To be confirmed'}
+Geographic scope: \${a.geoScope || 'To be confirmed'}
 Expected project duration: \${a.timeline || 'To be confirmed'}
 
 2. IN SCOPE
@@ -1922,44 +2033,63 @@ Expected project duration: \${a.timeline || 'To be confirmed'}
   • Setup of \${a.numProcesses || 'agreed number of'} hiring process workflows
   • Configuration of \${a.numTemplates || 'agreed number of'} job templates with custom fields
   • Setup of email notification templates (application received, interview invite, rejection, offer)
-  • Configuration of offer letter templates
-  • Setup of interview scheduling configuration
+  • Setup of interview scheduling configuration\${isMultiCountry ? '\\n  • Multi-country / multi-language configuration for agreed markets' : ''}
 
-2.2 Career Page & Advertising
+2.2 Requisition Approval Workflow
+  • \${a.reqApproval || 'Requisition approval configuration to be confirmed during discovery'}
+
+2.3 Offer Management
+  • \${a.offerMgmt || 'Offer management requirements to be confirmed during discovery'}\${hasFullOffer ? '\\n  • E-signature integration scoped under section 2.6 (Integrations)' : ''}
+
+2.4 Candidate Screening
+  • \${a.screening || 'Screening configuration to be confirmed during discovery'}
+
+2.5 Career Page & Advertising
   • \${a.careerPage || 'Career page setup to be confirmed'}
   • Connection of the following job boards: \${jobBoardsList}
 
-2.3 Integrations
-\${integrationsList}
+2.6 Integrations
+\${integrationsList}\${hasAgency ? '\\n  • Vendor/agency portal configuration — see section 2.9' : ''}
 
-2.4 Testing
+2.7 Reporting & Analytics
+  • \${a.reporting || 'Reporting requirements to be confirmed during discovery'}
+
+2.8 Data Privacy & Compliance
+\${complianceList}
+
+2.9 Agency / Vendor Portal
+  • \${a.agencyPortal || 'Agency portal requirements to be confirmed during discovery'}
+
+2.10 Data Migration
+  • \${a.dataMigration || 'Data migration requirements to be confirmed during discovery'}
+
+2.11 Testing
   • Facilitation of User Acceptance Testing (UAT) with agreed test scripts
   • Resolution of critical and high-priority issues identified during UAT
   • Provision of written UAT sign-off template
 
-2.5 Training
+2.12 Training
 \${trainingList}
   • Access to the EX3 SmartRecruiters Enablement Guide for all users
 
-2.6 Go-Live & Hypercare Support
+2.13 Go-Live & Hypercare Support
   • Go-live readiness review and final production checks
   • On-call support on go-live day
   • Hypercare support period: \${a.hypercare || 'to be agreed'} post go-live (daily check-ins in week 1, weekly thereafter)
   • Post-implementation documentation and formal handover
-
-2.7 Data Migration
-  • \${a.dataMigration || 'Data migration requirements to be confirmed during discovery'}
 
 3. OUT OF SCOPE
 ━━━━━━━━━━━━━━
 
 The following are explicitly excluded from this engagement unless agreed via a separate Change Request:
 
-  • Any integrations not listed in section 2.3 above
+  • Any integrations not listed in section 2.6 above
   • Custom development, bespoke API builds, or non-standard connectors
   • SmartRecruiters platform licensing costs (to be contracted directly between \${a.clientName} and SmartRecruiters)
   • Ongoing managed services or system administration after the hypercare period
-  • Training sessions beyond those listed in section 2.5
+  • Training sessions beyond those listed in section 2.12
+  • Custom BI tool development or data warehouse builds (unless explicitly scoped above)
+  • Additional countries or languages beyond those agreed during discovery
   • Changes to scope agreed after project kick-off (subject to formal change request process)
 
 4. CLIENT RESPONSIBILITIES
@@ -1971,10 +2101,13 @@ The following are explicitly excluded from this engagement unless agreed via a s
   • Completing the EX3 Discovery Questionnaire within 5 business days of kickoff
   • Providing timely feedback and approvals at each phase gate (within 3 business days of request)
   • Ensuring key stakeholders are available for all scheduled sessions
-  • Providing IT access and credentials required for integrations (section 2.3)
+  • Providing IT access and credentials required for integrations (section 2.6)
   • Providing brand assets (logo, colour palette, imagery) prior to career page configuration
+  • Defining and confirming the requisition approval chain(s) prior to the build phase
+  • Providing offer letter template content and approval chain definitions prior to configuration
+  • Confirming all pre-screening and knockout questions prior to workflow configuration
   • Completing UAT and providing written sign-off before go-live
-  • Ensuring all users attend or watch their relevant training session prior to go-live
+  • Ensuring all users attend or watch their relevant training session prior to go-live\${hasAgency ? '\\n  • Providing agency contact details and access requirements before vendor portal configuration' : ''}
 
 5. ASSUMPTIONS
 ━━━━━━━━━━━━━━
@@ -1986,13 +2119,28 @@ This SOW is based on the following assumptions. Material changes to these assump
   • Client feedback and approvals will be provided within 3 business days of request
   • All integrations use standard SmartRecruiters Marketplace connectors — no custom development is required
   • The number of users, workflows, and templates does not exceed the quantities stated above without a Change Request
+  • Requisition approval chains, offer templates, and screening questions will be provided by the client before the build phase begins
   • Go-live will occur within \${a.timeline || 'the agreed timeline'} of project kick-off. Delays caused by the client may impact timelines and costs
-  • All required IT access and credentials will be provided at least 2 weeks before the integration build phase begins
+  • All required IT access and credentials will be provided at least 2 weeks before the integration build phase begins\${isMultiCountry ? '\\n  • Translation of platform content into languages other than English is the responsibility of the client' : ''}
+  • Compliance configuration is limited to the items listed in section 2.8. Additional regulatory requirements will be treated as out-of-scope unless agreed via Change Request
 
 6. CHANGE REQUEST PROCESS
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Any changes to the agreed scope must be submitted as a formal Change Request by either party. Change Requests will include a description of the change, impact on timeline, and any associated cost. No out-of-scope work will commence without written approval from both parties.
+
+7. SIGN-OFF
+━━━━━━━━━━━
+
+By signing below, both parties agree to the scope, deliverables, and responsibilities set out in this Statement of Work.
+
+EX3 Consulting
+Name: _______________________________  Date: ________________
+Signature: ___________________________
+
+\${a.clientName}
+Name: _______________________________  Date: ________________
+Signature: ___________________________
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
@@ -2018,14 +2166,26 @@ Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
     const medTimeline = a.timeline === '10 weeks';
     const isEnterprise = a.orgSize && a.orgSize.includes('Enterprise');
     const isLarge = a.orgSize && (a.orgSize.includes('Large') || a.orgSize.includes('Enterprise'));
+    const hasFullOffer = a.offerMgmt && a.offerMgmt.includes('Full offer');
+    const hasMultiApproval = a.reqApproval && (a.reqApproval.includes('multi-level') || a.reqApproval.includes('different chains'));
+    const isMultiCountry = a.geoScope && (a.geoScope.includes('European') || a.geoScope.includes('global') || a.geoScope.includes('Global'));
+    const hasAgency = a.agencyPortal && !a.agencyPortal.includes('No external');
+    const complianceCount = Array.isArray(a.compliance) ? a.compliance.length : 0;
 
     if (shortTimeline && hasHRIS && hasSSO) risks.push('HRIS + SSO + 8 weeks is very aggressive — consider extending to at least 12 weeks');
     if (shortTimeline && hasMigration) risks.push('Data migration in 8 weeks is high risk — this typically adds 2–4 weeks');
     if (isEnterprise && (shortTimeline || medTimeline)) risks.push('Enterprise organisations rarely complete in under 12 weeks — consider 16 weeks');
     if (integrations.length >= 3 && shortTimeline) risks.push(integrations.length + ' integrations in 8 weeks is very tight — each integration can take 1–2 weeks');
+    if (isMultiCountry && shortTimeline) risks.push('Multi-country scope in 8 weeks is extremely ambitious — plan for at least 16 weeks');
+    if (hasMultiApproval && shortTimeline) risks.push('Complex multi-level approval chains require significant configuration time — 8 weeks leaves little room for iteration');
+    if (hasFullOffer && hasMigration && shortTimeline) risks.push('Full offer management + data migration + 8 weeks is very high risk — extend timeline or reduce scope');
     if (hasHRIS) warnings.push('HRIS integrations require IT involvement early — confirm credentials are available before the build phase');
     if (hasSSO) warnings.push("SSO setup requires the client's IT team — get them in the kickoff call");
     if (isLarge && a.training && Array.isArray(a.training) && a.training.length < 2) warnings.push('A large organisation with fewer than 2 training sessions may lead to low adoption — consider adding more');
+    if (hasMultiApproval) warnings.push('Multi-level approval chains: map the exact approval flow in discovery before build starts — late changes are expensive');
+    if (isMultiCountry) warnings.push('Multi-country/language: confirm which markets are live at go-live vs phased in later — scope creep risk is high');
+    if (hasAgency) warnings.push('Agency portal: get a list of agencies and their contacts from the client early — account setup takes time');
+    if (complianceCount >= 3) warnings.push('High compliance scope (' + complianceCount + ' items) — involve the client\\'s DPO or legal team in discovery');
 
     const banner = document.getElementById('risk-banner');
     if (risks.length === 0 && warnings.length === 0) { banner.style.display = 'none'; return; }
@@ -2151,7 +2311,14 @@ Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
         dataMigration: 'Migration of active job requisitions into SmartRecruiters is included in scope.',
         training: ['One Recruiter training session (up to 60 minutes, covering end-to-end hiring workflow, candidate management, and communication tools)', 'One Hiring Manager training session (up to 45 minutes, covering job approval, candidate review, and interview scheduling)'],
         hypercare: '4 weeks',
-        timeline: '12 weeks'
+        timeline: '12 weeks',
+        reqApproval: 'A single-level approval workflow is required (e.g. line manager or HR Director approves each requisition before posting).',
+        offerMgmt: 'Full offer management is in scope: offer letter templates, an offer approval workflow, and integration with e-signature (DocuSign or equivalent).',
+        screening: 'Basic knockout questions are required (e.g. right to work, minimum qualifications). Configuration of up to 5 standard screening questions per workflow is in scope.',
+        reporting: 'Configuration of custom reports is in scope. Up to 5 custom report templates will be created based on requirements agreed during discovery.',
+        compliance: ['GDPR data retention policy configuration (automated deletion schedules for candidate records)', 'Candidate consent and privacy notice configuration'],
+        geoScope: 'The implementation is for a single country (UK) with a single language. No multi-country or multi-language configuration is required.',
+        agencyPortal: 'No external recruitment agencies are used. Agency/vendor portal configuration is not in scope.'
       };
       Object.assign(answers, demoData);
       var name = 'Acme Corporation';
@@ -2278,7 +2445,7 @@ var steps = [
     {d:1800, a:{action:'openPhase',index:0}},
     {d:3400, a:{action:'openPhase',index:1}}
   ]},
-  {icon:'\uD83D\uDCDD', title:'SOW Builder', desc:'Complete a full Statement of Work automatically — all 12 fields filled, generated in under 2 minutes', url:'/consultant/sow-builder', auto:[
+  {icon:'\uD83D\uDCDD', title:'SOW Builder', desc:'Complete a full Statement of Work automatically — all 19 questions answered, generated in under 2 minutes', url:'/consultant/sow-builder', auto:[
     {d:700, a:{action:'demoFill'}}
   ]},
   {icon:'\u2728', title:'AI SOW Rewrite', desc:'GPT-4 rewrites your draft into polished, client-ready consulting language — streamed in real time', url:'/consultant/sow-builder', auto:[
