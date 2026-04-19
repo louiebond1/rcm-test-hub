@@ -2296,45 +2296,78 @@ Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
   window.addEventListener('message', function(e){
     if(!e.data || e.data.type !== 'EX3_DEMO') return;
     var d = e.data;
-    if(d.action === 'demoFill'){
+
+    if(d.action === 'demoWalkSOW'){
+      var sowOut = document.getElementById('sow-output');
+      if(sowOut && sowOut.classList.contains('show')) return;
       var inp = document.getElementById('client-name');
-      if(!inp || inp.value) return;
-      var demoData = {
-        clientName: 'Acme Corporation',
-        orgSize: 'Mid-size (100\u2013500 employees)',
-        numUsers: '25\u201350 users',
-        numProcesses: '3\u20135 hiring process workflows',
-        numTemplates: '5\u201310 job templates',
-        integrations: ['HRIS integration (e.g. Workday, SAP, BambooHR)', 'Single Sign-On (SSO)'],
-        jobBoards: ['Indeed', 'LinkedIn', 'Reed'],
-        careerPage: 'Configuration and branding of the SmartRecruiters careers page is included in scope. The client will provide brand assets prior to configuration.',
-        dataMigration: 'Migration of active job requisitions into SmartRecruiters is included in scope.',
-        training: ['One Recruiter training session (up to 60 minutes, covering end-to-end hiring workflow, candidate management, and communication tools)', 'One Hiring Manager training session (up to 45 minutes, covering job approval, candidate review, and interview scheduling)'],
-        hypercare: '4 weeks',
-        timeline: '12 weeks',
-        reqApproval: 'A single-level approval workflow is required (e.g. line manager or HR Director approves each requisition before posting).',
-        offerMgmt: 'Full offer management is in scope: offer letter templates, an offer approval workflow, and integration with e-signature (DocuSign or equivalent).',
-        screening: 'Basic knockout questions are required (e.g. right to work, minimum qualifications). Configuration of up to 5 standard screening questions per workflow is in scope.',
-        reporting: 'Configuration of custom reports is in scope. Up to 5 custom report templates will be created based on requirements agreed during discovery.',
-        compliance: ['GDPR data retention policy configuration (automated deletion schedules for candidate records)', 'Candidate consent and privacy notice configuration'],
-        geoScope: 'The implementation is for a single country (UK) with a single language. No multi-country or multi-language configuration is required.',
-        agencyPortal: 'No external recruitment agencies are used. Agency/vendor portal configuration is not in scope.'
-      };
-      Object.assign(answers, demoData);
-      var name = 'Acme Corporation';
+      if(!inp) return;
       inp.value = '';
-      var i = 0;
-      var t = setInterval(function(){
-        if(i >= name.length){ clearInterval(t); answers.clientName = name; setTimeout(function(){ generateSOW(); }, 900); return; }
-        inp.value += name[i++];
+      var name = 'Acme Corporation';
+      var ni = 0;
+      var nameT = setInterval(function(){
+        if(ni >= name.length){ clearInterval(nameT); answers.clientName = name; setTimeout(runDemoWalk, 500); return; }
+        inp.value += name[ni++];
         answers.clientName = inp.value;
       }, 55);
+
+      function q(arr, delay, fn){ var last = arr.length ? arr[arr.length-1][0] : 0; arr.push([last+delay, fn]); return arr; }
+      function runDemoWalk(){
+        var actions = [];
+        function sc(delay, fn){ var last = actions.length ? actions[actions.length-1][0] : 0; actions.push([last+delay, fn]); }
+        sc(500, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-2 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-3 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-4 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-5 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#integrations-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[1])o[1].click(); },380); });
+        sc(1350, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#jobboards-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[1])o[1].click(); },300); setTimeout(function(){ if(o[3])o[3].click(); },600); });
+        sc(1400, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-8 .opt'); if(o[0])o[0].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-9 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-10 .opt'); if(o[1])o[1].click(); setTimeout(function(){ if(o[2])o[2].click(); },380); });
+        sc(1300, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-11 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-12 .opt'); if(o[2])o[2].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-13 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-14 .opt'); if(o[2])o[2].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-15 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-16 .opt'); if(o[1])o[1].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#compliance-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[3])o[3].click(); },380); });
+        sc(1300, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-18 .opt'); if(o[0])o[0].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        sc(950, function(){ var o=document.querySelectorAll('#step-19 .opt'); if(o[0])o[0].click(); });
+        sc(850, function(){ document.getElementById('btn-next').click(); });
+        actions.forEach(function(a){ setTimeout(a[1], a[0]); });
+      }
     }
+
     if(d.action === 'triggerAIRewrite'){
+      var sowOut2 = document.getElementById('sow-output');
+      if(!sowOut2 || !sowOut2.classList.contains('show')) return;
       var btns = document.querySelectorAll('button');
       for(var i=0; i<btns.length; i++){
         if(btns[i].textContent.indexOf('Rewrite with AI') > -1){ btns[i].click(); break; }
       }
+    }
+
+    if(d.action === 'scrollToExport'){
+      var sa = document.querySelector('.sow-actions');
+      if(sa) sa.scrollIntoView({behavior:'smooth'});
     }
   });
 
@@ -2357,10 +2390,9 @@ app.get('/demo', (_req, res) => {
 body{font-family:'Sora',sans-serif;background:#0a0a0a;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:48px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;flex-shrink:0}
 .tb-logo{font-size:14px;font-weight:700}.tb-logo em{color:#22c55e;font-style:normal}
-.tb-dots{display:flex;gap:6px}
-.tb-dot{width:8px;height:8px;border-radius:50%;background:#222;transition:background .3s}
-.tb-dot.done{background:#166534}
-.tb-dot.cur{background:#22c55e}
+.tb-dots{display:flex;gap:5px;flex-wrap:wrap;max-width:420px;justify-content:center}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:#222;transition:background .3s;flex-shrink:0}
+.tb-dot.done{background:#166534}.tb-dot.cur{background:#22c55e}
 .tb-right{display:flex;align-items:center;gap:14px}
 .tb-timer{font-size:16px;font-weight:800;color:#22c55e;font-variant-numeric:tabular-nums}
 .tb-count{font-size:11px;color:#444}
@@ -2369,19 +2401,18 @@ body{font-family:'Sora',sans-serif;background:#0a0a0a;color:#fff;height:100vh;di
 .iframe-wrap{flex:1;position:relative;overflow:hidden}
 iframe{width:100%;height:100%;border:none;background:#fff}
 .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:#0a0a0a}
-.ph-icon{font-size:64px}
-.ph-title{font-size:26px;font-weight:800;letter-spacing:-.5px}
-.ph-body{font-size:14px;color:#555;max-width:400px;text-align:center;line-height:1.7}
-.ph-link{display:inline-block;margin-top:8px;padding:12px 24px;background:#22c55e;color:#000;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;transition:opacity .15s}
+.ph-icon{font-size:64px}.ph-title{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.ph-body{font-size:14px;color:#555;max-width:440px;text-align:center;line-height:1.75}
+.ph-link{display:inline-block;margin-top:8px;padding:12px 28px;background:#22c55e;color:#000;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;transition:opacity .15s}
 .ph-link:hover{opacity:.88}
-.bottombar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:72px;background:#0d0d0d;border-top:1px solid #1a1a1a;flex-shrink:0;gap:20px}
-.step-info{display:flex;align-items:center;gap:14px;min-width:0}
-.step-icon-wrap{font-size:28px;flex-shrink:0}
+.bottombar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:76px;background:#0d0d0d;border-top:1px solid #1a1a1a;flex-shrink:0;gap:20px}
+.step-info{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+.step-icon-wrap{font-size:26px;flex-shrink:0}
 .step-text{min-width:0}
-.step-title{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.step-desc{font-size:12px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.step-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.step-desc{font-size:12px;color:#555;margin-top:3px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nav{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.nav-btn{padding:9px 20px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #2a2a2a;background:#161616;color:#fff;transition:all .15s;white-space:nowrap}
+.nav-btn{padding:9px 22px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #2a2a2a;background:#161616;color:#fff;transition:all .15s;white-space:nowrap}
 .nav-btn:hover:not(:disabled){background:#1e1e1e}
 .nav-btn.p{background:#22c55e;color:#000;border-color:#22c55e}
 .nav-btn.p:hover{opacity:.9}
@@ -2416,51 +2447,103 @@ iframe{width:100%;height:100%;border:none;background:#fff}
     </div>
   </div>
   <div class="nav">
-    <button class="nav-btn" id="btn-prev" onclick="go(-1)">&#8592; Prev</button>
-    <button class="nav-btn p" id="btn-next" onclick="go(1)">Next &#8594;</button>
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)">\u2190 Prev</button>
+    <button class="nav-btn p" id="btn-next" onclick="go(1)">Next \u2192</button>
   </div>
 </div>
 <script>
 var steps = [
-  {icon:'\uD83C\uDF10', title:'The EX3 SmartRecruiters Platform', desc:'The complete enablement and implementation guide — built by EX3, for EX3', url:'/', auto:[]},
-  {icon:'\uD83D\uDC65', title:'Role-Based Training', desc:'Every user gets content built for their role — no irrelevant information, no wasted time', url:'/', auto:[
-    {d:900,  a:{action:'setRole',role:'rec'}},
-    {d:2600, a:{action:'setRole',role:'hm'}},
-    {d:4300, a:{action:'setRole',role:'cand'}},
-    {d:6000, a:{action:'setRole',role:'adm'}},
-    {d:7700, a:{action:'setRole',role:'rec'}}
-  ]},
-  {icon:'\uD83E\uDD16', title:'AI Assistant', desc:'Ask anything about SmartRecruiters — exact answers with navigation paths, powered by your own documentation', url:'/', auto:[
-    {d:700,  a:{action:'openAI'}},
-    {d:1500, a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}
-  ]},
-  {icon:'\uD83D\uDCAD', title:'AI Memory', desc:'Full conversation context — ask follow-ups without repeating yourself, like talking to a real consultant', url:'/', auto:[
-    {d:500,  a:{action:'openAI'}},
-    {d:1300, a:{action:'typeAndAsk',query:'What about for a volume hiring campaign with 500 applicants?'}}
-  ]},
-  {icon:'\uD83D\uDCF1', title:'WhatsApp Bot', desc:'24/7 AI support on WhatsApp — no app, no login, works with voice messages too', url:null,
-   ph:{icon:'\uD83D\uDCF1', title:'WhatsApp Bot', body:'The same AI available on WhatsApp, any time, any device. Send a message and get an answer in seconds. Handles voice messages too.', link:{label:'Message the Bot on WhatsApp \u2197',url:'https://wa.me/14155238886'}}, auto:[]},
-  {icon:'\uD83E\uDDED', title:'Consultant Portal', desc:'The complete implementation methodology — every phase, every deliverable, every checklist', url:'/consultant', auto:[
-    {d:900,  a:{action:'showPhases'}},
-    {d:1800, a:{action:'openPhase',index:0}},
-    {d:3400, a:{action:'openPhase',index:1}}
-  ]},
-  {icon:'\uD83D\uDCDD', title:'SOW Builder', desc:'Complete a full Statement of Work automatically — all 19 questions answered, generated in under 2 minutes', url:'/consultant/sow-builder', auto:[
-    {d:700, a:{action:'demoFill'}}
-  ]},
-  {icon:'\u2728', title:'AI SOW Rewrite', desc:'GPT-4 rewrites your draft into polished, client-ready consulting language — streamed in real time', url:'/consultant/sow-builder', auto:[
-    {d:600,  a:{action:'demoFill'}},
-    {d:5000, a:{action:'triggerAIRewrite'}}
-  ]},
-  {icon:'\uD83D\uDCE7', title:'Export & Email', desc:'Export to Word or send directly to the client by email — without ever leaving the platform', url:'/consultant/sow-builder', auto:[
-    {d:600, a:{action:'demoFill'}}
-  ]},
-  {icon:'\uD83D\uDCAC', title:'Conversation History', desc:'Every session stored as a full thread — searchable and replayable, like ChatGPT', url:null,
-   ph:{icon:'\uD83D\uDCAC', title:'Conversation History', body:'Every web chat and WhatsApp session stored as a full conversation thread. Search by keyword or click any thread to replay it.', link:{label:'Open Conversation History \u2197',url:'/conversations'}}, auto:[]},
-  {icon:'\uD83D\uDE80', title:"What's Next", desc:"Version 1, built in weeks. Infinitely expandable. The floor is open — what would you build next?", url:'/', auto:[]}
+  {
+    icon:'\uD83C\uDF10', title:'The EX3 SmartRecruiters Platform',
+    desc:'A complete enablement and implementation system — training, AI support, consultant tools, and SOW generation all in one place.',
+    url:'/', auto:[]
+  },
+  {
+    icon:'\uD83D\uDCCB', title:'Recruiter Training',
+    desc:'Recruiters see their own dedicated training track — posting jobs, managing candidates, interview coordination, and offer management step by step.',
+    url:'/', auto:[{d:700, a:{action:'setRole',role:'rec'}}]
+  },
+  {
+    icon:'\uD83D\uDC54', title:'Hiring Manager Training',
+    desc:'Hiring managers get a completely different view — job approvals, candidate review, interview feedback, and decisions. No irrelevant content cluttering their experience.',
+    url:'/', auto:[{d:700, a:{action:'setRole',role:'hm'}}]
+  },
+  {
+    icon:'\uD83D\uDC64', title:'Candidate & Admin Training',
+    desc:'Candidates get guidance on applying and tracking their application. Admins see full system configuration, user management, and reporting — one platform, every audience.',
+    url:'/', auto:[
+      {d:700,  a:{action:'setRole',role:'cand'}},
+      {d:4000, a:{action:'setRole',role:'adm'}}
+    ]
+  },
+  {
+    icon:'\uD83E\uDD16', title:'AI Assistant — Instant Answers',
+    desc:'Any user can ask anything about SmartRecruiters and get an exact, sourced answer with navigation paths — no ticket, no waiting, no Googling.',
+    url:'/', auto:[
+      {d:700,  a:{action:'openAI'}},
+      {d:1500, a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}
+    ]
+  },
+  {
+    icon:'\uD83D\uDCAD', title:'AI Memory — Full Context',
+    desc:'The AI remembers everything said in the session. Ask follow-up questions without repeating yourself — exactly like talking to a real consultant who was in the room.',
+    url:'/', auto:[
+      {d:600,  a:{action:'openAI'}},
+      {d:1400, a:{action:'typeAndAsk',query:'What about for a volume hiring campaign with 500 applicants?'}}
+    ]
+  },
+  {
+    icon:'\uD83D\uDCF1', title:'WhatsApp AI Bot',
+    desc:'The same AI is available 24/7 on WhatsApp — no app download, no login required. Candidates and recruiters can ask questions from any device, including via voice message.',
+    url:null,
+    ph:{icon:'\uD83D\uDCF1', title:'WhatsApp AI Bot',
+        body:'Scan or click to message the EX3 AI on WhatsApp. Ask questions, get answers, send voice notes — no app download or login needed. Available around the clock.',
+        link:{label:'Message the Bot on WhatsApp \u2197',url:'https://wa.me/14155238886'}},
+    auto:[]
+  },
+  {
+    icon:'\uD83E\uDDED', title:'Consultant Portal — Implementation Phases',
+    desc:'The full SmartRecruiters implementation methodology — every phase, every deliverable, every checklist — structured so any consultant can pick it up and run.',
+    url:'/consultant', auto:[
+      {d:800,  a:{action:'showPhases'}},
+      {d:1700, a:{action:'openPhase',index:0}},
+      {d:3500, a:{action:'openPhase',index:1}},
+      {d:5300, a:{action:'openPhase',index:2}},
+      {d:7100, a:{action:'openPhase',index:3}}
+    ]
+  },
+  {
+    icon:'\uD83D\uDCDD', title:'SOW Builder — All 19 Steps Live',
+    desc:'Watch the full Statement of Work wizard fill itself in automatically — every question answered, every option selected, the SOW generated at the end.',
+    url:'/consultant/sow-builder', auto:[{d:500, a:{action:'demoWalkSOW'}}]
+  },
+  {
+    icon:'\u2728', title:'AI SOW Rewrite',
+    desc:'One click and GPT-4 rewrites the draft into polished, client-ready consulting language — streamed word by word, right in the browser.',
+    url:'/consultant/sow-builder', auto:[{d:1000, a:{action:'triggerAIRewrite'}}]
+  },
+  {
+    icon:'\uD83D\uDCE7', title:'Export to Word & Email to Client',
+    desc:'The finished SOW can be downloaded as a formatted Word document or emailed directly to the client — without leaving the platform.',
+    url:'/consultant/sow-builder', auto:[{d:800, a:{action:'scrollToExport'}}]
+  },
+  {
+    icon:'\uD83D\uDCAC', title:'Conversation History',
+    desc:'Every web chat and WhatsApp session is stored as a full thread — searchable by keyword, filterable by source, replayable in full. Like ChatGPT, but for your implementation.',
+    url:null,
+    ph:{icon:'\uD83D\uDCAC', title:'Conversation History',
+        body:'Every AI conversation — web or WhatsApp — is captured as a full thread. Search, filter, and replay any session. Nothing gets lost.',
+        link:{label:'Open Conversation History \u2197',url:'/conversations'}},
+    auto:[]
+  },
+  {
+    icon:'\uD83D\uDE80', title:"What's Next",
+    desc:'Version 1 — built in weeks. Role training, AI assistant, WhatsApp bot, consultant portal, SOW builder, conversation history. The foundation is laid. What do you want to build on it?',
+    url:'/', auto:[{d:600, a:{action:'setRole',role:'rec'}}]
+  }
 ];
 
-var cur = 0, startTime = Date.now(), autoTimers = [];
+var cur = 0, prevCur = -1, startTime = Date.now(), autoTimers = [];
 
 setInterval(function(){
   var s = Math.floor((Date.now()-startTime)/1000);
@@ -2469,7 +2552,6 @@ setInterval(function(){
 }, 1000);
 
 function renderDots(){
-  var n = steps.length;
   document.getElementById('dots').innerHTML = steps.map(function(_,i){
     var cls = i<cur?'tb-dot done':i===cur?'tb-dot cur':'tb-dot';
     return '<div class="'+cls+'"></div>';
@@ -2478,8 +2560,7 @@ function renderDots(){
 
 function render(){
   var s = steps[cur];
-  var pct = Math.round(((cur+1)/steps.length)*100);
-  document.getElementById('prog').style.width = pct+'%';
+  document.getElementById('prog').style.width = Math.round(((cur+1)/steps.length)*100)+'%';
   document.getElementById('tb-count').textContent = (cur+1)+' / '+steps.length;
   document.getElementById('btn-prev').disabled = cur===0;
   document.getElementById('btn-next').textContent = cur===steps.length-1 ? 'Finish \u2713' : 'Next \u2192';
@@ -2487,27 +2568,31 @@ function render(){
   document.getElementById('s-title').textContent = s.title;
   document.getElementById('s-desc').textContent = s.desc;
   renderDots();
-
   clearAuto();
 
   if(s.url){
+    var sameUrl = prevCur >= 0 && steps[prevCur] && steps[prevCur].url === s.url;
     document.getElementById('placeholder').style.display = 'none';
     document.getElementById('liveFrame').style.display = 'block';
-    document.getElementById('liveFrame').src = s.url;
-    if(s.auto && s.auto.length){
-      document.getElementById('liveFrame').onload = function(){
-        s.auto.forEach(function(cmd){
-          var t = setTimeout(function(){ postToFrame(cmd.a); }, cmd.d);
-          autoTimers.push(t);
-        });
-        document.getElementById('liveFrame').onload = null;
-      };
+    if(!sameUrl){
+      document.getElementById('liveFrame').src = s.url;
+      if(s.auto && s.auto.length){
+        document.getElementById('liveFrame').onload = function(){
+          s.auto.forEach(function(cmd){
+            autoTimers.push(setTimeout(function(){ postToFrame(cmd.a); }, cmd.d));
+          });
+          document.getElementById('liveFrame').onload = null;
+        };
+      }
+    } else {
+      s.auto.forEach(function(cmd){
+        autoTimers.push(setTimeout(function(){ postToFrame(cmd.a); }, cmd.d));
+      });
     }
   } else {
     document.getElementById('liveFrame').style.display = 'none';
     var ph = s.ph || {};
-    var el = document.getElementById('placeholder');
-    el.style.display = 'flex';
+    document.getElementById('placeholder').style.display = 'flex';
     document.getElementById('ph-icon').textContent = ph.icon || s.icon;
     document.getElementById('ph-title').textContent = ph.title || s.title;
     document.getElementById('ph-body').textContent = ph.body || '';
@@ -2515,11 +2600,11 @@ function render(){
     if(ph.link){ lnk.style.display='inline-block'; lnk.textContent=ph.link.label; lnk.href=ph.link.url; }
     else { lnk.style.display='none'; }
   }
+  prevCur = cur;
 }
 
 function postToFrame(msg){
-  var fr = document.getElementById('liveFrame');
-  try{ fr.contentWindow.postMessage(Object.assign({type:'EX3_DEMO'},msg),'*'); } catch(e){}
+  try{ document.getElementById('liveFrame').contentWindow.postMessage(Object.assign({type:'EX3_DEMO'},msg),'*'); }catch(e){}
 }
 
 function clearAuto(){
@@ -2533,7 +2618,7 @@ function go(dir){
 }
 
 document.addEventListener('keydown', function(e){
-  if(e.key==='ArrowRight') go(1);
+  if(e.key==='ArrowRight'||e.key===' ') go(1);
   if(e.key==='ArrowLeft') go(-1);
 });
 
