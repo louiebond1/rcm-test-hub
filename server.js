@@ -2125,7 +2125,7 @@ Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
 </html>`);
 });
 
-// Demo presenter mode
+// Demo presenter mode — split screen with live product in iframe
 app.get('/demo', (_req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -2135,485 +2135,267 @@ app.get('/demo', (_req, res) => {
 <title>EX3 SmartRecruiters — Live Demo</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Sora',sans-serif; background:#0a0a0a; color:#fff; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-  .topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; border-bottom:1px solid #1e1e1e; background:#0f0f0f; flex-shrink:0; }
-  .topbar-logo { font-size:17px; font-weight:700; letter-spacing:-0.5px; }
-  .topbar-logo span { color:#22c55e; }
-  .topbar-meta { display:flex; align-items:center; gap:24px; }
-  .step-counter { font-size:13px; color:#666; }
-  .step-counter strong { color:#fff; }
-  .timer { font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; color:#22c55e; letter-spacing:-0.5px; }
-  .progress-bar { height:3px; background:#1a1a1a; flex-shrink:0; }
-  .progress-fill { height:100%; background:#22c55e; transition:width 0.4s ease; }
-  .main { display:flex; flex:1; overflow:hidden; }
-  .sidebar { width:240px; background:#0d0d0d; border-right:1px solid #1a1a1a; overflow-y:auto; flex-shrink:0; padding:12px 0; }
-  .sidebar-item { padding:9px 18px; font-size:11.5px; color:#444; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:10px; border-left:3px solid transparent; }
-  .sidebar-item:hover { color:#888; background:#111; }
-  .sidebar-item.active { color:#fff; background:#131313; border-left-color:#22c55e; }
-  .sidebar-item.done { color:#3a3a3a; }
-  .sidebar-num { font-size:10px; color:#333; font-weight:700; min-width:20px; }
-  .sidebar-item.active .sidebar-num { color:#22c55e; }
-  .sidebar-item.done .sidebar-num { color:#22c55e; }
-  .sidebar-check { margin-left:auto; color:#22c55e; font-size:10px; }
-  .content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-  .step-content { flex:1; padding:44px 52px; overflow-y:auto; display:flex; gap:44px; }
-  .step-left { flex:1; min-width:0; }
-  .step-tag { font-size:10.5px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:#22c55e; margin-bottom:14px; }
-  .step-title { font-size:36px; font-weight:800; line-height:1.1; margin-bottom:10px; letter-spacing:-1px; }
-  .step-subtitle { font-size:14.5px; color:#777; margin-bottom:32px; line-height:1.65; }
-  .talking-points { list-style:none; display:flex; flex-direction:column; gap:14px; }
-  .talking-points li { display:flex; align-items:flex-start; gap:14px; font-size:14.5px; line-height:1.65; color:#bbb; }
-  .dot { width:7px; height:7px; background:#22c55e; border-radius:50%; flex-shrink:0; margin-top:9px; }
-  .step-right { width:300px; flex-shrink:0; display:flex; flex-direction:column; gap:14px; }
-  .card { background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:20px; }
-  .card h3 { font-size:10px; font-weight:700; color:#444; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:14px; }
-  .action-btn { display:block; width:100%; padding:13px 18px; background:#22c55e; color:#000; border:none; border-radius:9px; font-family:inherit; font-size:13.5px; font-weight:700; cursor:pointer; text-align:center; text-decoration:none; transition:opacity 0.15s; margin-bottom:8px; }
-  .action-btn:last-child { margin-bottom:0; }
-  .action-btn:hover { opacity:0.88; }
-  .action-btn.sec { background:#1a1a1a; color:#ccc; border:1px solid #2a2a2a; }
-  .no-action { font-size:12.5px; color:#3a3a3a; line-height:1.6; }
-  .time-val { font-size:28px; font-weight:800; color:#22c55e; letter-spacing:-1px; }
-  .time-label { font-size:11px; color:#444; margin-top:3px; }
-  .note-text { font-size:12.5px; color:#555; line-height:1.7; font-style:italic; }
-  .bottombar { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; border-top:1px solid #1a1a1a; background:#0d0d0d; flex-shrink:0; }
-  .nav-btn { padding:10px 22px; border-radius:8px; font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer; transition:all 0.15s; border:1px solid #2a2a2a; background:#161616; color:#fff; }
-  .nav-btn:hover:not(:disabled) { background:#1e1e1e; }
-  .nav-btn.primary { background:#22c55e; color:#000; border-color:#22c55e; }
-  .nav-btn.primary:hover { opacity:0.9; }
-  .nav-btn:disabled { opacity:0.25; cursor:not-allowed; }
-  .kbd-hint { font-size:11.5px; color:#333; }
-  .kbd { background:#141414; border:1px solid #2a2a2a; border-radius:4px; padding:2px 7px; font-size:10.5px; color:#555; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:#0a0a0a;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:16px;padding:10px 20px;background:#0d0d0d;border-bottom:1px solid #1e1e1e;flex-shrink:0}
+.tb-logo{font-size:15px;font-weight:700;white-space:nowrap}.tb-logo span{color:#22c55e}
+.tb-step{font-size:13px;color:#555;flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-step strong{color:#ccc}
+.tb-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tb-timer{font-size:18px;font-weight:800;color:#22c55e;font-variant-numeric:tabular-nums;letter-spacing:-0.5px}
+.toggle-btn{padding:7px 14px;border-radius:7px;border:1px solid #2a2a2a;background:#161616;color:#666;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.toggle-btn:hover,.toggle-btn.on{color:#fff;border-color:#22c55e;background:#0a1f10;color:#22c55e}
+.progress-bar{height:2px;background:#1a1a1a;flex-shrink:0}
+.progress-fill{height:100%;background:#22c55e;transition:width .4s}
+.layout{display:flex;flex:1;overflow:hidden}
+.notes-panel{width:320px;background:#0d0d0d;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .3s cubic-bezier(.4,0,.2,1)}
+.notes-panel.hidden{width:0;border:none}
+.np-inner{width:320px;display:flex;flex-direction:column;height:100%;overflow:hidden}
+.np-body{flex:1;overflow-y:auto;padding:20px 16px}
+.np-tag{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#22c55e;margin-bottom:10px}
+.np-title{font-size:19px;font-weight:800;line-height:1.2;margin-bottom:8px;letter-spacing:-.5px}
+.np-sub{font-size:12px;color:#666;margin-bottom:16px;line-height:1.6}
+.np-points{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.np-points li{display:flex;gap:10px;font-size:12px;color:#bbb;line-height:1.6}
+.npdot{width:6px;height:6px;background:#22c55e;border-radius:50%;flex-shrink:0;margin-top:7px}
+.np-note{background:#111;border:1px solid #1e1e1e;border-radius:9px;padding:12px;font-size:11px;color:#555;line-height:1.65;font-style:italic}
+.np-actions{padding:12px 16px;border-top:1px solid #1a1a1a;display:flex;flex-direction:column;gap:7px;flex-shrink:0}
+.np-actions-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:#333;text-transform:uppercase;margin-bottom:2px}
+.act-btn{display:block;width:100%;padding:9px 12px;background:#1a1a1a;color:#ccc;border:1px solid #2a2a2a;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;text-decoration:none}
+.act-btn:hover{background:#222;color:#fff;border-color:#444}
+.live-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.live-bar{padding:7px 16px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.live-url{font-size:11px;color:#444;font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-iframe{flex:1;border:none;background:#fff}
+.live-placeholder{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#333;padding:40px;text-align:center}
+.live-placeholder .ph-icon{font-size:52px}
+.live-placeholder h2{font-size:20px;font-weight:700;color:#555}
+.live-placeholder p{font-size:13px;color:#3a3a3a;line-height:1.7;max-width:380px}
+.bottombar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid #1a1a1a;background:#0d0d0d;flex-shrink:0}
+.nav-btn{padding:9px 20px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid #2a2a2a;background:#161616;color:#fff}
+.nav-btn:hover:not(:disabled){background:#1e1e1e}
+.nav-btn.primary{background:#22c55e;color:#000;border-color:#22c55e}
+.nav-btn.primary:hover{opacity:.9}
+.nav-btn:disabled{opacity:.25;cursor:not-allowed}
+.kbd-hint{font-size:11px;color:#2a2a2a;text-align:center}
+.kbd{background:#141414;border:1px solid #252525;border-radius:4px;padding:2px 6px;font-size:10px;color:#3a3a3a}
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div class="topbar-logo">EX3 <span>SmartRecruiters</span> Platform</div>
-  <div class="topbar-meta">
-    <div class="step-counter">Step <strong id="snum">1</strong> of <strong>14</strong></div>
-    <div class="timer" id="timer">00:00</div>
+  <div class="tb-logo">EX3 <span>SmartRecruiters</span></div>
+  <div class="tb-step">Step <strong id="snum">1</strong> of <strong>13</strong> &mdash; <strong id="stitle"></strong></div>
+  <div class="tb-right">
+    <div class="tb-timer" id="timer">00:00</div>
+    <button class="toggle-btn on" id="notesToggle" onclick="toggleNotes()">&#128196; Notes</button>
   </div>
 </div>
-<div class="progress-bar"><div class="progress-fill" id="prog" style="width:7%"></div></div>
-<div class="main">
-  <div class="sidebar" id="sidebar"></div>
-  <div class="content">
-    <div class="step-content" id="step-content"></div>
-    <div class="bottombar">
-      <button class="nav-btn" id="btn-prev" onclick="go(-1)">&#8592; Previous</button>
-      <div class="kbd-hint"><span class="kbd">&#8592;</span> <span class="kbd">&#8594;</span> arrow keys</div>
-      <button class="nav-btn primary" id="btn-next" onclick="go(1)">Next &#8594;</button>
+<div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+<div class="layout">
+  <div class="notes-panel" id="notesPanel">
+    <div class="np-inner">
+      <div class="np-body" id="np-body"></div>
+      <div class="np-actions" id="np-actions" style="display:none"></div>
     </div>
   </div>
+  <div class="live-panel">
+    <div class="live-bar">
+      <span class="live-dot"></span>
+      <span class="live-url" id="live-url">Loading...</span>
+    </div>
+    <iframe class="live-iframe" id="live-iframe" src="/"></iframe>
+    <div class="live-placeholder" id="live-placeholder" style="display:none">
+      <div class="ph-icon" id="ph-icon"></div>
+      <h2 id="ph-title"></h2>
+      <p id="ph-body"></p>
+    </div>
+  </div>
+</div>
+<div class="bottombar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)">&#8592; Previous</button>
+  <div class="kbd-hint"><span class="kbd">&#8592;</span> <span class="kbd">&#8594;</span> arrows &nbsp;&bull;&nbsp; <span class="kbd">N</span> notes &nbsp;&bull;&nbsp; <span class="kbd">F</span> fullscreen</div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Next &#8594;</button>
 </div>
 <script>
 const steps = [
   {
-    tag: 'Introduction',
-    title: 'The Problem We Solved',
+    tag: 'Introduction', title: 'The Problem We Solved',
     subtitle: 'Every EX3 consultant was starting from scratch. No standard training, no consistent SOWs, no single source of truth.',
-    points: [
-      'New consultants had no standardised onboarding — quality depended on who they shadowed',
-      'SOW writing took hours and produced inconsistent, unprofessional documents every time',
-      'Recruiters and hiring managers had nowhere to go when they got stuck on the platform',
-      'Consultant time was being spent answering the same basic questions over and over again',
-    ],
-    time: '2 min',
+    points: ['New consultants had no standardised onboarding — quality depended on who they shadowed', 'SOW writing took hours and produced inconsistent documents every time', 'Recruiters and hiring managers had nowhere to go when stuck on the platform', 'Consultant time was spent answering the same basic questions over and over'],
     note: 'Set the scene. Make it relatable — everyone in this room has felt this pain at some point.',
-    actions: [],
+    url: '/', actions: []
   },
   {
-    tag: 'The Platform',
-    title: 'One Platform. Everything in One Place.',
+    tag: 'The Platform', title: 'One Platform. Everything in One Place.',
     subtitle: 'A live, always-on enablement guide built specifically for SmartRecruiters — by EX3, for EX3.',
-    points: [
-      'Accessible from any device, anywhere — no login, no install, no friction whatsoever',
-      'Covers every role in the process: Recruiters, Hiring Managers, Candidates, and Admins',
-      "Built on EX3's own SmartRecruiters knowledge — not generic vendor documentation",
-      'Hosted on Railway, auto-deploys from GitHub — updates are live within minutes of a change',
-    ],
-    time: '3 min',
-    note: 'Open the main guide now. Let them take in the layout and design before you start clicking.',
-    actions: [{ label: 'Open the Guide', url: '/' }],
+    points: ['Accessible from any device, anywhere — no login, no install, no friction', 'Covers every role in the process: Recruiters, Hiring Managers, Candidates, and Admins', "Built on EX3's own SmartRecruiters knowledge — not generic vendor documentation", 'Hosted on Railway, auto-deploys from GitHub — updates are live within minutes'],
+    note: 'Let them take in the layout and design before you start clicking around.',
+    url: '/', actions: [{label: 'Open the Guide', url: '/'}]
   },
   {
-    tag: 'Role-Based Training',
-    title: 'Tailored Training for Every User Type',
-    subtitle: 'Recruiters, Hiring Managers, Candidates, and Admins all see content built specifically for them.',
-    points: [
-      'Recruiters: posting jobs, managing applications, candidate comms, pipeline management',
-      'Hiring Managers: reviewing candidates, approving roles, scheduling interviews without recruiter help',
-      'Candidates: what to expect, how to apply, checking application status',
-      'Admins: system configuration, user management, permissions, custom fields, reporting',
-    ],
-    time: '3 min',
-    note: 'Click each button to jump straight to that role tab. Let them see how the content shifts for each audience.',
-    actions: [
-      { label: 'Recruiter Tab', url: '/#rec' },
-      { label: 'Hiring Manager Tab', url: '/#hm' },
-      { label: 'Candidate Tab', url: '/#cand' },
-      { label: 'Admin Tab', url: '/#adm' },
-    ],
+    tag: 'Role-Based Training', title: 'Tailored Training for Every User',
+    subtitle: 'Recruiters, Hiring Managers, Candidates, and Admins all get content built specifically for them.',
+    points: ['Recruiters: posting jobs, managing applications, candidate comms, pipeline management', 'Hiring Managers: reviewing, approving roles, scheduling interviews without recruiter help', 'Candidates: what to expect, how to apply, checking application status', 'Admins: system configuration, user management, permissions, custom fields, reporting'],
+    note: 'Click each role button to switch tabs live. Watch the content shift completely for each audience.',
+    url: '/#rec', actions: [{label: 'Recruiter Tab', url: '/#rec'}, {label: 'Hiring Manager Tab', url: '/#hm'}, {label: 'Candidate Tab', url: '/#cand'}, {label: 'Admin Tab', url: '/#adm'}]
   },
   {
-    tag: 'AI Assistant',
-    title: 'An AI That Actually Knows SmartRecruiters',
-    subtitle: 'Not ChatGPT. Not Google. An AI trained on our documentation that answers with exact platform navigation.',
-    points: [
-      'Ask it anything — it pulls answers directly from our SmartRecruiters knowledge base',
-      'Answers include exact navigation paths: "go to Settings \u2192 Configuration \u2192 Hiring Process"',
-      'Handles complex questions: workflow setup, permission levels, integration troubleshooting',
-      'Cuts support time dramatically — clients and new consultants get accurate answers instantly',
-    ],
-    time: '4 min',
-    note: 'Ask it live: "How do I set up a hiring process in SmartRecruiters?" Watch it respond with steps.',
-    actions: [{ label: 'Open AI Assistant', url: '/#ai' }],
+    tag: 'AI Assistant', title: 'An AI That Actually Knows SmartRecruiters',
+    subtitle: 'Not ChatGPT. Not Google. An AI trained on our documentation with exact platform navigation.',
+    points: ['Ask anything — it pulls from our actual SmartRecruiters knowledge base', 'Answers include exact navigation paths: Settings → Configuration → Hiring Process', 'Handles complex questions: workflow setup, permissions, integration troubleshooting', 'Cuts support time dramatically — clients and consultants get accurate answers instantly'],
+    note: "Ask live: 'How do I set up a hiring process in SmartRecruiters?' Watch it answer with exact steps.",
+    url: '/#ai', actions: [{label: 'Open AI Assistant', url: '/#ai'}]
   },
   {
-    tag: 'AI Memory',
-    title: 'It Remembers the Whole Conversation',
-    subtitle: 'The AI maintains full context across your session — like talking to a real consultant, not a search box.',
-    points: [
-      'Ask follow-up questions without repeating yourself — it knows exactly what you were discussing',
-      'Example: "What about for a seasonal hiring campaign?" — it understands the previous context',
-      'Each web chat session is logged with its full conversation thread for later review',
-      'WhatsApp users get persistent memory across messages — it remembers you between conversations',
-    ],
-    time: '2 min',
-    note: "Ask a follow-up right after the previous demo. 'What if it's a volume hiring role?' Show it retains context.",
-    actions: [{ label: 'Open AI Assistant', url: '/#ai' }],
+    tag: 'AI Memory', title: 'It Remembers the Whole Conversation',
+    subtitle: 'Full context across the session — like a real consultant, not a search box.',
+    points: ['Ask follow-ups without repeating yourself — it knows what you were discussing', "Example: 'What about for a seasonal hiring campaign?' — it understands the context", 'Each session logged with its full conversation thread for later review', 'WhatsApp users get persistent memory across messages between conversations'],
+    note: "Ask a follow-up immediately: 'What if it's a volume hiring role?' Show it retains full context.",
+    url: '/#ai', actions: [{label: 'Open AI Assistant', url: '/#ai'}]
   },
   {
-    tag: 'Customisable Workflows',
-    title: 'Configuring Hiring Workflows for Every Client',
-    subtitle: 'Every client hires differently. The guide walks consultants through building the right workflows from scratch.',
-    points: [
-      'Step-by-step guidance on building multi-stage hiring processes inside SmartRecruiters',
-      'Covers different workflow types: office roles, volume/warehouse, graduate schemes, executive search',
-      'Explains interview stages, offer management stages, and linking workflows to job templates',
-      'Means every consultant configures workflows consistently — no more guessing or variation',
-    ],
-    time: '3 min',
-    note: 'Navigate to the hiring workflow section in the Admin tab. Show the depth and specificity.',
-    actions: [{ label: 'Admin Tab \u2014 Workflows', url: '/#adm' }],
+    tag: 'Role Onboarding', title: 'It Asks Who You Are First',
+    subtitle: 'First-time visitors are identified and routed straight to their relevant content.',
+    points: ['On first open, the guide asks: Recruiter, Hiring Manager, Candidate, or Admin?', 'The guide remembers the answer — next visit lands straight in their section', 'No wading through irrelevant content — each role sees only what matters to them', 'Open in incognito to show the full first-time onboarding experience'],
+    note: 'Open the guide fresh in incognito. Walk through selecting a role and landing in the right content.',
+    url: '/', actions: [{label: 'Open Guide (Fresh Tab)', url: '/'}]
   },
   {
-    tag: 'Role Onboarding',
-    title: 'It Asks Who You Are First',
-    subtitle: 'When someone opens the guide for the first time, it identifies who they are and takes them straight to the right content.',
-    points: [
-      'First-time visitors are asked: are you a Recruiter, Hiring Manager, Candidate, or Admin?',
-      'The guide remembers their answer — next time they open it, they land straight in their section',
-      'No wading through irrelevant content — a recruiter never sees admin setup guides',
-      'Open the guide in a private/incognito window to show the full first-time experience',
-    ],
-    time: '2 min',
-    note: 'Open the guide in an incognito tab so the onboarding flow triggers fresh. Walk through selecting a role.',
-    actions: [{ label: 'Open Guide (Fresh)', url: '/' }],
+    tag: 'WhatsApp Bot', title: '24/7 AI Support on WhatsApp',
+    subtitle: 'The same AI, available on any phone, any time — no app download, no login.',
+    points: ['Send a WhatsApp message and the AI responds instantly', 'Handles voice messages — speak a question, get a written answer back', 'Persistent memory per number — remembers the full conversation history', 'Never goes down, detects greetings, handles off-topic gracefully'],
+    note: 'Click the button to open WhatsApp. Send a live message and show the response on your phone.',
+    url: null, icon: '📱', ph: 'WhatsApp Bot Demo', phbody: 'Click the button below to open WhatsApp and send a message to the EX3 AI. It will respond within seconds. Try asking it something about SmartRecruiters.',
+    actions: [{label: '📱 Message the WhatsApp Bot ↗', url: 'https://wa.me/14155238886', external: true}]
   },
   {
-    tag: 'WhatsApp Bot',
-    title: '24/7 AI Support on WhatsApp',
-    subtitle: 'The same AI assistant, available on any phone, any time — no app download, no login.',
-    points: [
-      'Send a WhatsApp to the number and the AI responds — just like messaging a colleague',
-      'Handles voice messages too — speak your question, get a written answer straight back',
-      'Persistent memory per phone number — it remembers your full conversation history',
-      'Detects greetings, handles off-topic questions gracefully, never goes down',
-    ],
-    time: '3 min',
-    note: 'Send a WhatsApp message live using the button below. Show the response coming in on your phone.',
-    actions: [{ label: 'Message the WhatsApp Bot', url: 'https://wa.me/14155238886' }],
+    tag: 'Consultant Portal', title: 'The Implementation Command Centre',
+    subtitle: 'Everything an EX3 consultant needs to run a flawless SmartRecruiters implementation.',
+    points: ['Phase-by-phase guide: Discovery → Config → Integrations → UAT → Training → Go-Live', 'Role responsibility matrix — who does what and when across every phase', 'Interactive UAT checklist — track sign-off items in real time', 'FAQ covering the most common client questions and escalation paths'],
+    note: 'Walk through a couple of phase cards slowly. The depth of detail will impress.',
+    url: '/consultant', actions: [{label: 'Open Consultant Portal', url: '/consultant'}]
   },
   {
-    tag: 'Consultant Portal',
-    title: 'The Implementation Command Centre',
-    subtitle: 'Everything an EX3 consultant needs to run a flawless SmartRecruiters implementation — one place.',
-    points: [
-      'Full phase-by-phase guide: Discovery \u2192 Configuration \u2192 Integrations \u2192 UAT \u2192 Training \u2192 Go-Live',
-      'Role responsibility matrix — who does what and when across every phase of the engagement',
-      'Interactive UAT checklist — track sign-off items and completion status in real time',
-      'Implementation FAQ covering the most common client questions, blockers, and escalation paths',
-    ],
-    time: '4 min',
-    note: 'Open the Consultant Portal. Walk through a couple of phase cards slowly — the detail will impress.',
-    actions: [{ label: 'Open Consultant Portal', url: '/consultant' }],
+    tag: 'SOW Builder', title: 'A Professional SOW in Under 2 Minutes',
+    subtitle: 'A 12-step wizard from blank page to complete Statement of Work.',
+    points: ['Covers org size, users, workflows, integrations, job boards, career page, migration, training, hypercare, timeline', 'Built-in risk flags — warns automatically if scope is too aggressive for the timeline', 'Consistent professional SOWs every time — no more blank templates or copy-pasting', 'No variation between consultants — every SOW reflects EX3 standards'],
+    note: 'Use Acme Corporation as the client name. Go through all 12 steps live.',
+    url: '/consultant/sow-builder', actions: [{label: 'Launch SOW Builder', url: '/consultant/sow-builder'}]
   },
   {
-    tag: 'SOW Builder',
-    title: 'A Professional SOW in Under 2 Minutes',
-    subtitle: 'A 12-step wizard that takes you from a blank page to a complete Statement of Work.',
-    points: [
-      'Covers everything: org size, users, workflows, integrations, job boards, career page, data migration, training, hypercare, and timeline',
-      'Built-in risk flags — automatically warns if the scope is too aggressive for the chosen timeline',
-      'Produces consistent, professional SOWs every time — language that reflects how EX3 actually implements',
-      'No more blank templates, no more copy-pasting from old SOWs, no more variation between consultants',
-    ],
-    time: '5 min',
-    note: 'Launch the SOW Builder now. Use "Acme Corporation" as the client. Go through all 12 steps live.',
-    actions: [{ label: 'Launch SOW Builder', url: '/consultant/sow-builder' }],
+    tag: 'AI SOW Rewrite', title: 'GPT-4 Polishes Your SOW in Seconds',
+    subtitle: 'One click rewrites your draft in polished, client-ready consulting language.',
+    points: ['Takes the wizard output and rewrites with professional consulting language', 'Streams in real time — watch it write word by word in front of the client', 'Consistent tone, complete structure, nothing missed — every single time', 'Fully editable after — AI gives the head start, you make the final call'],
+    note: "Click 'Rewrite with AI' after generating the SOW. Let it stream fully. Watch the reaction.",
+    url: '/consultant/sow-builder', actions: [{label: 'Open SOW Builder', url: '/consultant/sow-builder'}]
   },
   {
-    tag: 'AI Rewrite',
-    title: 'GPT-4 Polishes Your SOW in Seconds',
-    subtitle: 'One click and AI rewrites your draft in polished, client-ready consulting language.',
-    points: [
-      'Takes the structured SOW output and rewrites it with professional, confident consulting language',
-      'Streams in real time — watch it write, word by word, in front of the client',
-      'Consistent tone, complete structure, nothing missed — every single time',
-      'Fully editable after generation — the AI gives you the head start, you make the final call',
-    ],
-    time: '2 min',
-    note: "Click Rewrite with AI on the generated SOW. Let it stream fully. Watch the room's reaction.",
-    actions: [{ label: 'Open SOW Builder', url: '/consultant/sow-builder' }],
+    tag: 'Export & Email', title: 'From Wizard to Client Inbox — One Click',
+    subtitle: 'Export to Word or email directly to the client without leaving the platform.',
+    points: ['Export as formatted .docx — ready to attach to any email or proposal', "Send directly to the client's email from within the tool — powered by Resend", 'Editable in the browser before sending — no need to re-run the wizard', 'What took hours now takes minutes — discovery call to SOW in the same session'],
+    note: 'Export to Word then email it to someone in the room live. Show it arriving in the inbox.',
+    url: '/consultant/sow-builder', actions: [{label: 'Open SOW Builder', url: '/consultant/sow-builder'}]
   },
   {
-    tag: 'Export & Email',
-    title: 'From Wizard to Client Inbox — One Click',
-    subtitle: 'Export to Word or email directly to the client without ever leaving the platform.',
-    points: [
-      'Export as a formatted .docx — ready to attach to an email or drop into a proposal pack',
-      "Send directly to the client's email address from within the tool — powered by Resend",
-      'Fully editable in the browser before sending — tweak anything without re-running the wizard',
-      'What used to take hours now takes minutes — from discovery call to SOW in the same session',
-    ],
-    time: '2 min',
-    note: 'Export to Word, then email it to someone in the room live. Show it arriving in the inbox.',
-    actions: [{ label: 'Open SOW Builder', url: '/consultant/sow-builder' }],
+    tag: 'Conversation History', title: 'Every Conversation — Fully Searchable',
+    subtitle: 'ChatGPT-style history of every question asked through the platform.',
+    points: ['Every web chat and WhatsApp session stored as a full conversation thread', 'Search by keyword across all past conversations instantly', 'Click any thread to replay it as chat bubbles — question and answer', 'Shows response time and flags uncertain answers for review'],
+    note: 'Navigate to /conversations. Click a thread and walk through a past conversation.',
+    url: null, icon: '💬', ph: 'Conversation History', phbody: 'This page is password-protected. Open /conversations in this iframe by clicking the button, or navigate there directly.',
+    actions: [{label: 'Open Conversation History ↗', url: '/conversations', external: true}]
   },
   {
-    tag: 'Analytics',
-    title: 'See Exactly What Users Are Asking',
-    subtitle: 'Every question through the web chat is logged, searchable, and analysed for quality.',
-    points: [
-      'Track question volume by day, showing usage trends across the platform over time',
-      "Uncertain answer detection — flags responses where the AI wasn't confident so we can improve",
-      'Search by session thread to replay any full conversation from start to finish',
-      'WhatsApp analytics tracked separately — full picture across both support channels',
-    ],
-    time: '3 min',
-    note: 'Open the analytics dashboard. Show the question log, a full thread, and the uncertain answer flags.',
-    actions: [{ label: 'Open Analytics', url: '/analytics' }],
-  },
-  {
-    tag: "What's Next",
-    title: "This Is Version One.",
+    tag: "What's Next", title: 'This Is Version One.',
     subtitle: "Built in a few weeks. Open to the room — what should version two look like?",
-    points: [
-      'Client-facing onboarding portal — give each client their own guided setup experience',
-      'Automated project tracking — sync implementation milestones directly with the SmartRecruiters API',
-      'Full proposal generator — not just the SOW, but pitch decks and business cases',
-      'What would make your implementations easier, faster, or more consistent tomorrow?',
-    ],
-    time: '3 min',
-    note: 'End on energy. This is v1, built fast. Invite ideas. Make it a conversation, not just a presentation.',
-    actions: [],
+    points: ['Client-facing onboarding portal — each client gets their own guided setup experience', 'Automated project tracking — implementation milestones synced to SmartRecruiters API', 'Full proposal generator — pitch decks and business cases, not just SOW', 'What would make your implementations easier, faster, or more consistent tomorrow?'],
+    note: 'End on energy. Invite ideas. Make it a conversation, not just a presentation.',
+    url: '/', actions: []
   },
 ];
 
-let cur = 0;
-const start = Date.now();
-const visited = new Set();
+let cur = 0, notesOpen = true, startTime = Date.now();
 
 setInterval(() => {
-  const s = Math.floor((Date.now() - start) / 1000);
+  const s = Math.floor((Date.now() - startTime) / 1000);
   document.getElementById('timer').textContent =
-    String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+    String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 }, 1000);
 
-function renderSidebar() {
-  document.getElementById('sidebar').innerHTML = steps.map((s, i) => {
-    const cls = i === cur ? 'active' : visited.has(i) ? 'done' : '';
-    const check = visited.has(i) && i !== cur ? '<span class="sidebar-check">&#10003;</span>' : '';
-    return '<div class="sidebar-item ' + cls + '" onclick="jump(' + i + ')">' +
-      '<span class="sidebar-num">' + String(i+1).padStart(2,'0') + '</span>' +
-      '<span style="flex:1">' + s.tag + '</span>' + check + '</div>';
-  }).join('');
+function render() {
+  const s = steps[cur];
+  document.getElementById('prog').style.width = Math.round(((cur + 1) / steps.length) * 100) + '%';
+  document.getElementById('snum').textContent = cur + 1;
+  document.getElementById('stitle').textContent = s.tag;
+  document.getElementById('btn-prev').disabled = cur === 0;
+  document.getElementById('btn-next').textContent = cur === steps.length - 1 ? 'Finish ✓' : 'Next →';
+
+  document.getElementById('np-body').innerHTML =
+    '<div class="np-tag">' + String(cur + 1).padStart(2, '0') + ' / ' + String(steps.length).padStart(2, '0') + ' — ' + s.tag + '</div>' +
+    '<div class="np-title">' + s.title + '</div>' +
+    '<div class="np-sub">' + s.subtitle + '</div>' +
+    '<ul class="np-points">' + s.points.map(p => '<li><span class="npdot"></span><span>' + p + '</span></li>').join('') + '</ul>' +
+    '<div class="np-note">' + s.note + '</div>';
+
+  const actEl = document.getElementById('np-actions');
+  if (s.actions && s.actions.length) {
+    actEl.style.display = 'flex';
+    actEl.innerHTML = '<div class="np-actions-label">Go to feature</div>' +
+      s.actions.map(a => a.external
+        ? '<a class="act-btn" href="' + a.url + '" target="_blank">' + a.label + '</a>'
+        : '<button class="act-btn" onclick="loadUrl(\'' + a.url + '\')">' + a.label + '</button>'
+      ).join('');
+  } else {
+    actEl.style.display = 'none';
+  }
+
+  if (s.url) {
+    document.getElementById('live-iframe').style.display = 'block';
+    document.getElementById('live-placeholder').style.display = 'none';
+    document.getElementById('live-iframe').src = s.url;
+    document.getElementById('live-url').textContent = window.location.origin + s.url;
+  } else {
+    document.getElementById('live-iframe').style.display = 'none';
+    document.getElementById('live-placeholder').style.display = 'flex';
+    document.getElementById('ph-icon').textContent = s.icon || '';
+    document.getElementById('ph-title').textContent = s.ph || s.title;
+    document.getElementById('ph-body').textContent = s.phbody || '';
+    document.getElementById('live-url').textContent = '(external or password-protected)';
+  }
 }
 
-function renderStep() {
-  const s = steps[cur];
-  const pct = Math.round(((cur + 1) / steps.length) * 100);
-  document.getElementById('prog').style.width = pct + '%';
-  document.getElementById('snum').textContent = cur + 1;
-  document.getElementById('btn-prev').disabled = cur === 0;
-  document.getElementById('btn-next').textContent = cur === steps.length - 1 ? 'Finish \u2713' : 'Next \u2192';
-
-  const actHtml = s.actions.length
-    ? s.actions.map(a => '<a class="action-btn" href="' + a.url + '" target="_blank">' + a.label + ' \u2197</a>').join('')
-    : '<p class="no-action">No live action for this step \u2014 focus on the talking points.</p>';
-
-  document.getElementById('step-content').innerHTML =
-    '<div class="step-left">' +
-      '<div class="step-tag">' + String(cur+1).padStart(2,'0') + ' / ' + String(steps.length).padStart(2,'0') + ' \u2014 ' + s.tag + '</div>' +
-      '<div class="step-title">' + s.title + '</div>' +
-      '<div class="step-subtitle">' + s.subtitle + '</div>' +
-      '<ul class="talking-points">' + s.points.map(p => '<li><span class="dot"></span><span>' + p + '</span></li>').join('') + '</ul>' +
-    '</div>' +
-    '<div class="step-right">' +
-      '<div class="card"><h3>Demo Action</h3>' + actHtml + '</div>' +
-      '<div class="card"><h3>Target Time</h3><div class="time-val">' + s.time + '</div><div class="time-label">for this section</div></div>' +
-      '<div class="card"><h3>Presenter Note</h3><p class="note-text">' + s.note + '</p></div>' +
-    '</div>';
-  document.getElementById('step-content').scrollTop = 0;
+function loadUrl(url) {
+  document.getElementById('live-iframe').src = url;
+  document.getElementById('live-url').textContent = window.location.origin + url;
+  document.getElementById('live-iframe').style.display = 'block';
+  document.getElementById('live-placeholder').style.display = 'none';
 }
 
 function go(dir) {
-  visited.add(cur);
   cur = Math.max(0, Math.min(steps.length - 1, cur + dir));
-  renderSidebar(); renderStep();
+  render();
 }
 
-function jump(i) {
-  visited.add(cur);
-  cur = i;
-  renderSidebar(); renderStep();
+function toggleNotes() {
+  notesOpen = !notesOpen;
+  document.getElementById('notesPanel').classList.toggle('hidden', !notesOpen);
+  document.getElementById('notesToggle').classList.toggle('on', notesOpen);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight') go(1);
+  if (e.key === 'ArrowLeft') go(-1);
+  if (e.key === 'n' || e.key === 'N') toggleNotes();
+  if (e.key === 'f' || e.key === 'F') toggleNotes();
 });
 
-renderSidebar(); renderStep();
+render();
 </script>
 </body>
 </html>`);
 });
 
-// Web chatbot analytics page
-app.all('/analytics/web', requirePassword);
-app.get('/analytics/web', (req, res) => {
-  const allLogs = readWebLogs();
-  const search = (req.query.q || '').trim();
-  const logs = search ? allLogs.filter(l => l.threadId === search) : allLogs;
-
-  const total = logs.length;
-  const errors = logs.filter(l => !l.success).length;
-  const uncertain = logs.filter(l => l.uncertain).length;
-  const avgMs = total ? Math.round(logs.reduce((s, l) => s + l.ms, 0) / total) : 0;
-
-  const byDay = {};
-  for (const l of logs) {
-    const day = l.ts.slice(0, 10);
-    byDay[day] = (byDay[day] || 0) + 1;
-  }
-
-  const uniqueThreads = [...new Set(allLogs.map(l => l.threadId))];
-
-  const rows = logs.slice().reverse().map(l => {
-    const status = !l.success ? '❌ Error' : l.uncertain ? '⚠️ Uncertain' : '✅';
-    const shortThread = l.threadId ? l.threadId.slice(-8) : '—';
-    return `
-    <tr>
-      <td>${l.ts.replace('T', ' ').slice(0, 19)}</td>
-      <td><a href="/analytics/web?q=${encodeURIComponent(l.threadId || '')}" style="color:#4a90e2;text-decoration:none;font-family:monospace" title="${escHtml(l.threadId || '')}">${shortThread}</a></td>
-      <td>${escHtml(l.question)}</td>
-      <td class="preview" onclick="showAnswer(this)" data-full="${escHtml(l.answer || '—')}">${escHtml(l.answer || '—').slice(0, 120)}${(l.answer || '').length > 120 ? '… <span style="color:#4a90e2;font-size:.8rem">(click to expand)</span>' : ''}</td>
-      <td>${status}</td>
-      <td>${(l.ms / 1000).toFixed(1)}s</td>
-    </tr>`;
-  }).join('');
-
-  const dayRows = Object.entries(byDay).sort().reverse().map(([d, c]) =>
-    `<tr><td>${d}</td><td>${c}</td></tr>`).join('');
-
-  const threadOptions = uniqueThreads.map(t =>
-    `<option value="${escHtml(t)}" ${search === t ? 'selected' : ''}>${escHtml(t.slice(-8))} (${allLogs.filter(l => l.threadId === t).length} msgs)</option>`
-  ).join('');
-
-  const searchLabel = search ? `— thread <strong style="font-family:monospace">${escHtml(search.slice(-8))}</strong> <a href="/analytics/web" style="font-size:.85rem;color:#4a90e2">clear</a>` : '';
-
-  res.send(`<!DOCTYPE html>
-<html>
-<head>
-  <title>Web Chat Analytics</title>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
-    h1 { color: #333; }
-    nav { margin-bottom: 1.5rem; }
-    nav a { margin-right: 1rem; color: #4a90e2; text-decoration: none; font-weight: bold; }
-    nav a.active { border-bottom: 2px solid #4a90e2; }
-    .cards { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .card { background: white; border-radius: 8px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); min-width: 140px; }
-    .card .num { font-size: 2rem; font-weight: bold; color: #4a90e2; }
-    .card .label { color: #888; font-size: .85rem; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-    th { background: #4a90e2; color: white; padding: .6rem 1rem; text-align: left; }
-    td { padding: .55rem 1rem; border-bottom: 1px solid #eee; font-size: .9rem; vertical-align: top; }
-    tr:last-child td { border-bottom: none; }
-    h2 { margin-top: 2rem; color: #555; }
-    .search-bar { display: flex; gap: .5rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .search-bar select, .search-bar input { padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .95rem; }
-    .search-bar button { padding: .5rem 1rem; background: #4a90e2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: .95rem; }
-    .preview { cursor: pointer; color: #555; }
-    .preview:hover { color: #4a90e2; }
-    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:center; justify-content:center; }
-    .modal-bg.open { display:flex; }
-    .modal { background:white; border-radius:10px; padding:1.5rem 2rem; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 4px 24px rgba(0,0,0,.2); }
-    .modal h3 { margin-top:0; color:#333; }
-    .modal p { white-space:pre-wrap; color:#444; line-height:1.6; }
-    .modal button { margin-top:1rem; padding:.4rem 1rem; background:#4a90e2; color:white; border:none; border-radius:6px; cursor:pointer; }
-  </style>
-</head>
-<body>
-  <nav>
-    <a href="/analytics">WhatsApp</a>
-    <a href="/analytics/web" class="active">Web Chat</a>
-  </nav>
-  <h1>Web Chat Analytics ${searchLabel}</h1>
-
-  <form class="search-bar" method="get" action="/analytics/web">
-    <select onchange="this.form.q.value=this.value;this.form.submit()" name="_pick">
-      <option value="">— filter by session —</option>
-      ${threadOptions}
-    </select>
-    <input name="q" type="hidden" value="${escHtml(req.query.q || '')}" />
-    <a href="/analytics/web" style="color:#999;font-size:.9rem">Clear filter</a>
-  </form>
-
-  <div class="cards">
-    <div class="card"><div class="num">${total}</div><div class="label">${search ? 'Session' : 'Total'} messages</div></div>
-    <div class="card"><div class="num">${uniqueThreads.length}</div><div class="label">Sessions</div></div>
-    <div class="card"><div class="num">${errors}</div><div class="label">Errors</div></div>
-    <div class="card"><div class="num">${uncertain}</div><div class="label">Uncertain answers</div></div>
-    <div class="card"><div class="num">${(avgMs/1000).toFixed(1)}s</div><div class="label">Avg response time</div></div>
-  </div>
-
-  <h2>Messages per day</h2>
-  <table>
-    <tr><th>Date</th><th>Messages</th></tr>
-    ${dayRows || '<tr><td colspan="2">No data yet</td></tr>'}
-  </table>
-
-  <h2>Recent messages</h2>
-  <table>
-    <tr><th>Time</th><th>Session</th><th>Question</th><th>Answer</th><th>OK</th><th>Time</th></tr>
-    ${rows || '<tr><td colspan="6">No messages yet</td></tr>'}
-  </table>
-
-  <div class="modal-bg" id="modal" onclick="closeModal(event)">
-    <div class="modal">
-      <h3 id="modal-q"></h3>
-      <p id="modal-a"></p>
-      <button onclick="document.getElementById('modal').classList.remove('open')">Close</button>
-    </div>
-  </div>
-  <script>
-    function showAnswer(td) {
-      const row = td.closest('tr');
-      const question = row.cells[2].textContent;
-      document.getElementById('modal-q').textContent = question;
-      document.getElementById('modal-a').textContent = td.dataset.full;
-      document.getElementById('modal').classList.add('open');
-    }
-    function closeModal(e) {
-      if (e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
-    }
-  </script>
-</body>
-</html>`);
-});
 
 // Conversation history page
 app.all('/conversations', requirePassword);
