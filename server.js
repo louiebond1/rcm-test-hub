@@ -2043,7 +2043,7 @@ const steps = [
     points: [
       'Accessible from any device, anywhere — no login, no install, no friction whatsoever',
       'Covers every role in the process: Recruiters, Hiring Managers, Candidates, and Admins',
-      'Built on EX3\'s own SmartRecruiters knowledge — not generic vendor documentation',
+      "Built on EX3's own SmartRecruiters knowledge — not generic vendor documentation",
       'Hosted on Railway, auto-deploys from GitHub — updates are live within minutes of a change',
     ],
     time: '3 min',
@@ -2089,7 +2089,7 @@ const steps = [
       'WhatsApp users get persistent memory across messages — it remembers you between conversations',
     ],
     time: '2 min',
-    note: 'Ask a follow-up right after the previous demo. "What if it\'s a volume hiring role?" Show it retains context.',
+    note: "Ask a follow-up right after the previous demo. 'What if it's a volume hiring role?' Show it retains context.",
     actions: [{ label: 'Open AI Assistant', url: '/' }],
   },
   {
@@ -2109,7 +2109,7 @@ const steps = [
   {
     tag: 'Pre-Screening Questions',
     title: 'Filter Candidates Before They Hit a Recruiter',
-    subtitle: 'Knockout and scoring questions save hours on high-volume roles — and most clients don\'t know they exist.',
+    subtitle: "Knockout and scoring questions save hours on high-volume roles — and most clients don't know they exist.",
     points: [
       'The guide covers exactly how to add screening questions to any job posting in SmartRecruiters',
       'Knockout questions automatically disqualify candidates who miss minimum requirements',
@@ -2173,7 +2173,7 @@ const steps = [
       'Fully editable after generation — the AI gives you the head start, you make the final call',
     ],
     time: '2 min',
-    note: 'Click "Rewrite with AI" on the generated SOW. Let it stream fully. Watch the room\'s reaction.',
+    note: "Click Rewrite with AI on the generated SOW. Let it stream fully. Watch the room's reaction.",
     actions: [{ label: 'Open SOW Builder', url: '/consultant/sow-builder' }],
   },
   {
@@ -2182,7 +2182,7 @@ const steps = [
     subtitle: 'Export to Word or email directly to the client without ever leaving the platform.',
     points: [
       'Export as a formatted .docx — ready to attach to an email or drop into a proposal pack',
-      'Send directly to the client\'s email address from within the tool — powered by Resend',
+      "Send directly to the client's email address from within the tool — powered by Resend",
       'Fully editable in the browser before sending — tweak anything without re-running the wizard',
       'What used to take hours now takes minutes — from discovery call to SOW in the same session',
     ],
@@ -2196,7 +2196,7 @@ const steps = [
     subtitle: 'Every question through the web chat is logged, searchable, and analysed for quality.',
     points: [
       'Track question volume by day, showing usage trends across the platform over time',
-      'Uncertain answer detection — flags responses where the AI wasn\'t confident so we can improve',
+      "Uncertain answer detection — flags responses where the AI wasn't confident so we can improve",
       'Search by session thread to replay any full conversation from start to finish',
       'WhatsApp analytics tracked separately — full picture across both support channels',
     ],
