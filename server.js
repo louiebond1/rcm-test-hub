@@ -1402,7 +1402,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
         <!-- Step 1: Client Name -->
         <div class="step active" id="step-1">
           <div class="step-num">Step 1 of 12</div>
-          <h2>What is the client's name?</h2>
+          <h2>What's the client's name?</h2>
           <p>This will appear throughout the SOW document.</p>
           <input type="text" id="client-name" placeholder="e.g. Acme Corporation" style="width:100%;padding:14px 18px;border:1.5px solid #e4e2dc;border-radius:10px;font-family:inherit;font-size:15px;outline:none" oninput="answers.clientName=this.value" onfocus="this.style.borderColor='#0f0f0f'" onblur="this.style.borderColor='#e4e2dc'">
         </div>
