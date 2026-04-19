@@ -663,6 +663,8 @@ app.get('/consultant', (req, res) => {
     <div class="sb-section">Resources</div>
     <div class="sb-item" onclick="showPage('checklists')">Checklists</div>
     <div class="sb-item" onclick="showPage('faq')">FAQ & Troubleshooting</div>
+    <div class="sb-section">Tools</div>
+    <a href="/consultant/sow-builder" style="display:block;padding:9px 20px;font-size:13px;color:#aaa;transition:all .15s;border-left:2px solid transparent;background:#1a3a1a;border-left-color:#4ade80;color:#4ade80;font-weight:600">✨ SOW Builder</a>
   </nav>
 
   <!-- Main -->
@@ -1176,6 +1178,480 @@ app.get('/consultant', (req, res) => {
       btn.textContent = 'Copied!';
       setTimeout(() => btn.textContent = 'Copy', 2000);
     });
+  }
+</script>
+</body>
+</html>`);
+});
+
+// SOW Builder
+app.get('/consultant/sow-builder', (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOW Builder — EX3</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Sora',sans-serif;background:#f8f7f4;color:#0f0f0e;min-height:100vh;display:flex;flex-direction:column}
+    .topbar{background:#0f0f0f;color:#fff;padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+    .topbar .logo{font-size:24px;font-weight:900;letter-spacing:-.1em}
+    .topbar a{color:#aaa;font-size:13px;text-decoration:none;transition:color .15s}
+    .topbar a:hover{color:#fff}
+    .progress-wrap{background:#1a1a1a;padding:0 32px}
+    .progress-bar{height:3px;background:#333;border-radius:2px;overflow:hidden}
+    .progress-fill{height:100%;background:#fff;border-radius:2px;transition:width .4s ease}
+    .progress-label{padding:8px 0;font-size:11px;color:#888;letter-spacing:.06em;text-transform:uppercase}
+    .wizard{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+    .card{background:#fff;border:1px solid #e4e2dc;border-radius:14px;padding:40px 44px;width:100%;max-width:620px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+    .step{display:none}.step.active{display:block}
+    .step-num{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa;margin-bottom:10px}
+    .step h2{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+    .step p{font-size:14px;color:#666;margin-bottom:28px;line-height:1.6}
+    .options{display:flex;flex-direction:column;gap:10px}
+    .opt{display:flex;align-items:center;gap:14px;padding:14px 18px;border:1.5px solid #e4e2dc;border-radius:10px;cursor:pointer;transition:all .15s;font-size:14px;font-weight:500}
+    .opt:hover{border-color:#0f0f0f;background:#fafafa}
+    .opt.sel{border-color:#0f0f0f;background:#0f0f0f;color:#fff}
+    .opt .opt-icon{font-size:20px;flex-shrink:0;width:28px;text-align:center}
+    .opt-multi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .opt-multi .opt{padding:12px 14px;font-size:13px}
+    .custom-input{margin-top:12px;display:none}
+    .custom-input.show{display:block}
+    .custom-input input,.custom-input textarea{width:100%;padding:12px 16px;border:1.5px solid #e4e2dc;border-radius:8px;font-family:inherit;font-size:14px;color:#0f0f0f;outline:none;transition:border-color .15s;resize:vertical}
+    .custom-input input:focus,.custom-input textarea:focus{border-color:#0f0f0f}
+    .nav{display:flex;justify-content:space-between;align-items:center;margin-top:32px}
+    .btn{padding:12px 28px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+    .btn-primary{background:#0f0f0f;color:#fff}
+    .btn-primary:hover{background:#333}
+    .btn-secondary{background:transparent;color:#888;border:1.5px solid #e4e2dc}
+    .btn-secondary:hover{border-color:#0f0f0f;color:#0f0f0f}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    /* SOW Output */
+    .sow-output{display:none}
+    .sow-output.show{display:block}
+    .sow-doc{background:#fff;border:1px solid #e4e2dc;border-radius:10px;padding:40px;line-height:1.8;font-size:14px;white-space:pre-wrap;font-family:'Sora',sans-serif;color:#0f0f0e}
+    .sow-actions{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:#f0fdf6;color:#0d7c4c;margin-bottom:16px}
+    .wizard-wrap{max-width:700px;width:100%}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">ex3</div>
+    <a href="/consultant">← Back to Consultant Portal</a>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label" id="progress-label">Step 1 of 12</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:8%"></div></div>
+  </div>
+
+  <div class="wizard">
+    <div class="wizard-wrap">
+
+      <!-- SOW Output (shown at end) -->
+      <div class="sow-output" id="sow-output">
+        <span class="badge">SOW Generated</span>
+        <h2 style="font-size:26px;font-weight:700;margin-bottom:6px;letter-spacing:-.02em">Your Statement of Work</h2>
+        <p style="font-size:14px;color:#666;margin-bottom:20px">Review, copy and paste into your document. All sections are editable.</p>
+        <div class="sow-actions">
+          <button class="btn btn-primary" onclick="copySow()">Copy Full SOW</button>
+          <button class="btn btn-secondary" onclick="restartWizard()">Start Again</button>
+        </div>
+        <div class="sow-doc" id="sow-doc" contenteditable="true"></div>
+      </div>
+
+      <!-- Wizard Card -->
+      <div class="card" id="wizard-card">
+
+        <!-- Step 1: Client Name -->
+        <div class="step active" id="step-1">
+          <div class="step-num">Step 1 of 12</div>
+          <h2>What is the client's name?</h2>
+          <p>This will appear throughout the SOW document.</p>
+          <input type="text" id="client-name" placeholder="e.g. Acme Corporation" style="width:100%;padding:14px 18px;border:1.5px solid #e4e2dc;border-radius:10px;font-family:inherit;font-size:15px;outline:none" oninput="answers.clientName=this.value" onfocus="this.style.borderColor='#0f0f0f'" onblur="this.style.borderColor='#e4e2dc'">
+        </div>
+
+        <!-- Step 2: Org Size -->
+        <div class="step" id="step-2">
+          <div class="step-num">Step 2 of 12</div>
+          <h2>How large is the organisation?</h2>
+          <p>This helps set expectations on implementation complexity.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'orgSize','Small (under 100 employees)')"><span class="opt-icon">🏢</span>Small — under 100 employees</div>
+            <div class="opt" onclick="selectOpt(this,'orgSize','Mid-size (100–500 employees)')"><span class="opt-icon">🏬</span>Mid-size — 100 to 500 employees</div>
+            <div class="opt" onclick="selectOpt(this,'orgSize','Large (500–2,000 employees)')"><span class="opt-icon">🏭</span>Large — 500 to 2,000 employees</div>
+            <div class="opt" onclick="selectOpt(this,'orgSize','Enterprise (2,000+ employees)')"><span class="opt-icon">🌐</span>Enterprise — 2,000+ employees</div>
+          </div>
+        </div>
+
+        <!-- Step 3: Number of users -->
+        <div class="step" id="step-3">
+          <div class="step-num">Step 3 of 12</div>
+          <h2>How many users will need access?</h2>
+          <p>Include all recruiters, hiring managers, and admins.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'numUsers','up to 25 users')"><span class="opt-icon">👤</span>Up to 25 users</div>
+            <div class="opt" onclick="selectOpt(this,'numUsers','25–50 users')"><span class="opt-icon">👥</span>25 to 50 users</div>
+            <div class="opt" onclick="selectOpt(this,'numUsers','50–100 users')"><span class="opt-icon">👨‍👩‍👧‍👦</span>50 to 100 users</div>
+            <div class="opt" onclick="selectOpt(this,'numUsers','over 100 users')"><span class="opt-icon">🏟️</span>Over 100 users</div>
+            <div class="opt" onclick="selectCustom(this,'numUsers-custom')"><span class="opt-icon">✏️</span>Custom number</div>
+          </div>
+          <div class="custom-input" id="numUsers-custom">
+            <input type="text" placeholder="e.g. 37 users" oninput="answers.numUsers=this.value">
+          </div>
+        </div>
+
+        <!-- Step 4: Hiring Processes -->
+        <div class="step" id="step-4">
+          <div class="step-num">Step 4 of 12</div>
+          <h2>How many hiring process workflows are needed?</h2>
+          <p>Different job types often have different hiring stages (e.g. office vs warehouse vs graduate).</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'numProcesses','1–2 hiring process workflows')"><span class="opt-icon">1️⃣</span>1 to 2 workflows</div>
+            <div class="opt" onclick="selectOpt(this,'numProcesses','3–5 hiring process workflows')"><span class="opt-icon">3️⃣</span>3 to 5 workflows</div>
+            <div class="opt" onclick="selectOpt(this,'numProcesses','6–10 hiring process workflows')"><span class="opt-icon">🔢</span>6 to 10 workflows</div>
+            <div class="opt" onclick="selectCustom(this,'numProcesses-custom')"><span class="opt-icon">✏️</span>Custom number</div>
+          </div>
+          <div class="custom-input" id="numProcesses-custom">
+            <input type="text" placeholder="e.g. 8 workflows" oninput="answers.numProcesses=this.value">
+          </div>
+        </div>
+
+        <!-- Step 5: Job templates -->
+        <div class="step" id="step-5">
+          <div class="step-num">Step 5 of 12</div>
+          <h2>How many job templates are required?</h2>
+          <p>Job templates speed up requisition creation for common roles.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'numTemplates','up to 5 job templates')"><span class="opt-icon">📄</span>Up to 5 templates</div>
+            <div class="opt" onclick="selectOpt(this,'numTemplates','5–10 job templates')"><span class="opt-icon">📋</span>5 to 10 templates</div>
+            <div class="opt" onclick="selectOpt(this,'numTemplates','10–20 job templates')"><span class="opt-icon">📚</span>10 to 20 templates</div>
+            <div class="opt" onclick="selectOpt(this,'numTemplates','no job templates required at this stage')"><span class="opt-icon">❌</span>None required</div>
+            <div class="opt" onclick="selectCustom(this,'numTemplates-custom')"><span class="opt-icon">✏️</span>Custom number</div>
+          </div>
+          <div class="custom-input" id="numTemplates-custom">
+            <input type="text" placeholder="e.g. 15 templates" oninput="answers.numTemplates=this.value">
+          </div>
+        </div>
+
+        <!-- Step 6: Integrations -->
+        <div class="step" id="step-6">
+          <div class="step-num">Step 6 of 12</div>
+          <h2>Which integrations are required?</h2>
+          <p>Select all that apply. Each integration adds complexity and time.</p>
+          <div class="options opt-multi" id="integrations-options">
+            <div class="opt" onclick="toggleMulti(this,'integrations','HRIS integration (e.g. Workday, SAP, BambooHR)')">🗄️ HRIS System</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','Single Sign-On (SSO)')">🔐 SSO</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','background screening integration')">🔍 Background Screening</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','DocuSign / e-signature integration')">✍️ DocuSign</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','video interviewing platform integration')">🎥 Video Interviews</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','payroll system integration')">💰 Payroll</div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="opt" onclick="selectOpt(this,'integrations','no third-party integrations required')">❌ No integrations needed</div>
+          </div>
+        </div>
+
+        <!-- Step 7: Job Boards -->
+        <div class="step" id="step-7">
+          <div class="step-num">Step 7 of 12</div>
+          <h2>Which job boards need connecting?</h2>
+          <p>Select all that apply. Job board credentials will need to be provided by the client.</p>
+          <div class="options opt-multi" id="jobboards-options">
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Indeed')">Indeed</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','LinkedIn')">LinkedIn</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Glassdoor')">Glassdoor</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Reed')">Reed</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','CV-Library')">CV-Library</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Totaljobs')">Totaljobs</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Adzuna')">Adzuna</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Guardian Jobs')">Guardian Jobs</div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="opt" onclick="selectOpt(this,'jobBoards','no job board connections required at this stage')">❌ None at this stage</div>
+          </div>
+        </div>
+
+        <!-- Step 8: Career Page -->
+        <div class="step" id="step-8">
+          <div class="step-num">Step 8 of 12</div>
+          <h2>Is career page branding in scope?</h2>
+          <p>This covers setting up the SmartRecruiters hosted careers page with the client's logo, colours, and imagery.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'careerPage','Configuration and branding of the SmartRecruiters careers page is included in scope. The client will provide brand assets (logo, colour palette, imagery) prior to configuration.')">✅ Yes — brand and configure the careers page</div>
+            <div class="opt" onclick="selectOpt(this,'careerPage','Career page setup is not in scope for this engagement.')">❌ No — out of scope</div>
+            <div class="opt" onclick="selectOpt(this,'careerPage','Basic career page configuration is included (logo and colour only). Full creative design is out of scope.')">🎨 Basic only — logo and colours only</div>
+          </div>
+        </div>
+
+        <!-- Step 9: Data Migration -->
+        <div class="step" id="step-9">
+          <div class="step-num">Step 9 of 12</div>
+          <h2>Is data migration required?</h2>
+          <p>Moving historical jobs, candidates, or offer data from an existing system into SmartRecruiters.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'dataMigration','Data migration is not in scope for this engagement. Historical data will remain in the client\\'s existing system.')">❌ No migration needed</div>
+            <div class="opt" onclick="selectOpt(this,'dataMigration','Migration of active job requisitions into SmartRecruiters is included in scope.')">📋 Active jobs only</div>
+            <div class="opt" onclick="selectOpt(this,'dataMigration','Migration of candidate records is included in scope, subject to a data mapping exercise to be completed during discovery.')">👤 Candidate records</div>
+            <div class="opt" onclick="selectOpt(this,'dataMigration','Migration of both active job requisitions and candidate records is included in scope, subject to a data mapping exercise to be completed during discovery.')">📦 Both jobs and candidates</div>
+          </div>
+        </div>
+
+        <!-- Step 10: Training -->
+        <div class="step" id="step-10">
+          <div class="step-num">Step 10 of 12</div>
+          <h2>Which training sessions are required?</h2>
+          <p>Select all that apply. Each session is role-specific and delivered separately.</p>
+          <div class="options">
+            <div class="opt" onclick="toggleMulti(this,'training','One Administrator training session (up to 90 minutes, covering system configuration, user management, and reporting)')">🔧 Administrator (90 mins)</div>
+            <div class="opt" onclick="toggleMulti(this,'training','One Recruiter training session (up to 60 minutes, covering end-to-end hiring workflow, candidate management, and communication tools)')">📞 Recruiter (60 mins)</div>
+            <div class="opt" onclick="toggleMulti(this,'training','One Hiring Manager training session (up to 45 minutes, covering job approval, candidate review, and interview scheduling)')">👔 Hiring Manager (45 mins)</div>
+          </div>
+        </div>
+
+        <!-- Step 11: Hypercare -->
+        <div class="step" id="step-11">
+          <div class="step-num">Step 11 of 12</div>
+          <h2>How long is the hypercare period?</h2>
+          <p>Hypercare is the close-support window immediately after go-live where your team is on hand to resolve issues quickly.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'hypercare','2 weeks')">⚡ 2 weeks — standard</div>
+            <div class="opt" onclick="selectOpt(this,'hypercare','4 weeks')">🛡️ 4 weeks — recommended for larger orgs</div>
+            <div class="opt" onclick="selectOpt(this,'hypercare','6 weeks')">🔒 6 weeks — enterprise / complex implementations</div>
+            <div class="opt" onclick="selectCustom(this,'hypercare-custom')">✏️ Custom</div>
+          </div>
+          <div class="custom-input" id="hypercare-custom">
+            <input type="text" placeholder="e.g. 3 weeks" oninput="answers.hypercare=this.value">
+          </div>
+        </div>
+
+        <!-- Step 12: Timeline -->
+        <div class="step" id="step-12">
+          <div class="step-num">Step 12 of 12</div>
+          <h2>What is the expected project timeline?</h2>
+          <p>From kickoff to go-live. This will appear in the SOW assumptions.</p>
+          <div class="options">
+            <div class="opt" onclick="selectOpt(this,'timeline','8 weeks')">🚀 8 weeks — small / simple implementation</div>
+            <div class="opt" onclick="selectOpt(this,'timeline','10 weeks')">📅 10 weeks — standard implementation</div>
+            <div class="opt" onclick="selectOpt(this,'timeline','12 weeks')">🗓️ 12 weeks — larger or more complex</div>
+            <div class="opt" onclick="selectOpt(this,'timeline','16 weeks')">📆 16 weeks — enterprise / heavily integrated</div>
+            <div class="opt" onclick="selectCustom(this,'timeline-custom')">✏️ Custom</div>
+          </div>
+          <div class="custom-input" id="timeline-custom">
+            <input type="text" placeholder="e.g. 14 weeks" oninput="answers.timeline=this.value">
+          </div>
+        </div>
+
+        <div class="nav">
+          <button class="btn btn-secondary" id="btn-back" onclick="prevStep()" style="display:none">← Back</button>
+          <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Next →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const TOTAL = 12;
+  let current = 1;
+  const answers = {
+    clientName: '', orgSize: '', numUsers: '', numProcesses: '',
+    numTemplates: '', integrations: [], jobBoards: [], careerPage: '',
+    dataMigration: '', training: [], hypercare: '', timeline: ''
+  };
+
+  function selectOpt(el, key, value) {
+    // Deselect all in same step
+    el.closest('.step').querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+    el.classList.add('sel');
+    answers[key] = value;
+    // Hide all custom inputs in this step
+    el.closest('.step').querySelectorAll('.custom-input').forEach(c => c.classList.remove('show'));
+  }
+
+  function selectCustom(el, inputId) {
+    el.closest('.step').querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+    el.classList.add('sel');
+    const inp = document.getElementById(inputId);
+    inp.classList.add('show');
+    inp.querySelector('input,textarea').focus();
+  }
+
+  function toggleMulti(el, key, value) {
+    el.classList.toggle('sel');
+    if (!Array.isArray(answers[key])) answers[key] = [];
+    if (el.classList.contains('sel')) {
+      if (!answers[key].includes(value)) answers[key].push(value);
+    } else {
+      answers[key] = answers[key].filter(v => v !== value);
+    }
+    // Deselect "none" option if multi selected
+    el.closest('.step').querySelectorAll('.options:not(.opt-multi) .opt').forEach(o => o.classList.remove('sel'));
+  }
+
+  function updateProgress() {
+    const pct = Math.round((current / TOTAL) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = 'Step ' + current + ' of ' + TOTAL;
+    document.getElementById('btn-back').style.display = current > 1 ? 'block' : 'none';
+    document.getElementById('btn-next').textContent = current === TOTAL ? 'Generate SOW ✨' : 'Next →';
+  }
+
+  function nextStep() {
+    // Validate step 1
+    if (current === 1) {
+      const val = document.getElementById('client-name').value.trim();
+      if (!val) { document.getElementById('client-name').focus(); return; }
+      answers.clientName = val;
+    }
+    if (current === TOTAL) {
+      generateSOW();
+      return;
+    }
+    document.getElementById('step-' + current).classList.remove('active');
+    current++;
+    document.getElementById('step-' + current).classList.add('active');
+    updateProgress();
+  }
+
+  function prevStep() {
+    document.getElementById('step-' + current).classList.remove('active');
+    current--;
+    document.getElementById('step-' + current).classList.add('active');
+    updateProgress();
+  }
+
+  function generateSOW() {
+    const a = answers;
+    const integrationsList = Array.isArray(a.integrations) && a.integrations.length
+      ? a.integrations.map(i => '  • ' + i).join('\\n')
+      : '  • No third-party integrations required';
+    const jobBoardsList = Array.isArray(a.jobBoards) && a.jobBoards.length
+      ? a.jobBoards.join(', ')
+      : 'none at this stage';
+    const trainingList = Array.isArray(a.training) && a.training.length
+      ? a.training.map(t => '  • ' + t).join('\\n')
+      : '  • No training sessions specified';
+
+    const sow = \`STATEMENT OF WORK
+SmartRecruiters Implementation — \${a.clientName}
+Prepared by: EX3 Consulting
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. PROJECT OVERVIEW
+━━━━━━━━━━━━━━━━━━
+
+This Statement of Work defines the scope, deliverables, timeline, and responsibilities for the implementation of SmartRecruiters for \${a.clientName}. EX3 will provide implementation consultancy services to configure, integrate, and deploy the SmartRecruiters platform in accordance with \${a.clientName}'s requirements as agreed during the discovery phase.
+
+Organisation size: \${a.orgSize || 'To be confirmed'}
+Expected project duration: \${a.timeline || 'To be confirmed'}
+
+2. IN SCOPE
+━━━━━━━━━━━
+
+2.1 Platform Configuration
+  • Configuration of company settings, branding, and system preferences
+  • Creation and configuration of user roles and permissions
+  • Creation of \${a.numUsers || 'agreed number of'} user accounts
+  • Setup of \${a.numProcesses || 'agreed number of'} hiring process workflows
+  • Configuration of \${a.numTemplates || 'agreed number of'} job templates with custom fields
+  • Setup of email notification templates (application received, interview invite, rejection, offer)
+  • Configuration of offer letter templates
+  • Setup of interview scheduling configuration
+
+2.2 Career Page & Advertising
+  • \${a.careerPage || 'Career page setup to be confirmed'}
+  • Connection of the following job boards: \${jobBoardsList}
+
+2.3 Integrations
+\${integrationsList}
+
+2.4 Testing
+  • Facilitation of User Acceptance Testing (UAT) with agreed test scripts
+  • Resolution of critical and high-priority issues identified during UAT
+  • Provision of written UAT sign-off template
+
+2.5 Training
+\${trainingList}
+  • Access to the EX3 SmartRecruiters Enablement Guide for all users
+
+2.6 Go-Live & Hypercare Support
+  • Go-live readiness review and final production checks
+  • On-call support on go-live day
+  • Hypercare support period: \${a.hypercare || 'to be agreed'} post go-live (daily check-ins in week 1, weekly thereafter)
+  • Post-implementation documentation and formal handover
+
+2.7 Data Migration
+  • \${a.dataMigration || 'Data migration requirements to be confirmed during discovery'}
+
+3. OUT OF SCOPE
+━━━━━━━━━━━━━━
+
+The following are explicitly excluded from this engagement unless agreed via a separate Change Request:
+
+  • Any integrations not listed in section 2.3 above
+  • Custom development, bespoke API builds, or non-standard connectors
+  • SmartRecruiters platform licensing costs (to be contracted directly between \${a.clientName} and SmartRecruiters)
+  • Ongoing managed services or system administration after the hypercare period
+  • Training sessions beyond those listed in section 2.5
+  • Changes to scope agreed after project kick-off (subject to formal change request process)
+
+4. CLIENT RESPONSIBILITIES
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\${a.clientName} is responsible for:
+
+  • Appointing a named internal project owner with authority to make decisions throughout the engagement
+  • Completing the EX3 Discovery Questionnaire within 5 business days of kickoff
+  • Providing timely feedback and approvals at each phase gate (within 3 business days of request)
+  • Ensuring key stakeholders are available for all scheduled sessions
+  • Providing IT access and credentials required for integrations (section 2.3)
+  • Providing brand assets (logo, colour palette, imagery) prior to career page configuration
+  • Completing UAT and providing written sign-off before go-live
+  • Ensuring all users attend or watch their relevant training session prior to go-live
+
+5. ASSUMPTIONS
+━━━━━━━━━━━━━━
+
+This SOW is based on the following assumptions. Material changes to these assumptions may impact timeline and cost:
+
+  • \${a.clientName} holds a valid SmartRecruiters licence for the duration of the project
+  • A named internal project owner will be available and responsive throughout the engagement
+  • Client feedback and approvals will be provided within 3 business days of request
+  • All integrations use standard SmartRecruiters Marketplace connectors — no custom development is required
+  • The number of users, workflows, and templates does not exceed the quantities stated above without a Change Request
+  • Go-live will occur within \${a.timeline || 'the agreed timeline'} of project kick-off. Delays caused by the client may impact timelines and costs
+  • All required IT access and credentials will be provided at least 2 weeks before the integration build phase begins
+
+6. CHANGE REQUEST PROCESS
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Any changes to the agreed scope must be submitted as a formal Change Request by either party. Change Requests will include a description of the change, impact on timeline, and any associated cost. No out-of-scope work will commence without written approval from both parties.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
+\`;
+
+    document.getElementById('sow-doc').textContent = sow;
+    document.getElementById('wizard-card').style.display = 'none';
+    document.getElementById('sow-output').classList.add('show');
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('progress-label').textContent = 'Complete ✓';
+  }
+
+  function copySow() {
+    const text = document.getElementById('sow-doc').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy Full SOW', 2000);
+    });
+  }
+
+  function restartWizard() {
+    location.reload();
   }
 </script>
 </body>
