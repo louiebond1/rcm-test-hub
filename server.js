@@ -1180,6 +1180,192 @@ app.get('/consultant', (req, res) => {
     });
   }
 </script>
+
+<!-- Demo Panel -->
+<style>
+  .demo-fab { position:fixed; bottom:28px; right:28px; z-index:9000; background:#22c55e; color:#000; border:none; border-radius:50px; padding:12px 22px; font-family:'Sora',sans-serif; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(34,197,94,.35); transition:all .2s; }
+  .demo-fab:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(34,197,94,.45); }
+  .demo-fab.open { background:#1a1a1a; color:#fff; box-shadow:none; }
+  .demo-panel { position:fixed; top:0; right:0; width:340px; height:100vh; background:#0f0f0f; color:#fff; z-index:8999; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .3s cubic-bezier(.4,0,.2,1); box-shadow:-8px 0 40px rgba(0,0,0,.3); font-family:'Sora',sans-serif; }
+  .demo-panel.open { transform:translateX(0); }
+  .dp-header { padding:18px 20px 14px; border-bottom:1px solid #1e1e1e; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .dp-logo { font-size:13px; font-weight:700; color:#22c55e; }
+  .dp-timer { font-size:18px; font-weight:800; color:#22c55e; font-variant-numeric:tabular-nums; }
+  .dp-progress { height:2px; background:#1a1a1a; flex-shrink:0; }
+  .dp-progress-fill { height:100%; background:#22c55e; transition:width .4s; }
+  .dp-body { flex:1; overflow-y:auto; padding:20px; }
+  .dp-tag { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#22c55e; margin-bottom:10px; }
+  .dp-title { font-size:20px; font-weight:800; line-height:1.2; margin-bottom:8px; letter-spacing:-.5px; }
+  .dp-sub { font-size:12.5px; color:#666; margin-bottom:18px; line-height:1.6; }
+  .dp-points { list-style:none; display:flex; flex-direction:column; gap:11px; margin-bottom:20px; }
+  .dp-points li { display:flex; gap:10px; font-size:12.5px; color:#bbb; line-height:1.6; }
+  .dp-dot { width:6px; height:6px; background:#22c55e; border-radius:50%; flex-shrink:0; margin-top:7px; }
+  .dp-note { background:#141414; border:1px solid #1e1e1e; border-radius:10px; padding:14px; font-size:11.5px; color:#555; line-height:1.65; font-style:italic; }
+  .dp-nav { padding:14px 20px; border-top:1px solid #1a1a1a; display:flex; gap:10px; flex-shrink:0; }
+  .dp-btn { flex:1; padding:10px; border-radius:8px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; border:1px solid #2a2a2a; background:#1a1a1a; color:#fff; transition:background .15s; }
+  .dp-btn:hover:not(:disabled) { background:#222; }
+  .dp-btn.primary { background:#22c55e; color:#000; border-color:#22c55e; }
+  .dp-btn.primary:hover { opacity:.9; }
+  .dp-btn:disabled { opacity:.25; cursor:not-allowed; }
+  .dp-step-count { text-align:center; font-size:11px; color:#444; padding:8px 0 0; flex-shrink:0; }
+</style>
+
+<button class="demo-fab" id="demoFab" onclick="toggleDemoPanel()">&#9654; Start Demo</button>
+
+<div class="demo-panel" id="demoPanel">
+  <div class="dp-header">
+    <div class="dp-logo">EX3 Demo Mode</div>
+    <div class="dp-timer" id="dp-timer">00:00</div>
+  </div>
+  <div class="dp-progress"><div class="dp-progress-fill" id="dp-prog"></div></div>
+  <div class="dp-body" id="dp-body"></div>
+  <div class="dp-step-count" id="dp-count"></div>
+  <div class="dp-nav">
+    <button class="dp-btn" id="dp-prev" onclick="dpGo(-1)">&#8592; Prev</button>
+    <button class="dp-btn primary" id="dp-next" onclick="dpGo(1)">Next &#8594;</button>
+  </div>
+</div>
+
+<script>
+const dpSteps = [
+  {
+    tag: 'Consultant Portal',
+    title: 'The Implementation Command Centre',
+    subtitle: 'Everything an EX3 consultant needs to run a flawless implementation — in one place.',
+    points: [
+      'Covers every phase of a SmartRecruiters implementation end to end',
+      'Built from real EX3 project experience — not generic advice',
+      'Role matrix, UAT checklist, and FAQ all in one place',
+      'Accessible anywhere — consultants use this live on client calls',
+    ],
+    note: 'Open with the overview visible. Let them read the phase list before you start clicking.',
+  },
+  {
+    tag: 'Discovery Phase',
+    title: 'Phase 1: Discovery',
+    subtitle: 'Before any configuration starts, we need to understand the client inside out.',
+    points: [
+      'Map the client hiring process end-to-end before touching the platform',
+      'Run a structured discovery session using the EX3 questionnaire',
+      'Identify integrations, job boards, and data migration requirements upfront',
+      'Agreeing scope here prevents scope creep later — this phase is critical',
+    ],
+    note: 'Click into the Discovery phase card. Walk through the key activities listed.',
+  },
+  {
+    tag: 'Configuration Phase',
+    title: 'Phase 2: Configuration',
+    subtitle: 'This is where SmartRecruiters is built out to match what was agreed in discovery.',
+    points: [
+      'Users, roles, and permissions set up first — everything else depends on this',
+      'Hiring workflows built to match each job type the client uses',
+      'Email templates, offer letters, and job templates configured to their brand',
+      'Every config decision is documented for the handover pack',
+    ],
+    note: 'Show the configuration checklist. Each item maps to a deliverable in the SOW.',
+  },
+  {
+    tag: 'Integrations Phase',
+    title: 'Phase 3: Integrations',
+    subtitle: 'Connecting SmartRecruiters to the rest of the client tech stack.',
+    points: [
+      'HRIS, SSO, background screening, DocuSign — all require IT involvement from the client',
+      'Engage the client IT team at kickoff — do not wait until integration phase starts',
+      'Each integration is tested end-to-end before UAT begins',
+      'Standard marketplace connectors only — custom dev is out of scope unless agreed',
+    ],
+    note: 'Show the integrations section. Highlight the note about engaging IT early.',
+  },
+  {
+    tag: 'UAT Phase',
+    title: 'Phase 4: User Acceptance Testing',
+    subtitle: 'The client signs off before we go anywhere near go-live.',
+    points: [
+      'UAT is run by the client, supported by EX3 — not the other way around',
+      'Test scripts provided covering every hiring workflow and user role',
+      'Critical issues must be resolved before go-live — no exceptions',
+      'Written sign-off obtained from the project owner before the go-live date is confirmed',
+    ],
+    note: 'Click on the UAT checklist. Show how each item is tracked.',
+  },
+  {
+    tag: 'Training Phase',
+    title: 'Phase 5: Training',
+    subtitle: 'Separate sessions per role — never mix admins and hiring managers in the same room.',
+    points: [
+      'Admin training: 90 mins covering configuration, user management, and reporting',
+      'Recruiter training: 60 mins covering end-to-end hiring and candidate management',
+      'Hiring Manager training: 45 mins covering review, approval, and interview scheduling',
+      'Sessions recorded and uploaded so new starters can watch them later',
+    ],
+    note: 'Show the training section. Emphasise the role-specific approach.',
+  },
+  {
+    tag: 'Go-Live & Hypercare',
+    title: 'Phase 6: Go-Live',
+    subtitle: "The moment the client goes live — and when the real work begins.",
+    points: [
+      'Go-live readiness review with the client project owner the day before',
+      'EX3 consultant on call on go-live day — available for any critical issues',
+      'Hypercare period: daily check-ins week one, weekly thereafter',
+      'Formal handover pack and close-out documentation delivered at end of hypercare',
+    ],
+    note: 'End on this slide. The hypercare point is a differentiator — competitors often disappear post go-live.',
+  },
+];
+
+let dpCur = 0;
+let dpOpen = false;
+let dpStart = null;
+let dpTimer = null;
+
+function toggleDemoPanel() {
+  dpOpen = !dpOpen;
+  document.getElementById('demoPanel').classList.toggle('open', dpOpen);
+  document.getElementById('demoFab').classList.toggle('open', dpOpen);
+  document.getElementById('demoFab').textContent = dpOpen ? '✕ Exit Demo' : '▶ Start Demo';
+  if (dpOpen && !dpStart) {
+    dpStart = Date.now();
+    dpTimer = setInterval(() => {
+      const s = Math.floor((Date.now() - dpStart) / 1000);
+      document.getElementById('dp-timer').textContent =
+        String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+    }, 1000);
+    dpRender();
+  }
+  if (!dpOpen && dpTimer) { clearInterval(dpTimer); dpTimer = null; dpStart = null; }
+}
+
+function dpRender() {
+  const s = dpSteps[dpCur];
+  const pct = Math.round(((dpCur + 1) / dpSteps.length) * 100);
+  document.getElementById('dp-prog').style.width = pct + '%';
+  document.getElementById('dp-count').textContent = 'Step ' + (dpCur + 1) + ' of ' + dpSteps.length;
+  document.getElementById('dp-prev').disabled = dpCur === 0;
+  document.getElementById('dp-next').textContent = dpCur === dpSteps.length - 1 ? 'Finish ✓' : 'Next →';
+  document.getElementById('dp-body').innerHTML =
+    '<div class="dp-tag">' + String(dpCur+1).padStart(2,'0') + ' / ' + String(dpSteps.length).padStart(2,'0') + ' — ' + s.tag + '</div>' +
+    '<div class="dp-title">' + s.title + '</div>' +
+    '<div class="dp-sub">' + s.subtitle + '</div>' +
+    '<ul class="dp-points">' + s.points.map(p => '<li><span class="dp-dot"></span><span>' + p + '</span></li>').join('') + '</ul>' +
+    '<div class="dp-note">' + s.note + '</div>';
+}
+
+function dpGo(dir) {
+  dpCur = Math.max(0, Math.min(dpSteps.length - 1, dpCur + dir));
+  dpRender();
+  if (dir === 1 && dpCur === dpSteps.length - 1) {
+    setTimeout(() => { if (confirm('Demo complete! Exit demo mode?')) toggleDemoPanel(); }, 300);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (!dpOpen) return;
+  if (e.key === 'ArrowRight') dpGo(1);
+  if (e.key === 'ArrowLeft') dpGo(-1);
+  if (e.key === 'Escape') toggleDemoPanel();
+});
+</script>
 </body>
 </html>`);
 });
