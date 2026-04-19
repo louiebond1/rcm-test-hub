@@ -1275,27 +1275,26 @@ app.post('/consultant/sow-export', async (req, res) => {
 
 // SOW Email
 app.post('/consultant/sow-email', async (req, res) => {
-  const { content, clientName, toEmail, fromName } = req.body;
+  const { content, clientName, toEmail } = req.body;
   if (!content || !toEmail) return res.status(400).json({ error: 'Missing fields' });
 
-  const nodemailer = require('nodemailer');
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
   try {
-    await transporter.sendMail({
-      from: '"EX3 Consulting" <' + process.env.EMAIL_USER + '>',
-      to: toEmail,
-      cc: process.env.EMAIL_USER,
-      subject: 'Statement of Work — SmartRecruiters Implementation — ' + clientName,
-      text: content,
-      html: '<pre style="font-family:Arial,sans-serif;font-size:14px;line-height:1.7;white-space:pre-wrap">' + content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>',
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'EX3 Consulting <onboarding@resend.dev>',
+        to: [toEmail],
+        subject: 'Statement of Work — SmartRecruiters Implementation — ' + (clientName || 'Client'),
+        text: content,
+        html: '<pre style="font-family:Arial,sans-serif;font-size:14px;line-height:1.7;white-space:pre-wrap">' + content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>',
+      }),
     });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Send failed');
     res.json({ ok: true });
   } catch (err) {
     console.error('Email error:', err.message);
