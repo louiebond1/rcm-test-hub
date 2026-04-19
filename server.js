@@ -1826,7 +1826,7 @@ Prepared by EX3 Consulting | ex3-guide-production.up.railway.app
     if (isEnterprise && (shortTimeline || medTimeline)) risks.push('Enterprise organisations rarely complete in under 12 weeks — consider 16 weeks');
     if (integrations.length >= 3 && shortTimeline) risks.push(integrations.length + ' integrations in 8 weeks is very tight — each integration can take 1–2 weeks');
     if (hasHRIS) warnings.push('HRIS integrations require IT involvement early — confirm credentials are available before the build phase');
-    if (hasSSO) warnings.push('SSO setup requires the client\'s IT team — get them in the kickoff call');
+    if (hasSSO) warnings.push("SSO setup requires the client's IT team — get them in the kickoff call");
     if (isLarge && a.training && Array.isArray(a.training) && a.training.length < 2) warnings.push('A large organisation with fewer than 2 training sessions may lead to low adoption — consider adding more');
 
     const banner = document.getElementById('risk-banner');
