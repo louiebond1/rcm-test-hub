@@ -2429,6 +2429,217 @@ app.get('/analytics/web', (req, res) => {
 </html>`);
 });
 
+// Conversation history page
+app.all('/conversations', requirePassword);
+app.get('/conversations', (req, res) => {
+  const allLogs = readWebLogs();
+  const whatsappLogs = readLogs();
+
+  // Group web logs by threadId
+  const webThreads = {};
+  for (const log of allLogs) {
+    const id = log.threadId || 'unknown';
+    if (!webThreads[id]) webThreads[id] = [];
+    webThreads[id].push(log);
+  }
+
+  // Group whatsapp logs by phone
+  const waThreads = {};
+  for (const log of whatsappLogs) {
+    const id = log.phone || 'unknown';
+    if (!waThreads[id]) waThreads[id] = [];
+    waThreads[id].push(log);
+  }
+
+  // Build thread list sorted by most recent message
+  const webList = Object.entries(webThreads).map(([id, msgs]) => {
+    const sorted = msgs.slice().sort((a, b) => a.ts.localeCompare(b.ts));
+    return { id, source: 'web', msgs: sorted, last: sorted[sorted.length - 1].ts, first: sorted[0] };
+  }).sort((a, b) => b.last.localeCompare(a.last));
+
+  const waList = Object.entries(waThreads).map(([id, msgs]) => {
+    const sorted = msgs.slice().sort((a, b) => a.ts.localeCompare(b.ts));
+    return { id, source: 'whatsapp', msgs: sorted, last: sorted[sorted.length - 1].ts, first: sorted[0] };
+  }).sort((a, b) => b.last.localeCompare(a.last));
+
+  const allThreads = [...webList, ...waList].sort((a, b) => b.last.localeCompare(a.last));
+
+  const threadsJson = JSON.stringify(allThreads).replace(/</g, '\\u003c');
+
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversation History — EX3</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Sora',sans-serif; background:#f8f7f4; color:#0f0f0e; height:100vh; display:flex; flex-direction:column; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; background:#fff; border-bottom:1px solid #e4e2dc; flex-shrink:0; }
+  .topbar-title { font-size:16px; font-weight:700; }
+  .topbar-nav { display:flex; gap:16px; font-size:13px; }
+  .topbar-nav a { color:#4a90e2; text-decoration:none; font-weight:600; }
+  .layout { display:flex; flex:1; overflow:hidden; }
+
+  /* Thread list sidebar */
+  .thread-sidebar { width:300px; background:#fff; border-right:1px solid #e4e2dc; display:flex; flex-direction:column; flex-shrink:0; }
+  .thread-search { padding:12px 16px; border-bottom:1px solid #f0ede8; }
+  .thread-search input { width:100%; padding:8px 12px; border:1.5px solid #e4e2dc; border-radius:8px; font-family:inherit; font-size:13px; outline:none; background:#f8f7f4; }
+  .thread-search input:focus { border-color:#0f0f0f; }
+  .thread-list { flex:1; overflow-y:auto; }
+  .thread-item { padding:14px 16px; border-bottom:1px solid #f0ede8; cursor:pointer; transition:background 0.1s; }
+  .thread-item:hover { background:#faf9f7; }
+  .thread-item.active { background:#f0ede8; }
+  .thread-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+  .thread-source { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:4px; }
+  .thread-source.web { background:#dbeafe; color:#1d4ed8; }
+  .thread-source.whatsapp { background:#dcfce7; color:#166534; }
+  .thread-date { font-size:11px; color:#aaa; }
+  .thread-preview { font-size:12.5px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px; }
+  .thread-count { font-size:11px; color:#aaa; }
+  .thread-empty { padding:32px 16px; text-align:center; color:#bbb; font-size:13px; }
+
+  /* Chat panel */
+  .chat-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .chat-header { padding:16px 24px; background:#fff; border-bottom:1px solid #e4e2dc; flex-shrink:0; }
+  .chat-header-title { font-size:14px; font-weight:700; margin-bottom:2px; }
+  .chat-header-sub { font-size:12px; color:#aaa; }
+  .chat-messages { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:20px; }
+  .chat-empty { display:flex; align-items:center; justify-content:center; height:100%; color:#ccc; font-size:14px; text-align:center; }
+
+  /* Message bubbles */
+  .msg { display:flex; flex-direction:column; max-width:72%; }
+  .msg.user { align-self:flex-end; align-items:flex-end; }
+  .msg.ai { align-self:flex-start; align-items:flex-start; }
+  .msg-label { font-size:10.5px; font-weight:600; color:#aaa; margin-bottom:5px; letter-spacing:0.5px; }
+  .msg.user .msg-label { color:#6b7280; }
+  .bubble { padding:12px 16px; border-radius:14px; font-size:13.5px; line-height:1.65; white-space:pre-wrap; word-break:break-word; }
+  .msg.user .bubble { background:#0f0f0f; color:#fff; border-bottom-right-radius:4px; }
+  .msg.ai .bubble { background:#fff; border:1px solid #e4e2dc; color:#0f0f0e; border-bottom-left-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  .msg.ai .bubble.uncertain { border-color:#fde68a; background:#fffbeb; }
+  .msg-time { font-size:10.5px; color:#ccc; margin-top:5px; }
+  .uncertain-badge { font-size:10px; font-weight:700; color:#92400e; background:#fef3c7; padding:2px 8px; border-radius:4px; margin-top:4px; display:inline-block; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">Conversation History</div>
+  <div class="topbar-nav">
+    <a href="/analytics">WhatsApp Analytics</a>
+    <a href="/analytics/web">Web Analytics</a>
+  </div>
+</div>
+<div class="layout">
+  <div class="thread-sidebar">
+    <div class="thread-search">
+      <input type="text" id="search" placeholder="Search conversations..." oninput="filterThreads(this.value)">
+    </div>
+    <div class="thread-list" id="thread-list"></div>
+  </div>
+  <div class="chat-panel">
+    <div class="chat-header" id="chat-header" style="display:none">
+      <div class="chat-header-title" id="chat-header-title"></div>
+      <div class="chat-header-sub" id="chat-header-sub"></div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-empty">Select a conversation on the left to read it</div>
+    </div>
+  </div>
+</div>
+<script>
+const threads = ${threadsJson};
+let active = null;
+
+function relativeDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Today ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return days + ' days ago';
+  return d.toLocaleDateString([], {day:'numeric', month:'short'});
+}
+
+function renderThreadList(list) {
+  const el = document.getElementById('thread-list');
+  if (!list.length) { el.innerHTML = '<div class="thread-empty">No conversations yet</div>'; return; }
+  el.innerHTML = list.map((t, i) => {
+    const src = t.source === 'whatsapp' ? 'WhatsApp' : 'Web';
+    const srcCls = t.source;
+    const preview = t.first.question || t.first.body || '';
+    const cls = active === t.id ? ' active' : '';
+    return '<div class="thread-item' + cls + '" onclick="openThread(' + i + ')">' +
+      '<div class="thread-meta">' +
+        '<span class="thread-source ' + srcCls + '">' + src + '</span>' +
+        '<span class="thread-date">' + relativeDate(t.last) + '</span>' +
+      '</div>' +
+      '<div class="thread-preview">' + esc(preview.slice(0, 80)) + '</div>' +
+      '<div class="thread-count">' + t.msgs.length + ' message' + (t.msgs.length !== 1 ? 's' : '') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openThread(idx) {
+  const t = filteredThreads[idx];
+  active = t.id;
+  renderThreadList(filteredThreads);
+
+  const label = t.source === 'whatsapp' ? 'WhatsApp — ' + t.id : 'Web Chat — ' + t.id.slice(-12);
+  document.getElementById('chat-header').style.display = 'block';
+  document.getElementById('chat-header-title').textContent = label;
+  document.getElementById('chat-header-sub').textContent =
+    t.msgs.length + ' messages · Started ' + new Date(t.msgs[0].ts).toLocaleString();
+
+  const el = document.getElementById('chat-messages');
+  el.innerHTML = t.msgs.map(m => {
+    const q = m.question || m.body || '';
+    const a = m.answer || m.response || '';
+    const ts = new Date(m.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const uncertainBadge = m.uncertain ? '<span class="uncertain-badge">⚠ Uncertain answer</span>' : '';
+    let html = '';
+    if (q) {
+      html += '<div class="msg user">' +
+        '<div class="msg-label">You</div>' +
+        '<div class="bubble">' + esc(q) + '</div>' +
+        '<div class="msg-time">' + ts + '</div>' +
+      '</div>';
+    }
+    if (a) {
+      html += '<div class="msg ai">' +
+        '<div class="msg-label">EX3 AI</div>' +
+        '<div class="bubble' + (m.uncertain ? ' uncertain' : '') + '">' + esc(a) + '</div>' +
+        uncertainBadge +
+        '<div class="msg-time">' + ts + ' · ' + (m.ms ? (m.ms/1000).toFixed(1) + 's' : '') + '</div>' +
+      '</div>';
+    }
+    return html;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let filteredThreads = threads;
+
+function filterThreads(q) {
+  q = q.toLowerCase();
+  filteredThreads = q ? threads.filter(t =>
+    t.msgs.some(m => (m.question||'').toLowerCase().includes(q) || (m.answer||'').toLowerCase().includes(q) || (m.body||'').toLowerCase().includes(q))
+  ) : threads;
+  renderThreadList(filteredThreads);
+}
+
+filteredThreads = threads;
+renderThreadList(filteredThreads);
+</script>
+</body>
+</html>`);
+});
+
 app.listen(PORT, () => {
   if (!process.env.ASSISTANT_ID) {
     console.warn('⚠  ASSISTANT_ID not set — run "node setup.js" first to upload your documents.');
