@@ -3813,7 +3813,7 @@ var steps = [
   },
   {
     icon:'', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What changes for high-volume hiring?'}}],
-    minHold:8000,
+    minHold:14000,
     voice:"She asks a follow-up. The AI carries the full conversation forward — no re-explaining, no repeating yourself. It knows exactly what she was talking about.",
     callout:{label:'Context memory',text:'Full conversation history — no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
   },
@@ -3822,13 +3822,13 @@ var steps = [
     auto:[
       {d:700,  a:{action:'closeAI'}},
       {d:1400, a:{action:'openUnifiedFlow'}},
-      {d:3200, a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}},
-      {d:7500, a:{action:'openTaskDetail',taskId:'add-workflow'}},
-      {d:9500, a:{action:'expandTaskSteps',taskId:'add-workflow',indices:[0,1]}},
-      {d:12500,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}},
-      {d:16000,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}
+      {d:5800, a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}},
+      {d:10500,a:{action:'openTaskDetail',taskId:'add-workflow'}},
+      {d:12500,a:{action:'expandTaskSteps',taskId:'add-workflow',indices:[0,1]}},
+      {d:15500,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}},
+      {d:19000,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}
     ],
-    minHold:24000,
+    minHold:28000,
     voice:"Now she builds her runbook. Picks the exact processes she needs — posting the job, scheduling interviews, workflow automation, assessment stage. One click. The full sequence generates. She opens Workflow Automation. Expands the steps. Step two is not landing — she clicks the warning. EX3 surfaces the likely causes. One more click and that exact step goes straight to the AI, with everything already loaded. Watch the answer come back.",
     callout:{label:'End-to-end workflow',text:'Build, troubleshoot, and escalate — without leaving EX3',dot:{x:52,y:50},bubble:{x:60,y:28}}
   },
