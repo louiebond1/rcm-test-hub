@@ -3024,10 +3024,10 @@ var steps = [
     url:null,
     ph:{icon:'\uD83D\uDCF1',title:'WhatsApp AI Bot',body:'',link:null},
     waChat:[
-      {from:'me',  text:'Hi, I can\'t find the Send Offer button for a candidate — any idea why?', delay:600},
-      {from:'them', text:'The Send Offer button only appears once three things are in place:\n\n1️⃣ The candidate is in the *Offer* stage\n2️⃣ The job has an active offer letter template\n3️⃣ You have the *Offer Manager* permission\n\nWhich one would you like to check first?', delay:1800},
-      {from:'me',  text:'Probably permissions — how do I check that?', delay:5200},
-      {from:'them', text:'Go to *Admin → User Management*, find your name, and look at your assigned role.\n\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\n\nIf it\'s missing your SR admin can add it in about 2 minutes. 👍', delay:7000}
+      {from:'me',  text:"Hi, I can't find the Send Offer button for a candidate \u2014 any idea why?", delay:600},
+      {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\\n2\ufe0f\u20e3 The job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich one would you like to check first?", delay:1800},
+      {from:'me',  text:"Probably permissions \u2014 how do I check that?", delay:5200},
+      {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it's missing your SR admin can add it in about 2 minutes. \uD83D\uDC4D", delay:7000}
     ],
     auto:[],
     voice:"The same AI is available 24/7 on WhatsApp. No app to install, no login required — consultants and clients just message the bot and get an expert answer, even via voice note.",
