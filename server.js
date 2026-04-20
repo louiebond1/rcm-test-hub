@@ -3104,14 +3104,18 @@ function speak(text, onDone, stepToken){
   utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
   document.getElementById('bars').classList.add('speaking');
   
-  // Chrome bug: speechSynthesis silently pauses itself after ~14s. Resume it periodically.
-  var resumeTimer = setInterval(function(){ if(synth.paused) synth.resume(); }, 5000);
+  // Chrome bug: speechSynthesis silently stops after ~14s without setting synth.paused.
+  // Force a pause/resume cycle every 10s to keep it alive.
+  var resumeTimer = setInterval(function(){
+    if(synth.speaking){ synth.pause(); synth.resume(); }
+  }, 10000);
 
   var audioCompleted = false;
   var timeoutDuration = Math.max(10000, text.split(' ').length * 530);
   var audioTimeout = setTimeout(function(){
     if(stepToken !== narrationStepToken || audioCompleted) return;
     audioCompleted = true;
+    clearInterval(resumeTimer);
     synth.cancel();
     document.getElementById('bars').classList.remove('speaking');
     document.getElementById('nar-pb-fill').style.width = '100%';
