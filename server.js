@@ -130,8 +130,26 @@ app.get('/api/tts', async (req, res) => {
   if (!text) return res.status(400).end();
   try {
     if (!ttsCache[text]) {
-      const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: 'nova', input: text, speed: 0.92 });
-      ttsCache[text] = Buffer.from(await mp3.arrayBuffer());
+      if (process.env.ELEVENLABS_API_KEY) {
+        // ElevenLabs — genuinely human voice. Change ELEVENLABS_VOICE_ID in .env to swap voice.
+        // Default: Rachel (21m00Tcm4TlvDq8ikWAM) — warm, professional, narrative.
+        const voiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+        const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_turbo_v2_5',
+            voice_settings: { stability: 0.45, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true }
+          })
+        });
+        if (!elRes.ok) throw new Error('ElevenLabs ' + elRes.status);
+        ttsCache[text] = Buffer.from(await elRes.arrayBuffer());
+      } else {
+        // Fallback: OpenAI nova (robotic but functional without ElevenLabs key)
+        const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: 'nova', input: text, speed: 0.92 });
+        ttsCache[text] = Buffer.from(await mp3.arrayBuffer());
+      }
     }
     res.set('Content-Type', 'audio/mpeg');
     res.set('Cache-Control', 'public, max-age=3600');
@@ -3780,41 +3798,41 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 var steps = [
   {
     icon:'', title:'The EX3 Platform', url:'/', auto:[],
-    voice:"This is EX3. Built for SmartRecruiters implementations. One platform — training, AI assistant, WhatsApp bot, and a full consultant toolkit. Everything a team needs, from the day a project kicks off.",
+    voice:"Meet Sarah. She runs SmartRecruiters implementations for a Big Four consulting firm. New client just signed — a global bank, twelve thousand employees, going live in sixty days. She has a kickoff call in two hours. This is everything she uses.",
     callout:null
   },
   {
     icon:'', title:'Role-Based Training', url:'/', auto:[{d:800,a:{action:'setRole',role:'rec'}}],
     minHold:5000,
-    voice:"Meet the recruiter. Day one, she opens EX3, picks her role — and everything she needs is right there. Job posting, pipelines, offer management, step by step. Nothing she does not need.",
+    voice:"Before the call she checks her team is set up. The recruiter opens their guide. Every task laid out for their specific role — job posting, candidate pipelines, offer management. Nothing they do not need. Nothing missing.",
     callout:{label:'Role-based training',text:'Every recruiter task, step by step',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
     icon:'', title:'Hiring Manager View', url:'/', auto:[{d:700,a:{action:'setRole',role:'hm'}}],
     minHold:5000,
-    voice:"The hiring manager opens the same platform and sees something completely different. Application review, interview feedback, offer approvals. Same tool — tailored experience.",
+    voice:"The hiring manager opens the same platform and gets a completely different experience. Application review, interview feedback, offer approvals. The platform already knows who they are and what they need.",
     callout:{label:'Hiring Manager view',text:'Tailored content, zero irrelevant clutter',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
     icon:'', title:'All Four Roles', url:'/', auto:[{d:700,a:{action:'setRole',role:'cand'}},{d:5500,a:{action:'setRole',role:'adm'}}],
     minHold:9000,
-    voice:"Candidates get a guided journey through their application. Admins get a full system setup walkthrough. Four completely different experiences — one platform covering every person on the project.",
+    voice:"Candidates get a guided journey through their application. System admins get a full configuration walkthrough. Four different people, four different experiences — every single person on this project covered from day one.",
     callout:{label:'4 roles covered',text:'Candidate · Recruiter · Hiring Manager · Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
     type:'card', icon:'', title:'Ask anything.', chap:'Chapter II', headline:'Ask anything.<br><em>Get an answer.</em>', countdown:4, auto:[], callout:null,
-    voice:"The AI assistant. Any SmartRecruiters question — answered in seconds."
+    voice:"The AI assistant. Any SmartRecruiters question, answered in seconds."
   },
   {
     icon:'', title:'AI Assistant', url:'/', auto:[{d:800,a:{action:'openAI'}},{d:1900,a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}],
     minHold:18000,
-    voice:"She has a question about setting up a hiring process. Types it in. The answer is back before she has finished reading it. No ticket, no waiting, no one to chase.",
+    voice:"Halfway through the kickoff call, the client asks something she was not expecting about hiring process setup. She types it straight into EX3. The answer comes back before she has even finished explaining the question to the room. No ticket. No waiting. No one to chase.",
     callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
   },
   {
     icon:'', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What changes for high-volume hiring?'}}],
     minHold:14000,
-    voice:"She asks a follow-up. The AI carries the full conversation forward — no re-explaining, no repeating yourself. It knows exactly what she was talking about.",
+    voice:"She pushes further. Asks a follow-up about high volume hiring. The AI carries the full conversation forward, no re-explaining, no starting over. It knows exactly what she was talking about. Like having a senior consultant in her ear the whole call.",
     callout:{label:'Context memory',text:'Full conversation history — no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
   },
   {
@@ -3829,7 +3847,7 @@ var steps = [
       {d:19000,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}
     ],
     minHold:28000,
-    voice:"Now she builds her runbook. Picks the exact processes she needs — posting the job, scheduling interviews, workflow automation, assessment stage. One click. The full sequence generates. She opens Workflow Automation. Expands the steps. Step two is not landing — she clicks the warning. EX3 surfaces the likely causes. One more click and that exact step goes straight to the AI, with everything already loaded. Watch the answer come back.",
+    voice:"After the call she starts building the implementation runbook. Picks the exact processes the client needs — posting the job, scheduling interviews, workflow automation, assessments. One click, the full sequence generates. She opens Workflow Automation, expands the steps. Step two is not landing. She flags it. EX3 surfaces the likely causes right away. One more click and that exact step goes straight to the AI with everything already loaded. Watch it answer.",
     callout:{label:'End-to-end workflow',text:'Build, troubleshoot, and escalate — without leaving EX3',dot:{x:52,y:50},bubble:{x:60,y:28}}
   },
   {
@@ -3850,34 +3868,34 @@ var steps = [
       {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:8000}
     ],
     auto:[],
-    voice:"It is 6am. She is driving to a client site. Instead of typing, she records a voice note — just talks. The answer lands before she even parks. That is the same AI, running 24 hours a day on WhatsApp. No app. No login.",
+    voice:"Next morning. Six AM. She is in the car, on the way to the client site. Instead of typing, she just talks — records a voice note on WhatsApp. The answer lands before she even parks. That is the same AI, running around the clock. No app to download. No login. Just WhatsApp.",
     callout:{label:'WhatsApp AI bot',text:'Voice notes supported — no app, no login',dot:{x:50,y:50},bubble:{x:55,y:32}}
   },
   {
     icon:'', title:'Consultant Portal', url:'/consultant',
     auto:[{d:800,a:{action:'showPhases'}},{d:1700,a:{action:'openPhase',index:0}},{d:3500,a:{action:'openPhase',index:1}},{d:5300,a:{action:'openPhase',index:2}},{d:7100,a:{action:'openPhase',index:3}}],
     minHold:9500,
-    voice:"The consultant portal runs the engagement. Four EXcelerate phases open up — Examine, Adopt, Validate, Launch. Each one with its own checklist, RACI, deliverables, and timelines. Everything the delivery team needs to run a clean SmartRecruiters deployment.",
+    voice:"Back at her desk, Sarah is running the engagement through the consultant portal. The EXcelerate methodology — four phases, each one fully structured. Examine, Adopt, Validate, Launch. Checklists, RACI, deliverables, timelines. Everything her delivery team needs to run a clean deployment, all in one place.",
     callout:{label:'EXcelerate methodology',text:'Examine · Adopt · Validate · Launch',dot:{x:50,y:42},bubble:{x:60,y:28}}
   },
   {
     type:'card', icon:'', title:'A complete SOW. In 45 seconds.', chap:'Chapter IV', headline:'A complete SOW.<br><em>In 45 seconds.</em>', countdown:4, auto:[], callout:null,
-    voice:"Every requirement captured. Every phase structured. Generated automatically."
+    voice:"The client has asked for a formal Statement of Work before they will sign off. Watch what happens next."
   },
   {
     icon:'', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], countdown:10,
-    voice:"Nineteen questions — org size, geography, integrations, approval workflows, compliance, training approach, go-live date. Watch it walk through every one. At the end, a complete Statement of Work, structured around EXcelerate phases.",
+    voice:"She opens the SOW builder. Nineteen questions — org size, geography, integrations, approval workflows, compliance, training approach, go-live date. It walks through every single one. At the end, a complete Statement of Work, structured around every EXcelerate phase.",
     callout:{label:'19-step SOW wizard',text:'Every requirement captured — EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
   {
     icon:'', title:'AI SOW Rewrite', url:'/consultant/sow-builder', auto:[{d:1000,a:{action:'triggerAIRewrite'}}],
     minHold:7000,
-    voice:"One click. The AI takes the raw output and rewrites it into polished, client-ready consulting language — streamed live, word by word. Done before the meeting starts.",
+    voice:"One click. The AI rewrites the whole thing into polished, client-ready consulting language — streamed live, word by word. Professional. Boardroom-ready. Done before the afternoon stand-up.",
     callout:{label:'AI rewrite',text:'Client-ready language, generated instantly',dot:{x:50,y:54},bubble:{x:60,y:40}}
   },
   {
     icon:'', title:'Export & Email', url:'/consultant/sow-builder', auto:[{d:800,a:{action:'scrollToExport'}}],
-    voice:"Export it as a structured Word document — proper headings, EXcelerate phase tables, RACI matrices. Or send it directly to the client. From generation to delivery without leaving the page.",
+    voice:"She exports it as a structured Word document — proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page. The client has what they need to sign.",
     callout:{label:'One-click delivery',text:'Structured Word doc or direct email to client',dot:{x:50,y:78},bubble:{x:60,y:64}}
   },
   {
@@ -3885,12 +3903,12 @@ var steps = [
     url:null,
     ph:{icon:'',title:'Conversation History',body:'Every web chat and WhatsApp session — stored, searchable, replayable.',link:{label:'Open Conversation History \u2197',url:'/conversations'}},
     auto:[],
-    voice:"And every conversation — web and WhatsApp — is stored as a searchable, replayable thread. Nothing lost when a consultant rolls off. Nothing missed between sessions.",
+    voice:"Three weeks in, a second consultant joins the project. Every conversation Sarah has had — web and WhatsApp — is stored, searchable, replayable. They can see everything. Nothing lost. Nothing missed. The project continues without a single briefing call.",
     callout:null
   },
   {
     icon:'', title:"That's EX3", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
-    voice:"Role-based training. An AI that answers anything. WhatsApp with voice notes. A workflow builder that troubleshoots itself. A SOW in 45 seconds. That is EX3 — the complete SmartRecruiters implementation platform.",
+    voice:"The kickoff went well. The SOW is signed. The team is live. Sarah has sixty days to deliver — and everything she needs is right here. Role training for every person. An AI that answers anything. WhatsApp, voice notes, no login. A workflow builder that troubleshoots itself. A Statement of Work in forty-five seconds. That is EX3.",
     callout:null
   }
 ];
