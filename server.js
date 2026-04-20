@@ -3854,9 +3854,9 @@ var steps = [
     calloutDelay:7500,
     waChat:[
       {from:'me', type:'voice', delay:600},
-      {from:'them', text:"The Send Offer button only appears once three things are in place:\n\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\n2\ufe0f\u20e3 The job has an active offer letter template\n3\ufe0f\u20e3 You have the *Offer Manager* permission\n\nWhich one would you like to check first?", delay:2400},
+      {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\\n2\ufe0f\u20e3 The job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich one would you like to check first?", delay:2400},
       {from:'me',  text:"Probably permissions \u2014 how do I check that?", delay:6000},
-      {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\n\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\n\nIf it's missing your SR admin can add it in about 2 minutes.", delay:8000}
+      {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:8000}
     ],
     auto:[],
     voice:"6:14 AM. A consultant on the way to a client. Sends a voice note. Gets the answer before they arrive. No app. No login. Just WhatsApp.",
