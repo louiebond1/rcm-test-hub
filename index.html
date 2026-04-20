@@ -6157,12 +6157,20 @@ function demoSetFlowProcesses(ids, buildNow){
   setTimeout(function(){
     renderFlowSelectors(ids);
     if(buildNow !== false) renderUnifiedFlow(ids);
+    setTimeout(function(){
+      var ft = document.getElementById('flowTimeline');
+      if(ft) ft.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 350);
   }, 120);
 }
 
 function demoOpenTaskDetail(taskId){
   if(!taskId || !TASK_DETAIL[taskId]) return;
   goL4(taskId);
+  setTimeout(function(){
+    var el = document.querySelector('.l4-steps') || document.querySelector('[id^="sb_"]');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 500);
 }
 
 function demoExpandTaskSteps(taskId, indices){
@@ -6173,6 +6181,12 @@ function demoExpandTaskSteps(taskId, indices){
       setTimeout(function(){
         var body = document.getElementById('sb_' + taskId + '_' + idx);
         if(body && !body.classList.contains('open')) togStep(taskId, idx);
+        if(order === indices.length - 1){
+          setTimeout(function(){
+            var hdr = document.getElementById('sh_' + taskId + '_' + idx);
+            if(hdr) hdr.scrollIntoView({behavior:'smooth', block:'center'});
+          }, 300);
+        }
       }, order * 420);
     });
   }, 180);
@@ -6182,6 +6196,10 @@ function demoOpenStuck(taskId, stepIdx){
   demoExpandTaskSteps(taskId, [stepIdx]);
   setTimeout(function(){
     toggleStuck('stuck_' + taskId + '_' + stepIdx, taskId, stepIdx);
+    setTimeout(function(){
+      var panel = document.getElementById('stuck_' + taskId + '_' + stepIdx);
+      if(panel) panel.scrollIntoView({behavior:'smooth', block:'center'});
+    }, 400);
   }, 680);
 }
 

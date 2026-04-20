@@ -3850,7 +3850,7 @@ var steps = [
       {d:23500,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}},
       {d:28000,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}
     ],
-    minHold:40000,
+    minHold:55000,
     voice:"After the call she starts building the implementation runbook. Picks the exact processes the client needs — posting the job, scheduling interviews, workflow automation, assessments. One click, the full sequence generates. She opens Workflow Automation, expands the steps. Step two is not landing. She flags it. EX3 surfaces the likely causes right away. One more click and that exact step goes straight to the AI with everything already loaded. Watch it answer.",
     callout:{label:'End-to-end workflow',text:'Build, troubleshoot, and escalate — without leaving EX3',dot:{x:52,y:50},bubble:{x:60,y:28}}
   },
@@ -4104,9 +4104,10 @@ function postToFrame(msg){
   try{ document.getElementById('liveFrame').contentWindow.postMessage(Object.assign({type:'EX3_DEMO'},msg),'*'); }catch(e){}
 }
 
-var waTimers = [];
+var waTimers = [], waVoiceAudio = null;
 function clearWaChat(){
   waTimers.forEach(clearTimeout); waTimers = [];
+  if(waVoiceAudio){ waVoiceAudio.pause(); waVoiceAudio.currentTime = 0; waVoiceAudio = null; }
   var shell = document.getElementById('wa-shell');
   if(shell) shell.classList.remove('active');
   var msgs = document.getElementById('wa-msgs');
@@ -4152,8 +4153,9 @@ function startWaChat(msgs){
           if(msg.voiceText){
             var vt = encodeURIComponent(msg.voiceText);
             setTimeout(function(){
-              var aud = new Audio('/api/tts?text='+vt+'&stressed=1');
-              aud.play().catch(function(){});
+              if(waVoiceAudio){ waVoiceAudio.pause(); waVoiceAudio = null; }
+              waVoiceAudio = new Audio('/api/tts?text='+vt+'&stressed=1');
+              waVoiceAudio.play().catch(function(){});
             }, 500);
           }
         } else {
