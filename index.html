@@ -1200,9 +1200,14 @@ body.dark .stuck-head-title{color:#f5a63d}
       <div class="sb-link" onclick="goL3('adm','offertpl')">Offer Templates <span class="sb-ct">4</span></div>
       <div class="sb-group-label">Advertising</div>
       <div class="sb-link" onclick="goL3('adm','jobboards')">Job Boards &amp; Contracts <span class="sb-ct">3</span></div>
+      <div class="sb-link" onclick="goL3('adm','careersite')">Career Site <span class="sb-ct">4</span></div>
       <div class="sb-link" onclick="goL3('adm','company')">Company Settings <span class="sb-ct">3</span></div>
       <div class="sb-group-label">Compliance &amp; Policy</div>
       <div class="sb-link" onclick="goL3('adm','compliance')">Compliance &amp; Policy <span class="sb-ct">4</span></div>
+      <div class="sb-link" onclick="goL3('adm','datamigration')">Data Migration <span class="sb-ct">3</span></div>
+      <div class="sb-group-label">Referrals &amp; Analytics</div>
+      <div class="sb-link" onclick="goL3('adm','referralmgmt')">Referral Management <span class="sb-ct">3</span></div>
+      <div class="sb-link" onclick="goL3('adm','reporting')">Reporting &amp; Analytics <span class="sb-ct">4</span></div>
       <div class="sb-group-label">AI &amp; Winston</div>
       <div class="sb-link" onclick="goL3('adm','aifeatures')">AI &amp; Winston <span class="sb-ct">3</span></div>
       <div class="sb-group-label">System Configuration</div>
@@ -1446,8 +1451,12 @@ const CATS = {
     { id:'interviewtpl',   icon:'📅',  title:'Interview Templates',    desc:'Set up individual and group interview scheduling templates', count:3 },
     { id:'offertpl',       icon:'📄',  title:'Offer Templates',        desc:'Create, upload and configure offer letter templates', count:4 },
     { id:'jobboards',      icon:'📢',  title:'Job Boards & Contracts', desc:'Set up posting contracts and automated distribution', count:3 },
+    { id:'careersite',     icon:'🌐',  title:'Career Site',            desc:'Configure your external career site, branding, pages, and mobile experience', count:4 },
     { id:'company',        icon:'⚙️',  title:'Company Settings',       desc:'Configure branding, security, and company profile', count:3 },
     { id:'compliance',    icon:'⚖️',  title:'Compliance & Policy',    desc:'Configure consent models, SMS opt-in, rejection enforcement and data compliance', count:4 },
+    { id:'datamigration',  icon:'🗄️', title:'Data Migration',          desc:'Import legacy candidates, requisitions, and historical data into SmartRecruiters', count:3 },
+    { id:'referralmgmt',   icon:'🤝',  title:'Referral Management',    desc:'Enable the employee referral portal and manage referral workflows', count:3 },
+    { id:'reporting',      icon:'📊',  title:'Reporting & Analytics',  desc:'Build dashboards, create saved reports, and schedule data distribution', count:4 },
     { id:'aifeatures',    icon:'🤖',  title:'AI & Winston',           desc:'Winston Match for resume scoring and Winston Chat for conversational apply', count:5 },
     { id:'systemconfig',  icon:'⚙️',  title:'System Configuration',   desc:'Locations, scheduling rules, approval delegation, calendar sync and integrations', count:9 },
     { id:'worktemplates', icon:'📋',  title:'Templates & Fields',     desc:'Job templates, org field detail, internal application and employee filters', count:4 },
@@ -1591,7 +1600,7 @@ const TASKS = {
   'adm-compliance': [
     { id:'configure-consent-model',        icon:'🔐', title:'Configure the Consent Model',            desc:'Set how candidate consent works for data storage and CRM community membership',          role:'adm' },
     { id:'configure-rejection-reasons',    icon:'❌', title:'Rejection Reasons — Mandatory Detail',   desc:'Enforce written context on every rejection — not just a dropdown selection',              role:'adm' },
-    { id:'configure-sms-compliance',       icon:'💬', title:'Configure SMS Opt-In (GDPR)',            desc:'Enable SmartMessage opt-in so candidates must reply START before receiving SMS',          role:'adm' },
+    { id:'configure-sms-compliance',       icon:'💬', title:'Configure SMS Opt-In (GDPR / UAE PDPL)', desc:'Enable SmartMessage opt-in so candidates must reply START before receiving SMS',          role:'adm' },
     { id:'configure-serial-applicants',    icon:'🔁', title:'Track Reapplied Candidates',             desc:'Enable the visual badge flagging candidates who apply to the same job twice',              role:'adm' },
   ],
   'adm-aifeatures': [
@@ -1616,6 +1625,28 @@ const TASKS = {
     { id:'configure-job-details-tab',      icon:'🗂', title:'Job Profile Tabs — Where Org Fields Live', desc:'Which tab holds cost centre, department code and all org fields',                    role:'adm' },
     { id:'configure-internal-application', icon:'🏢', title:'Internal Application Experience',          desc:'Apply different screening questions to the internal employee apply form',              role:'adm' },
     { id:'configure-employee-filters',     icon:'🔍', title:'Employee Portal Search Filters',           desc:'Add searchable filters like Technical Branch to the internal career portal',           role:'adm' },
+  ],
+  'adm-careersite': [
+    { id:'configure-career-site-branding', icon:'🎨', title:'Configure Career Site Branding',           desc:'Apply your logo, brand colours, and imagery to the external career site',              role:'adm' },
+    { id:'configure-career-site-pages',    icon:'📄', title:'Build Career Site Pages',                  desc:'Create the homepage, category pages, and content pages for your career site',          role:'adm' },
+    { id:'configure-career-site-locale',   icon:'🌍', title:'Set Career Site Locale & Language',        desc:'Configure the site locale, language, and regional display settings',                   role:'adm' },
+    { id:'test-career-site-mobile',        icon:'📱', title:'Test Mobile Career Site',                  desc:'Validate that the career site renders correctly on mobile devices',                    role:'adm' },
+  ],
+  'adm-referralmgmt': [
+    { id:'enable-referral-portal',         icon:'🤝', title:'Enable the Employee Referral Portal',      desc:'Activate the native SmartRecruiters referral portal so employees can submit referrals', role:'adm' },
+    { id:'configure-referral-settings',    icon:'⚙️', title:'Configure Referral Settings',              desc:'Set visibility rules, referral form fields, and notification preferences',              role:'adm' },
+    { id:'track-referral-status',          icon:'📋', title:'Track Referral Status',                    desc:'Monitor referral pipeline, view referral history, and manage referred candidates',      role:'adm' },
+  ],
+  'adm-reporting': [
+    { id:'access-standard-dashboards',     icon:'📊', title:'Access Standard Dashboards',               desc:'Navigate SmartRecruiters built-in dashboards for pipeline, sourcing, and time-to-hire', role:'adm' },
+    { id:'create-saved-report',            icon:'💾', title:'Create a Saved Report',                    desc:'Build a custom report from the Reports module and save it for regular use',              role:'adm' },
+    { id:'schedule-report',                icon:'⏰', title:'Schedule a Report',                        desc:'Set up automatic report distribution to stakeholders by email on a defined cadence',    role:'adm' },
+    { id:'export-recruiting-data',         icon:'⬇️', title:'Export Recruiting Data',                   desc:'Export candidate and job data for external analysis or compliance records',             role:'adm' },
+  ],
+  'adm-datamigration': [
+    { id:'prepare-migration-templates',    icon:'📋', title:'Prepare Data Migration Templates',         desc:'Download and complete EX3 data load templates for candidates and requisitions',         role:'adm' },
+    { id:'validate-migration-data',        icon:'✅', title:'Validate Migration Data',                  desc:'Run basic format and integrity checks before submitting data for loading',               role:'adm' },
+    { id:'execute-data-migration',         icon:'🚀', title:'Execute Data Migration',                   desc:'Coordinate the test and production migration cycles with your EX3 consultant',          role:'adm' },
   ],
 };
 
@@ -3405,12 +3436,21 @@ const TASK_DETAIL = {
     {
       title:'Select Model 2 and save',
       desc:'Select <strong>Model 2</strong> from the Consent Model dropdown. Customise the opt-in checkbox text if required. Click <strong>Save</strong>.',
-      subs:[{ icon:'⚠️', title:'Impact', points:[
-        'Applies to new applicants only — existing candidates retain their original consent status',
-        'Existing CRM community members are not removed',
-        'Always document consent model changes with date, reason, and approver for your compliance records'
-      ]}],
-      warn:'Always confirm the correct model with your legal team. Incorrect consent configuration can expose your organisation to GDPR violations.'
+      subs:[
+        { icon:'⚠️', title:'Impact', points:[
+          'Applies to new applicants only — existing candidates retain their original consent status',
+          'Existing CRM community members are not removed',
+          'Always document consent model changes with date, reason, and approver for your compliance records'
+        ]},
+        { icon:'🌙', title:'UAE PDPL & Saudi PDPPL requirements', points:[
+          '<strong>UAE Personal Data Protection Law (PDPL)</strong>: Requires explicit consent for collection and processing of personal data. Candidates must be informed of the purpose of data collection at the point of application.',
+          '<strong>Saudi Arabia Personal Data Protection Law (PDPPL)</strong>: Requires clear, specific consent before collecting personal data. Data subjects have the right to withdraw consent at any time.',
+          'For Middle East implementations, use Model 3 (explicit consent for everything) or Model 2 with customised consent text approved by your legal team',
+          'Your privacy notice must reference the applicable law(s) — UAE PDPL, Saudi PDPPL, or both, depending on the countries in scope',
+          'Retain consent records — document when and how each candidate gave consent'
+        ]}
+      ],
+      warn:'Always confirm the correct model with your legal team. For Middle East deployments, GDPR standards alone are insufficient — ensure UAE PDPL and Saudi PDPPL requirements are met.'
     },
   ]
 },
@@ -3443,6 +3483,528 @@ const TASK_DETAIL = {
         'External career page filters configured separately under External Career Page settings'
       ]}],
       tip:'To do this: configure the Technical Branch field as a searchable filter under Settings → Career Page Setup → Internal Career Page → Search Filters.'
+    },
+  ]
+},
+
+// ─── CAREER SITE ─────────────────────────────────────
+'configure-career-site-branding': {
+  role:'adm', icon:'🎨', title:'Configure Career Site Branding',
+  desc:'Apply your organisation\'s logo, brand colours, and imagery to the SmartRecruiters external career site so candidates see a consistent employer brand.',
+  path:['Settings','Career Page Setup','External Career Page','Branding'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Brand assets must be provided by the client: logo (SVG or PNG), hex colour codes, and any banner imagery','Confirm the single locale is English — additional language sites require separate configuration'],
+  steps:[
+    {
+      title:'Go to Settings → Career Page Setup → External Career Page',
+      desc:'Click User Menu → Settings → <strong>Career Page Setup</strong> → <strong>External Career Page</strong>.',
+      path:['Settings','Career Page Setup','External Career Page'],
+      subs:[{ icon:'💡', title:'Career site vs internal portal', points:[
+        'External Career Page is the public-facing site candidates see when they apply',
+        'Internal Career Page is the employee portal for internal mobility — configured separately',
+        'Branding is applied independently to each site'
+      ]}]
+    },
+    {
+      title:'Upload your logo and set brand colours',
+      desc:'In the <strong>Branding</strong> section, upload your company logo and enter your primary brand colour using a hex code. This colour is applied to buttons, links, and highlights across the career site.',
+      subs:[{ icon:'⚠️', title:'Asset requirements', points:[
+        'Logo: SVG or high-resolution PNG preferred — displays at approx 200px wide',
+        'Colour: enter as hex code (e.g. #0F3D6E)',
+        'Background imagery: recommended 1920×1080 minimum for hero banners',
+        'All assets must be approved brand-compliant versions — do not use placeholder files'
+      ]}]
+    },
+    {
+      title:'Add a hero banner image and page header',
+      desc:'Upload a hero/banner image for the homepage. Add a <strong>Tagline</strong> or header text that reflects your employer value proposition.',
+      subs:[{ icon:'✍️', title:'Content tips', points:[
+        'Keep the tagline under 10 words — it overlays on the banner image',
+        'Ensure sufficient colour contrast between text and banner for accessibility (WCAG AA)',
+        'Avoid text embedded in images — it cannot be translated or scaled'
+      ]}]
+    },
+    {
+      title:'Save and preview the career site',
+      desc:'Click <strong>Save</strong>. Use the <strong>Preview</strong> option to review how the site looks before publishing. Confirm with the client that branding is approved before go-live.',
+      subs:[{ icon:'📱', title:'Mobile check', points:[
+        'Preview the site on a mobile viewport — SmartRecruiters career sites are responsive by design',
+        'Check the logo, banner, and apply button all render correctly on small screens',
+        'Do this before sign-off — not after go-live'
+      ]}]
+    },
+  ]
+},
+
+'configure-career-site-pages': {
+  role:'adm', icon:'📄', title:'Build Career Site Pages',
+  desc:'Create the homepage, category pages (e.g. by department or location), and content pages (e.g. Life at X, Benefits) that form your career site structure.',
+  path:['Settings','Career Page Setup','External Career Page','Pages'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Agree the career site page structure with the client during Examine Phase','Collect all copy, images, and video links in advance — configuration cannot begin without content'],
+  steps:[
+    {
+      title:'Access Career Page Setup → Pages',
+      desc:'Settings → Career Page Setup → External Career Page → <strong>Pages</strong> tab.',
+      path:['Settings','Career Page Setup','External Career Page','Pages'],
+      subs:[{ icon:'📋', title:'Page types in scope', points:[
+        '1 Career Site Homepage — the landing page all candidates see first',
+        'Up to 8 Category Pages — filter job listings by department, location, or type',
+        'Up to 3 Content Pages — employer brand pages like "Life at X" or "Benefits"',
+        'Additional pages require a Change Order'
+      ]}]
+    },
+    {
+      title:'Configure the Homepage',
+      desc:'Click <strong>Edit Homepage</strong>. Add components using the page builder: job search widget, featured jobs, video embed, or content blocks. Arrange components by drag-and-drop.',
+      subs:[{ icon:'⚙️', title:'Homepage components', points:[
+        'Job Search Widget — allows candidates to search by keyword, location, or category',
+        'Featured Jobs — manually curated list of priority roles',
+        'Video — embed a YouTube or Vimeo employer brand video',
+        'Content Block — text + image sections for employer branding copy'
+      ]}]
+    },
+    {
+      title:'Add Category Pages',
+      desc:'Click <strong>Add Category Page</strong>. Set the page title (e.g. "Technology Roles"), assign a filter rule (e.g. Department = Technology), and add any intro copy or imagery.',
+      subs:[{ icon:'💡', title:'Category page logic', points:[
+        'Category pages automatically surface jobs that match your filter rules',
+        'Candidates clicking a category see only relevant jobs — improving conversion',
+        'Link category pages from the homepage navigation for discoverability'
+      ]}]
+    },
+    {
+      title:'Add Content Pages and publish',
+      desc:'Click <strong>Add Content Page</strong> for employer brand pages. Add copy, images, and calls to action. When all pages are ready, click <strong>Publish</strong> to make the site live.',
+      warn:'Do not publish until all branding and content has been approved by the client. Once published, the career site is publicly accessible.'
+    },
+  ]
+},
+
+'configure-career-site-locale': {
+  role:'adm', icon:'🌍', title:'Set Career Site Locale & Language',
+  desc:'Configure the career site locale, display language, and regional settings. For Middle East implementations, the site is configured in English only.',
+  path:['Settings','Career Page Setup','External Career Page','Locale'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Confirm the in-scope locale with your EX3 consultant during Examine Phase','Arabic and other language configurations are out of scope unless explicitly agreed in the SOW'],
+  steps:[
+    {
+      title:'Go to Settings → Career Page Setup → Locale',
+      desc:'Settings → Career Page Setup → External Career Page → <strong>Locale</strong> tab.',
+      path:['Settings','Career Page Setup','External Career Page','Locale'],
+      subs:[{ icon:'🌐', title:'Locale scope for Middle East deployments', points:[
+        'Standard scope: 1 locale, English language only',
+        'Arabic configuration is out of scope and requires a Change Order',
+        'Regional date and number formats can be set independently of the display language',
+        'Confirm locale settings in Examine Phase — changes post-go-live can affect candidate data'
+      ]}]
+    },
+    {
+      title:'Set the display language and region',
+      desc:'Select <strong>English (United Kingdom)</strong> or <strong>English (United States)</strong> as the display language. Set the region to match your primary country of operation.',
+      subs:[{ icon:'⚠️', title:'Language and compliance note', points:[
+        'For UAE and Saudi Arabia: set English as the display language',
+        'Regional compliance (UAE PDPL, Saudi PDPPL) is configured in Company Policy — not Locale settings',
+        'Consent notices and privacy policy text must be reviewed by your legal team for each market'
+      ]}]
+    },
+    {
+      title:'Save locale settings',
+      desc:'Click <strong>Save</strong>. Confirm the locale is correctly reflected on the career site preview before proceeding to page configuration.',
+    },
+  ]
+},
+
+'test-career-site-mobile': {
+  role:'adm', icon:'📱', title:'Test Mobile Career Site',
+  desc:'Validate that the career site renders correctly on mobile devices across iOS and Android — including job search, apply flow, and all content pages.',
+  path:['Career Site','Mobile Preview'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Career site must be fully built and branded before mobile testing begins','Test on real devices if possible — not just browser developer tools'],
+  steps:[
+    {
+      title:'Use the career site preview on mobile',
+      desc:'Open the career site URL on a real mobile device (iOS and Android). Walk through the full candidate journey: homepage → job search → job ad → application form.',
+      subs:[{ icon:'📱', title:'What to check on mobile', points:[
+        'Logo and hero banner display correctly and are not cropped',
+        'Job search widget is usable on a small screen',
+        'Apply button is clearly visible and tappable',
+        'Application form fields are mobile-friendly — no horizontal scrolling',
+        'Page load time is acceptable on mobile network speed'
+      ]}]
+    },
+    {
+      title:'Test the apply flow end-to-end',
+      desc:'Submit a test application via mobile. Confirm the candidate receives the application acknowledgement email. Verify the candidate appears in the SmartRecruiters pipeline.',
+      subs:[{ icon:'✅', title:'End-to-end mobile test checklist', points:[
+        'Homepage renders without layout issues',
+        'Category pages display correct jobs',
+        'Job ad is readable with no truncation',
+        'Application form completes and submits without errors',
+        'Confirmation email is received',
+        'Candidate appears in pipeline with correct source tag'
+      ]}]
+    },
+    {
+      title:'Log findings and resolve before sign-off',
+      desc:'Document any mobile issues in the UAT log. Raise with your EX3 consultant for resolution before the Validate sign-off. Mobile issues discovered post-go-live are harder to fix.',
+    },
+  ]
+},
+
+// ─── REFERRAL MANAGEMENT ──────────────────────────────
+'enable-referral-portal': {
+  role:'adm', icon:'🤝', title:'Enable the Employee Referral Portal',
+  desc:'Activate the native SmartRecruiters employee referral portal so employees can browse open roles, submit referrals, and track the status of their referrals — without needing a SmartRecruiters licence.',
+  path:['Settings','Referrals','Referral Portal'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Confirm referral management is in scope in your SOW','Advanced features (bonus tracking, leaderboard, automated payments) are out of scope — these require a third-party Marketplace integration'],
+  steps:[
+    {
+      title:'Go to Settings → Referrals',
+      desc:'Click User Menu → Settings → <strong>Referrals</strong>.',
+      path:['Settings','Referrals'],
+      subs:[{ icon:'💡', title:'What the referral portal enables', points:[
+        'Employees receive a unique referral link or email invitation',
+        'They can browse open jobs and submit a referral with a candidate\'s details',
+        'Referred candidates are tagged with the referring employee\'s name',
+        'Employees can track the status of their referrals (applied, in review, hired)',
+        'No SmartRecruiters licence is required for the referring employee'
+      ]}]
+    },
+    {
+      title:'Enable the Referral Portal',
+      desc:'Toggle <strong>Enable Referral Portal</strong> on. Configure the portal name and introductory message shown to employees.',
+      subs:[{ icon:'⚠️', title:'Out of scope reminders', points:[
+        'Referral bonus tracking and automated payments require a third-party marketplace app',
+        'Leaderboard and gamification features are not part of the native portal',
+        'If the client requests these, raise a Change Order'
+      ]}]
+    },
+    {
+      title:'Configure who can access the portal',
+      desc:'Under <strong>Access Settings</strong>, choose whether all employees can access the portal or restrict it to specific groups. Set the internal domain whitelist if using SSO.',
+      subs:[{ icon:'🔐', title:'Access options', points:[
+        'Open to all employees — anyone with a company email can access',
+        'Restricted by domain — only email addresses on your whitelist',
+        'SSO-gated — employees authenticate via your identity provider before accessing',
+        'Confirm the access method with IT during Examine Phase'
+      ]}]
+    },
+  ]
+},
+
+'configure-referral-settings': {
+  role:'adm', icon:'⚙️', title:'Configure Referral Settings',
+  desc:'Set up referral form fields, notification preferences, and visibility rules for the employee referral portal.',
+  path:['Settings','Referrals','Settings'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Employee referral portal must be enabled first'],
+  steps:[
+    {
+      title:'Configure referral form fields',
+      desc:'Under <strong>Referral Form</strong>, choose which fields the referring employee must complete: candidate name, email, phone, relationship to referrer, and optional notes.',
+      subs:[{ icon:'📋', title:'Field recommendations', points:[
+        'Candidate name and email are required minimum fields',
+        'Add "Relationship to referrer" to give recruiters context',
+        'Keep the form short — long forms reduce referral volume',
+        'Optional: add a free-text "Why are you referring this person?" field'
+      ]}]
+    },
+    {
+      title:'Set referral notifications',
+      desc:'Under <strong>Notifications</strong>, configure which status updates the referring employee receives. Recommended: notify on application received, interview stage reached, and hire.',
+      subs:[{ icon:'🔔', title:'Notification best practices', points:[
+        'Over-notifying erodes trust — limit to meaningful milestone updates',
+        'Hiring decisions (reject/hire) are the most valued notifications for referrers',
+        'Confirm notification copy with HR — referral comms must be sensitive to candidate privacy'
+      ]}]
+    },
+    {
+      title:'Set job visibility for the referral portal',
+      desc:'Configure which jobs are visible in the referral portal. Options: all published jobs, or jobs explicitly marked as "Referral eligible" via a job field.',
+      tip:'Limiting referral-eligible jobs to high-priority or hard-to-fill roles can improve referral quality by focusing employee attention.'
+    },
+  ]
+},
+
+'track-referral-status': {
+  role:'adm', icon:'📋', title:'Track Referral Status',
+  desc:'Monitor the referral pipeline, view referral history, and manage referred candidates within SmartRecruiters.',
+  path:['Reports','Referrals'],
+  who:[{label:'Admin',c:'var(--a-adm)'},{label:'Recruiter',c:'var(--a-rec)'}],
+  before:['Referral portal must be active and referrals must have been submitted'],
+  steps:[
+    {
+      title:'Access the Referrals report',
+      desc:'Navigate to <strong>Reports</strong> → <strong>Referrals</strong>. This shows all submitted referrals, the referring employee, the candidate, current stage, and outcome.',
+      subs:[{ icon:'📊', title:'What the referrals report shows', points:[
+        'Referring employee name',
+        'Referred candidate name and current pipeline stage',
+        'Job they were referred for',
+        'Date referral was submitted',
+        'Outcome: active, hired, or declined'
+      ]}]
+    },
+    {
+      title:'Filter and export referral data',
+      desc:'Use date filters to view referrals within a specific period. Export to CSV for reporting to HR or finance teams (e.g. for referral bonus programme administration).',
+      subs:[{ icon:'⚠️', title:'Bonus programme note', points:[
+        'SmartRecruiters does not natively calculate or pay referral bonuses',
+        'Export the hire data and process bonuses manually through Payroll or a third-party tool',
+        'Document the process clearly to avoid disputes'
+      ]}]
+    },
+    {
+      title:'Manage referred candidates in the pipeline',
+      desc:'Referred candidates appear in the normal recruiter pipeline with a Referral source tag. Recruiters manage them identically to other candidates. The referrer sees status updates via notifications.',
+    },
+  ]
+},
+
+// ─── REPORTING & ANALYTICS ────────────────────────────
+'access-standard-dashboards': {
+  role:'adm', icon:'📊', title:'Access Standard Dashboards',
+  desc:'Navigate SmartRecruiters built-in dashboards for pipeline overview, sourcing analytics, time-to-hire, and recruiter activity metrics.',
+  path:['Reports','Dashboards'],
+  who:[{label:'Admin',c:'var(--a-adm)'},{label:'Recruiter',c:'var(--a-rec)'}],
+  before:['Dashboards are populated by live data — they are empty or limited in a sandbox with no candidates'],
+  steps:[
+    {
+      title:'Navigate to Reports → Dashboards',
+      desc:'From the top navigation, click <strong>Reports</strong>. Select <strong>Dashboards</strong> from the left sidebar.',
+      path:['Reports','Dashboards'],
+      subs:[{ icon:'📊', title:'Standard SmartRecruiters dashboards', points:[
+        '<strong>Pipeline Overview</strong> — active jobs and candidates by stage',
+        '<strong>Sourcing Analytics</strong> — which channels produce the most applicants and hires',
+        '<strong>Time to Hire</strong> — average days from job open to offer accepted',
+        '<strong>Recruiter Activity</strong> — actions taken by each recruiter (reviews, rejections, moves)',
+        '<strong>Diversity</strong> — EEO and diversity data where applicable and configured'
+      ]}]
+    },
+    {
+      title:'Apply filters to focus the data',
+      desc:'Use the date range selector and filters (Job, Department, Recruiter, Location) to narrow the dashboard to the data relevant to you.',
+      subs:[{ icon:'💡', title:'Dashboard tips', points:[
+        'Dashboards update in near real-time — refresh to see the latest data',
+        'Save commonly used filter combinations as a Saved Report for regular use',
+        'Share dashboard views by copying the URL — filters are preserved in the URL'
+      ]}]
+    },
+    {
+      title:'Understand the Sourcing Analytics chart',
+      desc:'The Sourcing Analytics chart shows the volume and conversion rate of candidates from each source (LinkedIn, Indeed, Referral, Direct, etc.). Use this to identify your highest-performing channels.',
+      subs:[{ icon:'📈', title:'Key sourcing metrics', points:[
+        'Volume: raw number of applicants per channel',
+        'Hired: number of hires per channel — the quality signal',
+        'Conversion rate: % of applicants who reach offer stage',
+        'Cost per hire: not calculated natively — export and calculate externally if needed'
+      ]}]
+    },
+  ]
+},
+
+'create-saved-report': {
+  role:'adm', icon:'💾', title:'Create a Saved Report',
+  desc:'Build a custom report from the Reports module using filters and columns, then save it for regular use by your team.',
+  path:['Reports','Create Report'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Standard dashboards exist out-of-the-box — only create saved reports for bespoke data needs','No custom report development is included in standard scope — saved reports use the standard report builder only'],
+  steps:[
+    {
+      title:'Go to Reports and click Create Report',
+      desc:'Navigate to <strong>Reports</strong> → click <strong>Create Report</strong>. Select a report type: Jobs, Candidates, Applications, or Offers.',
+      path:['Reports','Create Report'],
+      subs:[{ icon:'📋', title:'Report types', points:[
+        '<strong>Jobs</strong> — job status, department, recruiter, days open',
+        '<strong>Candidates</strong> — candidate details, source, stage, rejection reason',
+        '<strong>Applications</strong> — application volume by job, status, and time period',
+        '<strong>Offers</strong> — offer status, approval chain, and offer letter data'
+      ]}]
+    },
+    {
+      title:'Select columns and apply filters',
+      desc:'Use the column picker to select the data fields you want. Apply filters (date range, department, status) to scope the report. Preview the data before saving.',
+      subs:[{ icon:'⚠️', title:'Report scope note', points:[
+        'You can only report on data you have permission to view based on your RBP role',
+        'Admins see all data; Recruiters see only their assigned jobs',
+        'Custom fields (org fields) are available as report columns if configured correctly'
+      ]}]
+    },
+    {
+      title:'Save the report',
+      desc:'Click <strong>Save</strong>. Name the report clearly (e.g. "Weekly Hiring Pipeline — Q2 2025"). Choose whether to keep it private or share with all SmartRecruiters users.',
+      tip:'Use a consistent naming convention for saved reports so your team can find them easily. Include the report frequency (weekly/monthly) in the name.'
+    },
+  ]
+},
+
+'schedule-report': {
+  role:'adm', icon:'⏰', title:'Schedule a Report',
+  desc:'Set up automatic report distribution so stakeholders receive key recruiting data by email on a weekly or monthly cadence — without manual exports.',
+  path:['Reports','Saved Reports','Schedule'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['The report must be saved before scheduling','Confirm email addresses with stakeholders — scheduled reports go to external email addresses, not just SmartRecruiters users'],
+  steps:[
+    {
+      title:'Open a saved report and click Schedule',
+      desc:'Go to Reports → Saved Reports. Open the report you want to schedule. Click the <strong>Schedule</strong> button (clock icon).',
+      path:['Reports','Saved Reports'],
+    },
+    {
+      title:'Set the schedule frequency and recipients',
+      desc:'Choose the frequency: Daily, Weekly, or Monthly. Set the day and time. Enter recipient email addresses. Choose the export format: CSV or PDF.',
+      subs:[{ icon:'💡', title:'Scheduling tips', points:[
+        'Weekly distribution on Monday morning is the most common pattern — gives stakeholders data at the start of the working week',
+        'Monthly reports for board or executive audiences — keep to high-level KPIs',
+        'CSV format is best for recipients who want to work with the data in Excel',
+        'PDF format is best for read-only distribution to non-technical stakeholders'
+      ]}]
+    },
+    {
+      title:'Save the schedule',
+      desc:'Click <strong>Save</strong>. The first distribution will run at the next scheduled time. You can send a test email immediately using <strong>Send Now</strong>.',
+      warn:'Scheduled reports include live data at the time they run. Ensure recipients are authorised to receive the candidate and job data the report contains — check with your data protection officer if unsure.'
+    },
+  ]
+},
+
+'export-recruiting-data': {
+  role:'adm', icon:'⬇️', title:'Export Recruiting Data',
+  desc:'Export candidate, application, and job data from SmartRecruiters for external analysis, compliance records, or data migration purposes.',
+  path:['Reports','Export'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Confirm data export is permitted under your data privacy policy and UAE PDPL / Saudi PDPPL obligations','Data exports containing personal candidate data must be handled and stored securely'],
+  steps:[
+    {
+      title:'Navigate to Reports and select Export',
+      desc:'Go to <strong>Reports</strong> → <strong>Export</strong>. Select the data type: Candidates, Jobs, Applications, or Offers.',
+      path:['Reports','Export'],
+      subs:[{ icon:'⚖️', title:'Data privacy considerations', points:[
+        'Exported data is a personal data extract — handle under your GDPR / UAE PDPL / Saudi PDPPL policies',
+        'Do not share exports via email — use secure file transfer methods',
+        'Document the purpose, date, and recipient of every data export for your compliance records',
+        'Candidate data should only be retained as long as necessary under your data retention policy'
+      ]}]
+    },
+    {
+      title:'Apply filters and select fields',
+      desc:'Use date range and status filters to scope the export. Select the specific fields/columns you need — do not export all fields if only a subset is required (data minimisation principle).',
+    },
+    {
+      title:'Download the export',
+      desc:'Click <strong>Export</strong>. The file downloads as a CSV. Open in Excel or your analytics tool. Store securely and delete when no longer needed.',
+      tip:'For recurring data exports, set up a Saved Report with a schedule instead of doing manual exports — this is more consistent and auditable.'
+    },
+  ]
+},
+
+// ─── DATA MIGRATION ───────────────────────────────────
+'prepare-migration-templates': {
+  role:'adm', icon:'📋', title:'Prepare Data Migration Templates',
+  desc:'Download and complete the EX3-provided data load templates for candidates and open requisitions. Correct template completion is the single biggest factor in a smooth migration.',
+  path:['Settings','Data Import'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Data migration scope must be confirmed in the SOW — not all implementations include migration','A maximum of 1 test cycle and 1 production migration cycle is included in standard scope'],
+  steps:[
+    {
+      title:'Receive migration templates from your EX3 consultant',
+      desc:'Your EX3 consultant will provide the official data load templates during the Examine Phase. Do not use templates from previous projects or SmartRecruiters documentation — use EX3\'s templates only.',
+      subs:[{ icon:'📋', title:'Typical migration templates', points:[
+        '<strong>Open Requisitions</strong> — job title, department, location, recruiter, status, opening date',
+        '<strong>Candidates / Active Pipeline</strong> — candidate name, email, current job, stage, source',
+        '<strong>Offer Data</strong> — offer status, salary, start date (if offer migration is in scope)',
+        'Closed requisitions and historical data are typically out of scope unless explicitly agreed'
+      ]}]
+    },
+    {
+      title:'Extract data from your legacy system',
+      desc:'Export candidate and requisition data from your existing ATS or HRIS in the format specified by the EX3 template. Map your legacy fields to the template columns exactly.',
+      subs:[{ icon:'⚠️', title:'Common extraction issues', points:[
+        'Date formats — ensure dates are in DD/MM/YYYY or MM/DD/YYYY as specified in the template',
+        'Special characters in candidate names — test that accented characters render correctly',
+        'Duplicate candidates — de-duplicate before submission, not after loading',
+        'Empty required fields — all mandatory columns must have values'
+      ]}]
+    },
+    {
+      title:'Complete and review the template',
+      desc:'Populate the template with your extracted data. Review every row for completeness and accuracy. Submit the completed template to your EX3 consultant for validation before any load is attempted.',
+      warn:'Never send raw candidate data via email. Use the secure file transfer method agreed with your EX3 consultant — typically a shared drive or secure upload portal.'
+    },
+  ]
+},
+
+'validate-migration-data': {
+  role:'adm', icon:'✅', title:'Validate Migration Data',
+  desc:'Run basic format and integrity checks on your migration data before submitting it for loading. Early validation prevents failed loads and delays.',
+  path:['Settings','Data Import'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Migration templates must be completed first','Your EX3 consultant will perform the final validation — client-side validation catches basic issues before formal review'],
+  steps:[
+    {
+      title:'Run your own data quality checks',
+      desc:'Before submitting to EX3, run the following checks on your completed templates in Excel or Google Sheets.',
+      subs:[{ icon:'✅', title:'Pre-submission data quality checklist', points:[
+        'All mandatory fields are populated — no blanks in required columns',
+        'Dates are in the correct format as specified in the template',
+        'Email addresses are valid format (name@domain.com) with no duplicates',
+        'Job titles and department names match the values configured in SmartRecruiters exactly',
+        'Candidate stages match valid stage names from your configured route maps',
+        'No special characters that could break CSV parsing (unescaped commas, quotes)',
+        'Record count matches your expected volume — verify against your source system export'
+      ]}]
+    },
+    {
+      title:'Submit to EX3 for technical validation',
+      desc:'Share the completed template via the agreed secure file transfer method. EX3 will run format validation and return a validation report within the agreed SLA.',
+      subs:[{ icon:'⚠️', title:'What EX3 validates', points:[
+        'Template format and column headers match the expected structure',
+        'Data types are correct (text, date, number)',
+        'Required field completeness',
+        'Reference data integrity (e.g. departments exist in the target system)',
+        'EX3 does not validate business accuracy — that remains the client\'s responsibility'
+      ]}]
+    },
+    {
+      title:'Address validation findings',
+      desc:'Review the EX3 validation report. Fix all errors in your source data. Resubmit the corrected template. Repeat until no validation errors remain before the test load.',
+    },
+  ]
+},
+
+'execute-data-migration': {
+  role:'adm', icon:'🚀', title:'Execute Data Migration',
+  desc:'Coordinate the test migration and production migration cycles with your EX3 consultant. Understand the two-cycle process and your responsibilities at each stage.',
+  path:['Settings','Data Import'],
+  who:[{label:'Admin',c:'var(--a-adm)'}],
+  before:['Data must pass validation before any load is attempted','One test cycle and one production cycle are included — additional cycles require a Change Order','Production migration must be aligned with your go-live cutover plan'],
+  steps:[
+    {
+      title:'Test migration cycle (Sandbox/STAGE)',
+      desc:'EX3 loads your validated data into the Sandbox or STAGE environment. You review the loaded data to confirm accuracy, completeness, and correct field mapping.',
+      subs:[{ icon:'✅', title:'What to check after test migration', points:[
+        'Spot-check at least 10% of loaded records against your source data',
+        'Verify candidate names, emails, and stages match',
+        'Confirm jobs are linked to the correct departments and recruiters',
+        'Check that source tags are correctly applied',
+        'Log any discrepancies in the migration review log provided by EX3'
+      ]}]
+    },
+    {
+      title:'Sign off test migration',
+      desc:'Once you have reviewed the test data and resolved any issues, provide written sign-off to EX3. This authorises the production migration to proceed.',
+      warn:'Do not rush migration sign-off to meet a go-live deadline. Incorrect data in production is significantly harder and more expensive to correct than delaying go-live by a few days.'
+    },
+    {
+      title:'Production migration (Go-live cutover)',
+      desc:'EX3 executes the production migration during the agreed cutover window. Your legacy system should be locked (no new data entry) during the migration window. Perform a smoke test on loaded production data before go-live is announced.',
+      subs:[{ icon:'🚀', title:'Cutover day responsibilities', points:[
+        'Client: lock legacy system, provide final data extract, perform PROD smoke test',
+        'EX3: execute production data load, confirm record counts, support smoke test',
+        'Both: agree go-live sign-off before announcing to users',
+        'Cutover windows should be scheduled outside business hours where possible'
+      ]}]
     },
   ]
 },
@@ -4132,11 +4694,11 @@ const TASK_DETAIL = {
 
 // ─── Q36: SMS COMPLIANCE ──────────────────────────────
 'configure-sms-compliance': {
-  role:'adm', icon:'💬', title:'Configure SMS Opt-In for GDPR Compliance',
-  desc:'Enable the SmartMessage SMS opt-in requirement so candidates must reply START before recruiters can initiate SMS communication — required in Germany and other GDPR-regulated markets.',
+  role:'adm', icon:'💬', title:'Configure SMS Opt-In (GDPR / UAE PDPL)',
+  desc:'Enable the SmartMessage SMS opt-in requirement so candidates must reply START before recruiters can initiate SMS communication — required under GDPR, UAE PDPL, and Saudi PDPPL.',
   path:['Settings','Global Compliance','SmartMessage Settings'],
   who:[{label:'Admin',c:'var(--a-adm)'}],
-  before:['SmartMessage must be active on your account','Confirm with legal which regions require double opt-in'],
+  before:['SmartMessage must be active on your account','Confirm with legal which regions require double opt-in — for Middle East deployments, UAE PDPL and Saudi PDPPL both require it'],
   steps:[
     {
       title:'Go to Settings → Global Compliance → SmartMessage Configuration',
@@ -4146,7 +4708,7 @@ const TASK_DETAIL = {
     },
     {
       title:'Enable the SMS Opt-In toggle',
-      desc:'Find <strong>SMS Opt-In Required</strong> and toggle it <strong>ON</strong> for the relevant region (Germany / EU).',
+      desc:'Find <strong>SMS Opt-In Required</strong> and toggle it <strong>ON</strong> for the relevant region.',
       subs:[{ icon:'📋', title:'How the opt-in flow works after enabling', points:[
         'Recruiter tries to send first SMS to candidate → system sends automated opt-in request: "Reply START to receive messages from [Company]"',
         'Recruiter\'s message is held — NOT sent yet',
@@ -4154,10 +4716,11 @@ const TASK_DETAIL = {
         'If candidate replies STOP at any time → immediately opted out, no further SMS possible',
         'Set the SMS Opt-In toggle to ON in Global Compliance Settings → SmartMessage'
       ]}, { icon:'⚖️', title:'Regional requirements', points:[
-        'Germany requires explicit SMS consent under GDPR',
-        'EU broadly requires opt-in — confirm per country with legal',
+        '<strong>UAE PDPL</strong>: Requires explicit prior consent before sending electronic marketing or communications — SMS opt-in must be enabled for UAE candidates',
+        '<strong>Saudi PDPPL</strong>: Similar explicit consent requirement — opt-in required before initiating SMS contact',
+        'Germany and EU broadly: require opt-in under GDPR',
         'US (TCPA) also requires opt-in but with different mechanics',
-        'SmartRecruiters can be configured differently per region'
+        'SmartRecruiters can be configured differently per region — ensure your legal team confirms the requirement for each country in scope'
       ]}]
     },
   ]

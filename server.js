@@ -1452,39 +1452,535 @@ Use formal, specific, commercial language. Be concrete — include the exact num
 
 // SOW Word Export
 app.post('/consultant/sow-export', async (req, res) => {
-  const { content, clientName } = req.body;
-  if (!content) return res.status(400).json({ error: 'No content' });
+  const { answers: a, clientName: rawClient } = req.body;
+  if (!a) return res.status(400).json({ error: 'No answers' });
 
-  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = require('docx');
+  const {
+    Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
+    Table, TableRow, TableCell, WidthType, BorderStyle, VerticalAlign
+  } = require('docx');
 
-  const lines = content.split('\n');
-  const children = [];
+  const clientName = rawClient || a.clientName || 'To be confirmed';
 
-  for (const line of lines) {
-    if (line.startsWith('STATEMENT OF WORK')) {
-      children.push(new Paragraph({ text: line, heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER }));
-    } else if (/^\d+\.\s+[A-Z]/.test(line)) {
-      children.push(new Paragraph({ text: line, heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 100 } }));
-    } else if (line.startsWith('━')) {
-      // skip dividers
-    } else if (line.startsWith('  •')) {
-      children.push(new Paragraph({ text: line.replace('  •', '').trim(), bullet: { level: 0 }, spacing: { after: 60 } }));
-    } else if (line.trim()) {
-      children.push(new Paragraph({ children: [new TextRun({ text: line, size: 24 })], spacing: { after: 120 } }));
-    } else {
-      children.push(new Paragraph({ text: '' }));
-    }
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const h1 = (text) => new Paragraph({ text, heading: HeadingLevel.HEADING_1, spacing: { before: 360, after: 120 } });
+  const h2 = (text) => new Paragraph({ text, heading: HeadingLevel.HEADING_2, spacing: { before: 280, after: 80 } });
+  const h3 = (text) => new Paragraph({ text, heading: HeadingLevel.HEADING_3, spacing: { before: 200, after: 60 } });
+  const body = (text) => new Paragraph({ children: [new TextRun({ text, size: 22 })], spacing: { after: 120 } });
+  const bullet = (text) => new Paragraph({ text, bullet: { level: 0 }, spacing: { after: 80 } });
+  const spacer = () => new Paragraph({ text: '' });
+
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+  const thinBorder = { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC' };
+  const headerBorder = { style: BorderStyle.SINGLE, size: 8, color: '0F0F0F' };
+
+  function twoColTable(rows, shade1 = 'F5F5F5') {
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: rows.map((r, idx) => new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            borders: { top: idx === 0 ? headerBorder : thinBorder, bottom: thinBorder, left: noBorder, right: noBorder },
+            shading: idx === 0 ? { fill: '0F0F0F' } : {},
+            verticalAlign: VerticalAlign.TOP,
+            children: [new Paragraph({ children: [new TextRun({ text: r[0], size: 20, bold: idx === 0, color: idx === 0 ? 'FFFFFF' : '000000' })], spacing: { before: 80, after: 80 } })],
+          }),
+          new TableCell({
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            borders: { top: idx === 0 ? headerBorder : thinBorder, bottom: thinBorder, left: noBorder, right: noBorder },
+            shading: idx === 0 ? { fill: '0F0F0F' } : {},
+            verticalAlign: VerticalAlign.TOP,
+            children: [new Paragraph({ children: [new TextRun({ text: r[1], size: 20, bold: idx === 0, color: idx === 0 ? 'FFFFFF' : '000000' })], spacing: { before: 80, after: 80 } })],
+          }),
+        ],
+      })),
+    });
   }
 
+  function raciTable(rows) {
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: rows.map((r, idx) => new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 70, type: WidthType.PERCENTAGE },
+            borders: { top: idx === 0 ? headerBorder : thinBorder, bottom: thinBorder, left: noBorder, right: noBorder },
+            shading: idx === 0 ? { fill: '0F0F0F' } : (idx % 2 === 0 ? { fill: 'FAFAFA' } : {}),
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({ children: [new TextRun({ text: r[0], size: 20, bold: idx === 0, color: idx === 0 ? 'FFFFFF' : '000000' })], spacing: { before: 60, after: 60 } })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            borders: { top: idx === 0 ? headerBorder : thinBorder, bottom: thinBorder, left: thinBorder, right: noBorder },
+            shading: idx === 0 ? { fill: '0F0F0F' } : (r[1] ? { fill: 'E8F5E9' } : {}),
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({ children: [new TextRun({ text: r[1] || '', size: 20, bold: idx === 0, color: idx === 0 ? 'FFFFFF' : r[1] ? '1B5E20' : '000000' })], alignment: AlignmentType.CENTER, spacing: { before: 60, after: 60 } })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            borders: { top: idx === 0 ? headerBorder : thinBorder, bottom: thinBorder, left: thinBorder, right: noBorder },
+            shading: idx === 0 ? { fill: '0F0F0F' } : (r[2] ? { fill: 'E8F5E9' } : {}),
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({ children: [new TextRun({ text: r[2] || '', size: 20, bold: idx === 0, color: idx === 0 ? 'FFFFFF' : r[2] ? '1B5E20' : '000000' })], alignment: AlignmentType.CENTER, spacing: { before: 60, after: 60 } })],
+          }),
+        ],
+      })),
+    });
+  }
+
+  // ── derived flags ─────────────────────────────────────────────────────────
+  const integrationsList = Array.isArray(a.integrations) ? a.integrations : [];
+  const jobBoardsList = Array.isArray(a.jobBoards) ? a.jobBoards : [];
+  const trainingList = Array.isArray(a.training) ? a.training : [];
+  const complianceList = Array.isArray(a.compliance) ? a.compliance : [];
+  const isMiddleEast = !!(a.geoScope && a.geoScope.indexOf('Middle East') >= 0);
+  const hasCareerPage = !!(a.careerPage && a.careerPage.indexOf('not in scope') < 0 && a.careerPage.indexOf('not required') < 0);
+  const hasOfferMgmt = !!(a.offerMgmt && a.offerMgmt.indexOf('Not in scope') < 0 && a.offerMgmt.indexOf('not in scope') < 0);
+  const hasAgency = !!(a.agencyPortal && a.agencyPortal.indexOf('No external') < 0);
+  const hasDocuSign = integrationsList.some(i => i.indexOf('DocuSign') >= 0 || i.indexOf('e-signature') >= 0);
+  const hasSFEC = integrationsList.some(i => i.indexOf('Employee Central') >= 0 || i.indexOf('SAP SuccessFactors') >= 0);
+  const hasMigration = !!(a.dataMigration && a.dataMigration.toLowerCase().indexOf('not in scope') < 0 && a.dataMigration.toLowerCase().indexOf('no migration') < 0 && a.dataMigration.toLowerCase().indexOf('no data') < 0);
+
+  const now = new Date();
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dateStr = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+
+  const children = [];
+
+  // ── TITLE PAGE ────────────────────────────────────────────────────────────
+  children.push(new Paragraph({
+    children: [new TextRun({ text: 'SmartRecruiters Recruiting Implementation', bold: true, size: 52, color: '0F0F0F' })],
+    alignment: AlignmentType.CENTER, spacing: { before: 720, after: 160 }
+  }));
+  children.push(new Paragraph({
+    children: [new TextRun({ text: 'via EXcelerate', size: 36, italics: true, color: '444444' })],
+    alignment: AlignmentType.CENTER, spacing: { after: 480 }
+  }));
+  children.push(spacer());
+  children.push(twoColTable([
+    ['Client', clientName],
+    ['Prepared by', 'EX3'],
+    ['Date', dateStr],
+    ['Version', '1.0 (Draft)'],
+  ]));
+  children.push(spacer());
+
+  // ── OVERVIEW ──────────────────────────────────────────────────────────────
+  children.push(h1('Overview'));
+  children.push(body('EX3 has been asked to provide a Statement of Work for the SmartRecruiters implementation for ' + clientName + '. This section outlines the scope, methodology, responsibilities, and deliverables for the SmartRecruiters deployment.'));
+  children.push(spacer());
+  children.push(body('The modules in scope for this workstream are:'));
+  children.push(bullet('SmartRecruiters Recruiting Management (SMRC)'));
+  if (hasCareerPage) children.push(bullet('Career Site / Recruiting Marketing configuration'));
+  if (integrationsList.length > 0) children.push(bullet('Integration to ' + (hasSFEC ? 'Employee Central (EC), Position Management, and Onboarding' : integrationsList.join('; '))));
+  children.push(spacer());
+  if (isMiddleEast) {
+    children.push(body('The countries in scope are:'));
+    children.push(bullet('United Arab Emirates'));
+    children.push(bullet('Saudi Arabia'));
+    children.push(bullet('Oman'));
+    children.push(bullet('Jordan'));
+    children.push(bullet('Lebanon'));
+    children.push(bullet('Iraq'));
+    children.push(spacer());
+  }
+  children.push(body('EX3 will apply the EXcelerate methodology, which is optimised for rapid deployment using model company content. EXcelerate is designed to deliver a high-quality SmartRecruiters implementation efficiently, leveraging EX3\'s pre-built assets as a baseline while allowing for configuration aligned to ' + clientName + '\'s hiring processes.'));
+
+  // ── PERIOD OF PERFORMANCE ─────────────────────────────────────────────────
+  children.push(h1('Period of Performance'));
+  children.push(body('The Services for the SmartRecruiters workstream shall take place within ' + (a.timeline || 'a timeline to be agreed') + ' of SOW execution and will run in parallel with the broader implementation.'));
+  children.push(spacer());
+  children.push(body('Organisation profile:'));
+  children.push(bullet('Organisation size: ' + (a.orgSize || 'To be confirmed')));
+  children.push(bullet('Geography: ' + (a.geoScope ? a.geoScope.split('.')[0] : 'To be confirmed')));
+  children.push(bullet('Platform language: English only'));
+  children.push(bullet('Users in scope: ' + (a.numUsers || 'To be confirmed')));
+
+  // ── ENGAGEMENT RESOURCES ──────────────────────────────────────────────────
+  children.push(h1('Engagement Resources'));
+  children.push(body('As part of this engagement, EX3 will assign the required resources. Resources will have experience of the SmartRecruiters platform and enterprise talent acquisition implementations.'));
+  children.push(spacer());
+  children.push(body('Key information on our resources:'));
+  children.push(bullet('All resources have worked effectively as remote resources on projects scaling from small to very large global implementations'));
+  children.push(bullet('Resources will have experience of the SmartRecruiters platform and relevant TA processes'));
+  children.push(bullet('Resources have global and Middle East regional experience'));
+  children.push(bullet('Resources and responsibilities are subject to change throughout the project'));
+  children.push(spacer());
+  children.push(body('The EX3 implementation team shall engage with the Customer no later than four (4) weeks from SOW execution. Delivery dates for tasks included in this SOW shall be based upon mutual agreement as documented within an approved project schedule.'));
+
+  // ── METHODOLOGY ───────────────────────────────────────────────────────────
+  children.push(h1('Implementation Methodology, Services & Responsibilities'));
+  children.push(body('EX3 has created its own implementation methodology, EXcelerate, which incorporates both industry best practices and lessons learned from our years of experience doing high quality SmartRecruiters implementations.'));
+  children.push(spacer());
+  children.push(body('EXcelerate is structured across the following phases:'));
+  children.push(spacer());
+  children.push(new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({ children: ['Examine','Adopt','Validate','Launch'].map((ph, i) => new TableCell({
+        width: { size: 25, type: WidthType.PERCENTAGE },
+        borders: { top: headerBorder, bottom: headerBorder, left: i === 0 ? noBorder : thinBorder, right: noBorder },
+        shading: { fill: '0F0F0F' },
+        children: [new Paragraph({ children: [new TextRun({ text: ph, bold: true, size: 22, color: 'FFFFFF' })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })],
+      })) }),
+      new TableRow({ children: [
+        ['Kick-off, requirements, process mapping, design sign-off, integration scoping'],
+        ['Platform config: route maps, job templates, user roles, offer mgmt, career site, integrations, data migration'],
+        ['UAT test scripts, facilitation, defect resolution, written sign-off prior to go-live'],
+        ['Go-live readiness review, production cutover, training, Hypercare support'],
+      ].map((t, i) => new TableCell({
+        width: { size: 25, type: WidthType.PERCENTAGE },
+        borders: { top: thinBorder, bottom: thinBorder, left: i === 0 ? noBorder : thinBorder, right: noBorder },
+        verticalAlign: VerticalAlign.TOP,
+        children: [new Paragraph({ children: [new TextRun({ text: t[0], size: 18 })], spacing: { before: 80, after: 80 } })],
+      })) }),
+    ],
+  }));
+  children.push(spacer());
+
+  // Phase detail helper
+  function phaseSection(phaseName, desc, taskRows, delivRows) {
+    children.push(h2(phaseName));
+    children.push(body(desc));
+    children.push(spacer());
+    children.push(h3('Key Tasks'));
+    children.push(twoColTable([['Client and EX3', 'EX3'], ...taskRows]));
+    children.push(spacer());
+    children.push(h3('Deliverables'));
+    children.push(twoColTable([['Client', 'EX3'], ...delivRows]));
+    children.push(spacer());
+  }
+
+  phaseSection(
+    'Examine Phase',
+    'The purpose of the Examine Phase is to establish the framework for a successful project, confirm platform design, map hiring processes, and sign off the configuration blueprint before Adopt commences.',
+    [
+      ['Review Examine findings and agree configuration blueprint', 'Lead kick-off workshop and process mapping sessions'],
+      ['Confirm route map stages and approval chain definitions', 'Produce platform design document for sign-off'],
+      ['Sign off RBP access matrix and job template structure', 'Begin integration scoping and data migration assessment'],
+    ],
+    [
+      ['Signed-off configuration blueprint', 'Kick-off and workshop presentations'],
+      ['Completed RBP access matrix', 'Platform design sign-off document'],
+      ['Approval chain definitions confirmed', 'Data migration assessment report'],
+    ]
+  );
+
+  phaseSection(
+    'Adopt Phase',
+    'The purpose of the Adopt Phase is to configure the SmartRecruiters platform per the agreed design, leveraging EX3 model company content as a baseline. Iterative unit testing occurs throughout this phase.',
+    [
+      ['Review configuration playbacks and provide timely feedback', 'Configure route maps, job templates, offer management, screening'],
+      ['Confirm email copy and brand assets for career site build', 'Configure user accounts, RBP roles, and approval chains'],
+      ['Sign off configuration before Validate commences', 'Conduct unit testing and playback sessions'],
+    ],
+    [
+      ['Approved email copy, branding assets, offer letter content', 'Configured SmartRecruiters sandbox environment'],
+      ['Build sign-off', 'Updated configuration workbooks'],
+      ['', 'Unit test results and playback docs'],
+    ]
+  );
+
+  phaseSection(
+    'Validate Phase',
+    'The purpose of the Validate Phase is to confirm all configured functionality through client-led UAT. Written sign-off is required before go-live proceeds.',
+    [
+      ['Execute UAT test scripts and log all findings', 'Deliver UAT test scripts and facilitate sessions'],
+      ['Coordinate feedback, triage calls, and final UAT sign-off', 'Resolve all Critical and High priority defects within SLA'],
+      ['Creation of test users', 'Update configuration workbooks post-UAT'],
+    ],
+    [
+      ['Signed UAT sign-off document', 'UAT test scripts'],
+      ['', 'Defect log and resolution summary'],
+      ['', 'Updated instance configuration'],
+    ]
+  );
+
+  phaseSection(
+    'Launch Phase',
+    'The purpose of the Launch Phase is to move configuration to the production environment, support the go-live, deliver training, and provide post-go-live Hypercare for a smooth transition to BAU.',
+    [
+      ['PROD smoke test', 'Execute cutover checklist and move configuration to PROD'],
+      ['Attend training sessions and complete pre-reading', 'Deliver recruiter, admin and hiring manager training'],
+      ['Participate in go-live readiness review', 'Administer Hypercare and project closure'],
+    ],
+    [
+      ['PROD smoke test sign-off', 'Final PROD configuration'],
+      ['Project closeout complete', 'Post-implementation handover pack'],
+      ['', 'HelpMyCloud Hypercare'],
+      ['', 'Completed configuration workbooks'],
+    ]
+  );
+
+  // ── SCOPE OF WORK ─────────────────────────────────────────────────────────
+  children.push(h1('Scope of Work'));
+  children.push(h2('SmartRecruiters Recruiting Management Scope — EXcelerate Deployment'));
+
+  children.push(h3('Route Maps (Hiring Workflows)'));
+  children.push(bullet('Configuration of ' + (a.numProcesses || '6–8') + ' route maps aligned to ' + clientName + ' hiring workflows'));
+  children.push(bullet('Stage and status configuration per agreed route map design'));
+  children.push(bullet('Rejection reason configuration'));
+  children.push(bullet('Route map design to be confirmed and signed off during the Examine Phase'));
+
+  children.push(h3('Job Templates'));
+  children.push(bullet('Configuration of ' + (a.numTemplates || '5–8') + ' job templates with custom fields'));
+  children.push(bullet('Department and location hierarchy setup'));
+  children.push(bullet('Template structure and field requirements to be confirmed during Examine Phase'));
+
+  children.push(h3('Application Template'));
+  children.push(bullet('1 Application Template [Single Stage only — up to 3 fields additional or amended]'));
+  if (a.screening && a.screening.indexOf('not required') < 0) {
+    children.push(bullet('Knockout / screening questions: ' + a.screening));
+  } else {
+    children.push(bullet('Knockout / screening questions: up to 5 standard screening questions per workflow (e.g. right to work, minimum qualifications)'));
+  }
+  children.push(bullet('Screening question content to be provided by Client prior to configuration'));
+
+  children.push(h3('Offer Management'));
+  if (hasOfferMgmt) {
+    children.push(bullet('1 Offer Detail Template'));
+    children.push(bullet('1 Offer Letter Template'));
+    children.push(bullet('Offer approval workflow configuration — approval chain to be confirmed during Examine Phase'));
+    if (hasDocuSign) children.push(bullet('E-signature integration (DocuSign) — subject to integration scope below'));
+  } else {
+    children.push(bullet('Offer management is not in scope for this engagement'));
+  }
+
+  children.push(h3('Approval Workflows'));
+  children.push(bullet('Requisition approval: ' + (a.reqApproval || 'multi-level approval chain (e.g. Line Manager → HR → Finance)')));
+  children.push(bullet('Exact approval chain structure to be confirmed and signed off during Examine Phase before Adopt commences'));
+  children.push(bullet('Up to ' + (a.numProcesses || '6–8') + ' approval workflow configurations'));
+
+  children.push(h3('Candidate Profile & Status Pipeline'));
+  children.push(bullet('1 Candidate Profile'));
+  children.push(bullet('1 Applicant Status Pipeline'));
+  children.push(bullet('Candidate profile fields and data capture configuration'));
+  children.push(bullet('Status pipeline aligned to agreed route map stages'));
+  children.push(bullet('Rejection reason configuration'));
+
+  children.push(h3('Email Templates'));
+  children.push(bullet('Up to 20 recruiting email templates (e.g. application received, interview invite, rejection, offer)'));
+  children.push(bullet('1 custom declined email template linked to status'));
+  children.push(bullet('Client to provide email copy and branding prior to configuration'));
+
+  if (hasAgency) {
+    children.push(h3('Agency / Vendor Portal'));
+    children.push(bullet('Basic vendor portal configuration including agency account setup and job sharing'));
+    children.push(bullet('Agency account setup for up to 5 agreed vendors (client to provide agency list) or training provided on how to set up additional agencies independently'));
+    children.push(bullet('Agency submission workflow and visibility controls'));
+  }
+
+  children.push(h3('Interview Scheduling'));
+  children.push(bullet('Interview scheduling configuration aligned to agreed route map stages'));
+  children.push(bullet('Central interview scheduling setup (no Outlook / Google Calendar integration unless separately scoped)'));
+
+  children.push(h3('Referral Management'));
+  children.push(bullet('Enablement of SmartRecruiters standard employee referral portal'));
+  children.push(bullet('Employees can view open roles, submit referrals, and track referral status natively within the platform'));
+  children.push(bullet('Advanced referral programme features (bonus tracking, leaderboards, automated payments) require a third-party Marketplace integration and are out of scope'));
+
+  children.push(h3('Mobile Enablement'));
+  children.push(bullet('Mobile enablement for recruiters and hiring managers via SmartRecruiters native mobile application (iOS and Android)'));
+  children.push(bullet('Mobile-responsive career site configuration included within career site scope'));
+
+  children.push(h3('Recruiting Posting'));
+  children.push(bullet('1 Posting Profile'));
+  if (jobBoardsList.length > 0) {
+    children.push(bullet('Up to ' + Math.min(jobBoardsList.length, 5) + ' job boards: ' + jobBoardsList.slice(0, 5).join(', ')));
+  } else {
+    children.push(bullet('Up to 5 job boards (to be confirmed during Examine Phase — e.g. LinkedIn, Indeed, Bayt)'));
+  }
+  children.push(bullet('Basic field mapping — 5 key fields'));
+  children.push(bullet('Internal posting configuration'));
+  children.push(bullet('Standard Internal Careers options'));
+
+  children.push(h3('User Accounts & Role-Based Permissions (RBP)'));
+  children.push(bullet('Creation of ' + (a.numUsers || 'agreed number of') + ' user accounts'));
+  children.push(bullet('1 Recruiter RBP role (minimal admin permissions)'));
+  children.push(bullet('RBP configuration per agreed access matrix'));
+  children.push(bullet('EX3 to provide RBP design template; Client to complete and sign off before Adopt commences'));
+
+  children.push(h3('Reporting & Analytics'));
+  children.push(bullet('Standard SmartRecruiters dashboards and out-of-the-box reports'));
+  children.push(bullet('Configuration of agreed saved reports and scheduled report distribution'));
+  if (a.reporting && a.reporting.indexOf('Standard') < 0 && a.reporting.indexOf('standard') < 0) {
+    children.push(bullet(a.reporting));
+  } else {
+    children.push(bullet('No custom report development is included'));
+  }
+
+  if (hasCareerPage) {
+    children.push(h2('Recruiting Marketing / Career Site Scope — EXcelerate Deployment'));
+    children.push(bullet('Integration of Recruiting Management and Career Site'));
+    children.push(bullet('Field mapping between Recruiting Management and Career Site'));
+    children.push(bullet('1 Brand'));
+    children.push(bullet('1 Locale (English only)'));
+    children.push(bullet('1 Career Site Homepage'));
+    children.push(bullet('Up to 8 Category Pages'));
+    children.push(bullet('Up to 3 Content Pages'));
+    children.push(bullet('Standard career site builder components only — bespoke front-end development is out of scope'));
+    children.push(bullet('Standard job search and apply flow'));
+    children.push(bullet('Mobile-responsive career site validation'));
+    children.push(bullet('Brand application (logo, colours, imagery) — Client to provide all assets prior to configuration'));
+  }
+
+  children.push(h2('Integrations Scope — EXcelerate Deployment'));
+  children.push(body('The following standard integrations are in scope:'));
+  if (integrationsList.length > 0) {
+    integrationsList.forEach(i => children.push(bullet(i)));
+  } else if (hasSFEC || isMiddleEast) {
+    children.push(bullet('Recruitment to Onboarding to Employee Central'));
+    children.push(bullet('Integration to Position Management (EC) — requisition creation from approved positions'));
+    children.push(bullet('E-signature / DocuSign — to be confirmed during Examine Phase'));
+  } else {
+    children.push(bullet('No third-party integrations in scope for this engagement'));
+  }
+  children.push(spacer());
+  children.push(body('All integrations use standard SmartRecruiters Marketplace connectors. Custom API builds or non-standard connectors are out of scope and would require a Change Order.'));
+
+  children.push(h2('Data Privacy & Compliance'));
+  children.push(bullet('Candidate consent and privacy notice configuration'));
+  children.push(bullet('Data retention policy configuration (automated deletion schedules for candidate records)'));
+  if (isMiddleEast || complianceList.some(c => c.indexOf('PDPL') >= 0 || c.indexOf('PDPPL') >= 0)) {
+    children.push(bullet('Compliance configuration aligned to applicable regional requirements including UAE Personal Data Protection Law (PDPL), Saudi Arabia Personal Data Protection Law (PDPPL), and GDPR where relevant'));
+  } else if (complianceList.length > 0) {
+    complianceList.forEach(c => children.push(bullet(c)));
+  } else {
+    children.push(bullet('Standard data privacy defaults will be applied'));
+  }
+  children.push(bullet('Specific regional compliance requirements to be confirmed during Examine Phase'));
+
+  children.push(h2('Data Migration Scope'));
+  if (hasMigration) {
+    children.push(bullet(a.dataMigration));
+  } else {
+    children.push(bullet('Migration of active job requisitions into SmartRecruiters is included in scope'));
+  }
+  children.push(bullet('Data mapping document to be agreed during Examine Phase'));
+  children.push(bullet('Client responsible for data extraction in the EX3-specified format'));
+  children.push(bullet('Migration performed in sandbox environment first for validation before cutover'));
+  children.push(bullet('Maximum of 1 test cycle and 1 production migration cycle'));
+
+  children.push(h2('Training Scope'));
+  if (trainingList.length > 0) {
+    trainingList.forEach(t => children.push(bullet(t)));
+  } else {
+    children.push(bullet('1 Recruiter training session (up to 60 minutes — end-to-end hiring workflow, candidate management, communication tools)'));
+    children.push(bullet('1 Administrator training session (up to 90 minutes — system configuration, user management, reporting)'));
+    children.push(bullet('1 Hiring Manager training session (up to 45 minutes — job approval, candidate review, interview scheduling)'));
+  }
+  children.push(bullet('All users receive access to the EX3 SmartRecruiters Enablement Guide'));
+  children.push(bullet('Sessions recorded and shared with Client for future reference'));
+  children.push(bullet('Training materials provided in advance for pre-reading'));
+
+  children.push(h2('General Scope'));
+  children.push(body('Hypercare: ' + (a.hypercare ? a.hypercare + ' of Hypercare Support' : '10 hours or 20 days of Hypercare Support, whichever comes first')));
+  children.push(spacer());
+  children.push(body('General Assumptions:'));
+  children.push(bullet('A 3-tier landscape will be used for the project: DEV, STAGE (Test), and PROD'));
+  children.push(bullet(clientName + ' holds a valid SmartRecruiters licence for the project duration including sandbox/test environments required'));
+  children.push(bullet('Testing time will be allocated for both EX3 and the Client in each iteration'));
+  children.push(spacer());
+  children.push(body('Module Assumptions:'));
+  children.push(bullet('We assume all requirements can be met by standard SmartRecruiters platform functionality. Use of third-party applications not listed in scope would require a Change Order and may impact timelines and cost'));
+  children.push(bullet('New requirements arising during the project will be considered additional scope and will require a Change Request (CR)'));
+  children.push(bullet('EX3 is not responsible for managing any 3rd party vendors or issues that can only be resolved by a 3rd party'));
+  children.push(bullet('The project will be executed using EX3\'s EXcelerate Methodology, document templates, and delivery project tools (Smartsheet)'));
+
+  // ── OUT OF SCOPE ──────────────────────────────────────────────────────────
+  children.push(h1('Out of Scope'));
+  children.push(body('Any item, deliverable or activity not explicitly stated as in scope within this section is to be deemed out of scope for this SOW.'));
+  children.push(spacer());
+  children.push(body('Other examples of items excluded from scope include:'));
+  children.push(bullet('SmartRecruiters platform licensing fees (contracted directly between ' + clientName + ' and SmartRecruiters)'));
+  children.push(bullet('Any integrations not explicitly listed in the Integrations Scope section'));
+  children.push(bullet('Custom API development, bespoke connectors, or non-standard integration builds'));
+  children.push(bullet('Outlook or Google Calendar integration for interview scheduling'));
+  children.push(bullet('Advanced referral programme features (bonus tracking, leaderboards, automated payments)'));
+  children.push(bullet('Ongoing platform administration or managed services after the Hypercare period'));
+  children.push(bullet('Additional training sessions beyond those listed in the Training Scope section'));
+  children.push(bullet('Custom dashboards and custom reports'));
+  children.push(bullet('Any Training Material beyond the EX3 SmartRecruiters Enablement Guide'));
+  children.push(bullet('Arabic or any language configuration other than English'));
+  children.push(bullet('Countries or languages beyond those agreed in scope'));
+  children.push(bullet('Recruitment process design or HR consultancy beyond system configuration'));
+  children.push(bullet('Content creation (job descriptions, email copy, brand assets, offer letter text)'));
+  children.push(bullet('Change Management consulting, communications development, or iterative process mapping'));
+  children.push(bullet('Management of client resources or creation of client internal project plans'));
+  children.push(bullet('Changes arising from SmartRecruiters vendor platform updates'));
+
+  // ── LANGUAGES ─────────────────────────────────────────────────────────────
+  children.push(h1('Languages'));
+  children.push(bullet('Platform language translation: English'));
+  children.push(bullet('All communications and deliverables will occur in English'));
+  children.push(bullet('The SmartRecruiters career site and all modules will be implemented in English only. Arabic or any additional language configuration is out of scope and would require a Change Order'));
+
+  // ── TESTING RACI ──────────────────────────────────────────────────────────
+  children.push(h1('Testing'));
+  children.push(raciTable([
+    ['Activity', 'EX3', 'Client'],
+    ['Iterative Unit Testing', 'Responsible', ''],
+    ['Systems Integration Test (where applicable)', 'Responsible', ''],
+    ['Creation of Test Users', 'Responsible', ''],
+    ['Detailed Test Scenarios in Smartsheets', 'Responsible', ''],
+    ['Confirmation of Testing Approach', 'Responsible', ''],
+    ['Cutover to TEST', 'Responsible', ''],
+    ['Additional smoke testing cycle', '', 'Responsible'],
+    ['Cut-over planning', 'Responsible', ''],
+    ['Creation of UAT Approach and Plan', '', 'Responsible'],
+    ['Coordination of UAT (feedback, defect, calls)', '', 'Responsible'],
+    ['UAT execution', '', 'Responsible'],
+    ['UAT coordination during UAT', '', 'Responsible'],
+    ['Triage / feedback calls with EX3 (daily)', '', 'Responsible'],
+    ['Define Test Approach', '', 'Responsible'],
+    ['Delivery of Test Strategy Document', '', 'Responsible'],
+    ['Click-level Test Scripts', '', 'Responsible'],
+    ['Testing Reports for Entry/Exit from each phase', '', 'Responsible'],
+    ['All test planning & coordination', '', 'Responsible'],
+    ['Full defect management through formal test phases', '', 'Responsible'],
+    ['Support for all Test Governance during deployment', '', 'Responsible'],
+  ]));
+
+  // ── DATA MIGRATION RACI ───────────────────────────────────────────────────
+  children.push(h1('Data Migration'));
+  children.push(raciTable([
+    ['Activity', 'EX3', 'Client'],
+    ['Provision of Data Load Templates', 'Responsible', ''],
+    ['Basic data validation (general format checks)', 'Responsible', ''],
+    ['Performing Data Loads (1 test + 1 production)', 'Responsible', ''],
+    ['Admin Training on BAU data loading', 'Responsible', ''],
+    ['Confirmation of Data Migration Approach', 'Responsible', ''],
+    ['Coordination of data migration tasks', 'Responsible', ''],
+    ['Support for extraction process from client systems', '', 'Responsible'],
+    ['Support for governance around data migration', '', 'Responsible'],
+    ['Delivery of Data Migration Strategy Document', '', 'Responsible'],
+    ['Data Transformation to SmartRecruiters templates', '', 'Responsible'],
+    ['Additional cycle of data migration testing', '', 'Responsible'],
+    ['Additional training on data loading', '', 'Responsible'],
+    ['Data transformation', '', 'Responsible'],
+  ]));
+
+  children.push(spacer());
+  children.push(new Paragraph({
+    children: [new TextRun({ text: 'Prepared by EX3  |  Confidential  |  via EXcelerate', size: 18, color: '888888', italics: true })],
+    alignment: AlignmentType.CENTER, spacing: { before: 400, after: 0 }
+  }));
+
   const doc = new Document({
-    sections: [{
-      properties: {},
-      children,
-    }],
+    styles: {
+      default: {
+        document: { run: { font: 'Arial', size: 22 } },
+        heading1: { run: { font: 'Arial', size: 28, bold: true, color: '0F0F0F' }, paragraph: { spacing: { before: 360, after: 120 } } },
+        heading2: { run: { font: 'Arial', size: 24, bold: true, color: '222222' }, paragraph: { spacing: { before: 240, after: 80 } } },
+        heading3: { run: { font: 'Arial', size: 22, bold: true, color: '444444' }, paragraph: { spacing: { before: 160, after: 60 } } },
+      }
+    },
+    sections: [{ properties: { page: { margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 } } }, children }],
   });
 
   const buffer = await Packer.toBuffer(doc);
-  const filename = 'SOW_' + (clientName || 'Client').replace(/[^a-z0-9]/gi, '_') + '.docx';
+  const filename = 'SOW_' + clientName.replace(/[^a-z0-9]/gi, '_') + '.docx';
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
   res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
   res.send(buffer);
@@ -1692,12 +2188,14 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>Which integrations are required?</h2>
           <p>Select all that apply. Each integration adds complexity and time.</p>
           <div class="options opt-multi" id="integrations-options">
-            <div class="opt" onclick="toggleMulti(this,'integrations','HRIS integration (e.g. Workday, SAP, BambooHR)')">🗄️ HRIS System</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','SAP SuccessFactors Employee Central (EC) integration — recruitment to onboarding to EC')">🔗 SAP SuccessFactors EC</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','Position Management (EC) integration — requisition creation from approved positions')">📋 Position Management (EC)</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','Onboarding integration — hired candidate data passed to onboarding system')">🚀 Onboarding integration</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','DocuSign / e-signature integration')">✍️ DocuSign / e-signature</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','HRIS integration (e.g. Workday, SAP, BambooHR)')">🗄️ Other HRIS System</div>
             <div class="opt" onclick="toggleMulti(this,'integrations','Single Sign-On (SSO)')">🔐 SSO</div>
             <div class="opt" onclick="toggleMulti(this,'integrations','background screening integration')">🔍 Background Screening</div>
-            <div class="opt" onclick="toggleMulti(this,'integrations','DocuSign / e-signature integration')">✍️ DocuSign</div>
             <div class="opt" onclick="toggleMulti(this,'integrations','video interviewing platform integration')">🎥 Video Interviews</div>
-            <div class="opt" onclick="toggleMulti(this,'integrations','payroll system integration')">💰 Payroll</div>
           </div>
           <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
             <div class="opt" onclick="selectOpt(this,'integrations','no third-party integrations required')">❌ No integrations needed</div>
@@ -1714,21 +2212,21 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>Which job boards need connecting?</h2>
           <p>Select all that apply. Job board credentials will need to be provided by the client.</p>
           <div class="options opt-multi" id="jobboards-options">
-            <div class="opt" onclick="toggleMulti(this,'jobBoards','Indeed')">Indeed</div>
             <div class="opt" onclick="toggleMulti(this,'jobBoards','LinkedIn')">LinkedIn</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Indeed')">Indeed</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Bayt')">Bayt</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Naukri Gulf')">Naukri Gulf</div>
             <div class="opt" onclick="toggleMulti(this,'jobBoards','Glassdoor')">Glassdoor</div>
+            <div class="opt" onclick="toggleMulti(this,'jobBoards','Wuzzuf')">Wuzzuf</div>
             <div class="opt" onclick="toggleMulti(this,'jobBoards','Reed')">Reed</div>
-            <div class="opt" onclick="toggleMulti(this,'jobBoards','CV-Library')">CV-Library</div>
             <div class="opt" onclick="toggleMulti(this,'jobBoards','Totaljobs')">Totaljobs</div>
-            <div class="opt" onclick="toggleMulti(this,'jobBoards','Adzuna')">Adzuna</div>
-            <div class="opt" onclick="toggleMulti(this,'jobBoards','Guardian Jobs')">Guardian Jobs</div>
           </div>
           <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
             <div class="opt" onclick="selectOpt(this,'jobBoards','no job board connections required at this stage')">❌ None at this stage</div>
             <div class="opt" onclick="toggleCustomMulti(this,'jobBoards','jobboards-other-input')">✏️ Other / not listed</div>
           </div>
           <div class="custom-input" id="jobboards-other-input">
-            <input type="text" placeholder="e.g. Monster, S1 Jobs, Nijobs…" oninput="setCustomMulti('jobBoards','jobboards-other-val',this.value)">
+            <input type="text" placeholder="e.g. Bayt, Naukri Gulf, Wuzzuf, Monster…" oninput="setCustomMulti('jobBoards','jobboards-other-val',this.value)">
           </div>
         </div>
 
@@ -1863,10 +2361,12 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>What compliance and data privacy configuration is needed?</h2>
           <p>Select all that apply. GDPR configuration is strongly recommended for all UK/EU clients.</p>
           <div class="options opt-multi" id="compliance-options">
-            <div class="opt" onclick="toggleMulti(this,'compliance','GDPR data retention policy configuration (automated deletion schedules for candidate records)')">🇪🇺 GDPR data retention</div>
-            <div class="opt" onclick="toggleMulti(this,'compliance','Right-to-be-forgotten workflow configuration (candidate data deletion requests)')">🗑️ Right to be forgotten</div>
-            <div class="opt" onclick="toggleMulti(this,'compliance','EEO / diversity monitoring data collection setup')">📋 EEO / diversity monitoring</div>
             <div class="opt" onclick="toggleMulti(this,'compliance','Candidate consent and privacy notice configuration')">✅ Candidate consent notices</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','Data retention policy configuration (automated deletion schedules for candidate records)')">🗑️ Data retention policy</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','UAE Personal Data Protection Law (PDPL) compliance configuration')">🇦🇪 UAE PDPL</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','Saudi Arabia Personal Data Protection Law (PDPPL) compliance configuration')">🇸🇦 Saudi PDPPL</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','GDPR compliance configuration (EU/UK)')">🇪🇺 GDPR</div>
+            <div class="opt" onclick="toggleMulti(this,'compliance','EEO / diversity monitoring data collection setup')">📋 EEO / diversity monitoring</div>
             <div class="opt" onclick="toggleMulti(this,'compliance','Audit trail and access log configuration')">🔍 Audit trail setup</div>
             <div class="opt" onclick="toggleMulti(this,'compliance','ISO 27001 / SOC 2 evidence documentation support')">🔒 ISO 27001 / SOC 2 support</div>
           </div>
@@ -1881,13 +2381,14 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>What is the geographic scope of the implementation?</h2>
           <p>Multi-country or multilingual setups require additional configuration time.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is for a single country (UK) with a single language. No multi-country or multi-language configuration is required.')"><span class="opt-icon">🇬🇧</span>UK only — single language</div>
-            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation covers multiple European markets. Multi-country configuration and at least one additional language is in scope. Specific countries and languages will be confirmed during discovery.')"><span class="opt-icon">🇪🇺</span>Multiple European markets</div>
-            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is global in scope. Multi-region configuration, timezone support, and multiple languages are required. Full scope will be confirmed during discovery.')"><span class="opt-icon">🌍</span>Global — multiple regions and languages</div>
-            <div class="opt" onclick="selectCustom(this,'geoScope-custom')"><span class="opt-icon">✏️</span>Custom — describe below</div>
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is for a single country with a single language (English). No multi-country or multi-language configuration is required.');hideGeoCustom()"><span class="opt-icon">🏢</span>Single country — English only</div>
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation covers multiple European markets. Multi-country configuration and at least one additional language is in scope. Specific countries and languages will be confirmed during discovery.');hideGeoCustom()"><span class="opt-icon">🇪🇺</span>Multiple European markets</div>
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is global in scope. Multi-region configuration, timezone support, and multiple languages are required. Full scope will be confirmed during discovery.');hideGeoCustom()"><span class="opt-icon">🌍</span>Global — multiple regions and languages</div>
+            <div class="opt" id="geo-custom-trigger" onclick="selectCustomGeo(this)"><span class="opt-icon">✏️</span>Other / Custom — specify regions below</div>
           </div>
-          <div class="custom-input" id="geoScope-custom">
-            <input type="text" placeholder="e.g. UK, Ireland, and Germany" oninput="answers.geoScope=this.value">
+          <div class="custom-input" id="geoScope-custom" style="margin-top:14px">
+            <div id="geo-entries" style="display:flex;flex-direction:column;gap:8px"></div>
+            <button type="button" onclick="addGeoEntry()" style="margin-top:8px;padding:7px 14px;border:1.5px dashed #ccc;border-radius:8px;background:none;font-family:inherit;font-size:13px;color:#666;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='#0f0f0f';this.style.color='#0f0f0f'" onmouseout="this.style.borderColor='#ccc';this.style.color='#666'">＋ Add another region</button>
           </div>
         </div>
 
@@ -1938,6 +2439,61 @@ app.get('/consultant/sow-builder', (_req, res) => {
     const inp = document.getElementById(inputId);
     inp.classList.add('show');
     inp.querySelector('input,textarea').focus();
+  }
+
+  function selectCustomGeo(el) {
+    el.closest('.step').querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+    el.classList.add('sel');
+    const wrap = document.getElementById('geoScope-custom');
+    wrap.classList.add('show');
+    const entries = document.getElementById('geo-entries');
+    if (entries.children.length === 0) addGeoEntry();
+    else entries.querySelector('input').focus();
+  }
+
+  function hideGeoCustom() {
+    const wrap = document.getElementById('geoScope-custom');
+    if (wrap) wrap.classList.remove('show');
+  }
+
+  function addGeoEntry() {
+    const entries = document.getElementById('geo-entries');
+    const idx = entries.children.length;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;align-items:center';
+    const placeholders = [
+      'e.g. Middle East (UAE, KSA, Oman, Jordan, Lebanon, Iraq) — English only, UAE PDPL & Saudi PDPPL apply',
+      'e.g. UK & Ireland — English only',
+      'e.g. Germany — German + English, GDPR applies',
+      'e.g. APAC — Singapore, Australia, Hong Kong',
+    ];
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = placeholders[idx] || 'e.g. Country / region — language, compliance notes';
+    inp.style.cssText = 'flex:1;padding:10px 14px;border:1.5px solid #e4e2dc;border-radius:8px;font-family:inherit;font-size:13px;color:#0f0f0f;outline:none';
+    inp.onfocus = function(){ this.style.borderColor='#0f0f0f'; };
+    inp.onblur  = function(){ this.style.borderColor='#e4e2dc'; };
+    inp.oninput = updateGeoScope;
+    if (idx > 0) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = '✕';
+      del.title = 'Remove';
+      del.style.cssText = 'padding:6px 10px;border:1.5px solid #e4e2dc;border-radius:6px;background:none;font-size:12px;color:#999;cursor:pointer;flex-shrink:0';
+      del.onclick = function(){ row.remove(); updateGeoScope(); };
+      row.appendChild(inp);
+      row.appendChild(del);
+    } else {
+      row.appendChild(inp);
+    }
+    entries.appendChild(row);
+    inp.focus();
+  }
+
+  function updateGeoScope() {
+    const inputs = document.querySelectorAll('#geo-entries input');
+    const vals = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+    answers.geoScope = vals.length ? vals.join('; ') : '';
   }
 
   function toggleMulti(el, key, value) {
@@ -2021,421 +2577,588 @@ app.get('/consultant/sow-builder', (_req, res) => {
 
     var isEnterprise = !!(a.orgSize && (a.orgSize.indexOf('Enterprise') >= 0 || a.orgSize.indexOf('2,001') >= 0));
     var hasMigration = !!(a.dataMigration && a.dataMigration.toLowerCase().indexOf('not in scope') < 0 && a.dataMigration.toLowerCase().indexOf('no migration') < 0 && a.dataMigration.toLowerCase().indexOf('no data') < 0);
-    var isMultiCountry = !!(a.geoScope && (a.geoScope.indexOf('European') >= 0 || a.geoScope.indexOf('global') >= 0 || a.geoScope.indexOf('Global') >= 0 || a.geoScope.indexOf('multi') >= 0));
-    var hasFullOffer = !!(a.offerMgmt && a.offerMgmt.indexOf('Full offer') >= 0);
+    var isMiddleEast = !!(a.geoScope && a.geoScope.indexOf('Middle East') >= 0);
+    var isMultiCountry = !!(a.geoScope && a.geoScope.indexOf('single country') < 0);
+    var hasFullOffer = !!(a.offerMgmt && (a.offerMgmt.indexOf('Full offer') >= 0 || a.offerMgmt.indexOf('full') >= 0));
     var hasMultiApproval = !!(a.reqApproval && (a.reqApproval.indexOf('multi-level') >= 0 || a.reqApproval.indexOf('different chains') >= 0));
     var hasAgency = !!(a.agencyPortal && a.agencyPortal.indexOf('No external') < 0);
-    var hasCareerPage = !!(a.careerPage && a.careerPage.indexOf('No dedicated') < 0 && a.careerPage.indexOf('not required') < 0);
-    var longTimeline = !!(a.timeline && (a.timeline.indexOf('16') >= 0 || a.timeline.indexOf('20') >= 0 || a.timeline.indexOf('24') >= 0));
-    var medTimeline = !!(a.timeline && a.timeline.indexOf('12') >= 0);
-
-    var useEXecute = isEnterprise || intCount >= 3 || isMultiCountry || hasMigration || longTimeline || medTimeline;
-    var methodology = useEXecute ? 'EXecute' : 'EXcelerate';
+    var hasCareerPage = !!(a.careerPage && a.careerPage.indexOf('not in scope') < 0 && a.careerPage.indexOf('not required') < 0);
+    var hasOfferMgmt = !!(a.offerMgmt && a.offerMgmt.indexOf('Not in scope') < 0 && a.offerMgmt.indexOf('not in scope') < 0);
+    var hasDocuSign = integrationsList.some(function(i){ return i.indexOf('DocuSign') >= 0 || i.indexOf('e-signature') >= 0; });
+    var hasSFEC = integrationsList.some(function(i){ return i.indexOf('Employee Central') >= 0 || i.indexOf('SAP SuccessFactors') >= 0; });
+    var hasPositionMgmt = integrationsList.some(function(i){ return i.indexOf('Position Management') >= 0; });
+    var hasOnboarding = integrationsList.some(function(i){ return i.indexOf('Onboarding') >= 0 || i.indexOf('onboarding') >= 0; });
 
     var now = new Date();
     var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     var dateStr = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
     var clientName = a.clientName || 'To be confirmed';
     var clientUpper = clientName.toUpperCase();
-    var s2 = hasCareerPage ? '4.3' : '4.2';
-    var s3 = hasCareerPage ? '4.4' : '4.3';
-    var s4 = hasCareerPage ? '4.5' : '4.4';
-    var s5 = hasCareerPage ? '4.6' : '4.5';
-    var s6 = hasCareerPage ? '4.7' : '4.6';
 
-    add('');
-    add('STATEMENT OF WORK');
+    // ── HEADER ──────────────────────────────────────────────────────────────
     add('SmartRecruiters Recruiting Implementation');
+    add('via EXcelerate');
     add('');
-    add('Client:         ' + clientName);
-    add('Prepared by:    EX3 Consulting');
-    add('Date:           ' + dateStr);
-    add('Version:        1.0 (Draft)');
+    add('Client:      ' + clientName);
+    add('Prepared by: EX3');
+    add('Date:        ' + dateStr);
+    add('Version:     1.0 (Draft)');
     add('');
-    add('========================================================================');
+
+    // ── OVERVIEW ─────────────────────────────────────────────────────────────
+    add('Overview');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    add('This Statement of Work ("SOW") is entered into between EX3 Consulting');
-    add('("EX3") and ' + clientName + ' ("Client") and forms part of the Master');
-    add('Services Agreement between the parties. EX3 will provide SmartRecruiters');
-    add('implementation consultancy services as described herein. All work will be');
-    add('performed on a fixed-scope basis unless a formal Change Order is agreed in');
-    add('writing by both parties.');
+    add('EX3 has been asked to provide a Statement of Work for the SmartRecruiters');
+    add('implementation for ' + clientName + '. This section outlines the scope,');
+    add('methodology, responsibilities, and deliverables for the SmartRecruiters');
+    add('deployment.');
     add('');
-    add('========================================================================');
+    add('The modules in scope for this workstream are:');
+    add('  • SmartRecruiters Recruiting Management (SMRC)');
+    if (hasCareerPage) add('  • Career Site / Recruiting Marketing configuration');
+    if (integrationsList.length > 0) add('  • Integration to ' + (hasSFEC ? 'Employee Central (EC), Position Management, and Onboarding' : integrationsList.join('; ')));
     add('');
-    add('1.  PERIOD OF PERFORMANCE');
+    if (isMiddleEast) {
+      add('The countries in scope are:');
+      add('  • United Arab Emirates, Saudi Arabia, Oman, Jordan, Lebanon and Iraq');
+      add('');
+    } else if (a.geoScope) {
+      add('Geography: ' + a.geoScope);
+      add('');
+    }
+    add('EX3 will apply the EXcelerate methodology, which is optimised for rapid');
+    add('deployment using model company content. EXcelerate is designed to deliver a');
+    add('high-quality SmartRecruiters implementation efficiently, leveraging EX3\'s');
+    add('pre-built assets as a baseline while allowing for configuration aligned to');
+    add(clientName + '\'s hiring processes.');
     add('');
-    add('    The project is estimated to complete within ' + (a.timeline || 'a timeline to be agreed'));
-    add('    of project kick-off, subject to timely Client engagement and provision');
-    add('    of required information and approvals.');
+
+    // ── PERIOD OF PERFORMANCE ────────────────────────────────────────────────
+    add('Period of Performance');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    add('    Organisation:    ' + (a.orgSize || 'To be confirmed'));
-    add('    Geography:       ' + (a.geoScope || 'To be confirmed'));
-    add('    Users in scope:  ' + (a.numUsers || 'To be confirmed'));
+    add('The Services for the SmartRecruiters workstream shall take place within');
+    add((a.timeline || 'a timeline to be agreed') + ' of SOW execution and will run in parallel');
+    add('with the broader implementation.');
     add('');
-    add('========================================================================');
+    add('Organisation profile:');
+    add('  • Organisation size: ' + (a.orgSize || 'To be confirmed'));
+    add('  • Geography: ' + (a.geoScope ? a.geoScope.split('.')[0] : 'To be confirmed'));
+    add('  • Platform language: English only');
+    add('  • Users in scope: ' + (a.numUsers || 'To be confirmed'));
     add('');
-    add('2.  ENGAGEMENT RESOURCES');
+
+    // ── ENGAGEMENT RESOURCES ──────────────────────────────────────────────────
+    add('Engagement Resources');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    add('    EX3 Team');
-    add('    -----------------------------------------------------------------------');
-    add('    Role                          Responsibility');
-    add('    -----------------------------------------------------------------------');
-    add('    Engagement Lead               Overall delivery, escalation point');
-    add('    Lead Implementation           Platform configuration, integrations,');
-    add('    Consultant                    data migration');
-    add('    Training Consultant           End-user training delivery and materials');
-    add('    -----------------------------------------------------------------------');
+    add('As part of this engagement, EX3 will assign the required resources.');
+    add('Resources will have experience of the SmartRecruiters platform and');
+    add('enterprise talent acquisition implementations.');
     add('');
-    add('    Client Team (required)');
-    add('    -----------------------------------------------------------------------');
-    add('    Role                          Responsibility');
-    add('    -----------------------------------------------------------------------');
-    add('    Project Owner                 Decision authority, internal coordination');
-    add('    HR / TA Lead                  Requirements sign-off, UAT, go-live');
-    add('    IT Representative             SSO, integrations, firewall clearance');
-    add('    -----------------------------------------------------------------------');
+    add('Key information on our resources:');
+    add('  • All resources have worked effectively as remote resources on projects');
+    add('    scaling from small to very large global implementations');
+    add('  • Resources will have experience of the SmartRecruiters platform and');
+    add('    relevant TA processes');
+    add('  • Resources have global and Middle East regional experience');
+    add('  • Resources and responsibilities are subject to change throughout the project');
     add('');
-    add('========================================================================');
+    add('The EX3 implementation team shall engage with the Customer no later than');
+    add('four (4) weeks from SOW execution. Delivery dates for tasks included in this');
+    add('SOW shall be based upon mutual agreement as documented within an approved');
+    add('project schedule.');
     add('');
-    add('3.  IMPLEMENTATION METHODOLOGY — ' + methodology.toUpperCase());
+
+    // ── METHODOLOGY ───────────────────────────────────────────────────────────
+    add('Implementation Methodology, Services & Responsibilities');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    if (methodology === 'EXcelerate') {
-      add('    EX3 will deliver this project using the EXcelerate methodology, designed');
-      add('    for streamlined SmartRecruiters deployments in focused, time-boxed');
-      add('    engagements. EXcelerate is optimised for organisations seeking rapid');
-      add('    time-to-value with a clearly scoped configuration.');
+    add('EX3 has created its own implementation methodology, EXcelerate, which');
+    add('incorporates both industry best practices and lessons learned from our years');
+    add('of experience doing high quality SmartRecruiters implementations. We use our');
+    add('EXcelerate methodology to efficiently deploy SmartRecruiters while meeting');
+    add('our high standards for quality, customer satisfaction and project success.');
+    add('');
+    add('EXcelerate is optimised for rapid deployment using model company content. It');
+    add('is structured across the following phases:');
+    add('');
+    add('  Examine          Adopt               Validate            Launch');
+    add('  ─────────────────────────────────────────────────────────────────');
+    add('  Kick-off,        Platform config:    UAT test scripts,   Go-live readiness');
+    add('  requirements,    route maps, job     facilitation,       review, production');
+    add('  process mapping, templates, user     defect resolution,  cutover, training,');
+    add('  design sign-off, roles, offer mgmt,  written sign-off    Hypercare support');
+    add('  integration      career site,        prior to go-live');
+    add('  scoping          integrations,');
+    add('                   data migration');
+    add('');
+
+    // ── EXAMINE PHASE ─────────────────────────────────────────────────────────
+    add('Examine Phase');
+    add('────────────────────────────────────────────────────────────────────────');
+    add('The purpose of the Examine Phase is to establish the framework for a');
+    add('successful project, confirm platform design, map hiring processes, and sign');
+    add('off the configuration blueprint before Adopt commences.');
+    add('');
+    add('Key Tasks');
+    add('');
+    add('  Client and EX3                          EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Review Examine findings and agree         Lead kick-off workshop and');
+    add('  configuration blueprint                   process mapping sessions');
+    add('');
+    add('  Confirm route map stages and approval     Produce platform design document');
+    add('  chain definitions                         for sign-off');
+    add('');
+    add('  Sign off RBP access matrix and job        Begin integration scoping and');
+    add('  template structure                        data migration assessment');
+    add('');
+    add('Deliverables');
+    add('');
+    add('  Client                                  EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Signed-off configuration blueprint       Kick-off and workshop presentations');
+    add('  Completed RBP access matrix              Platform design sign-off document');
+    add('  Approval chain definitions confirmed     Data migration assessment report');
+    add('');
+
+    // ── ADOPT PHASE ───────────────────────────────────────────────────────────
+    add('Adopt Phase');
+    add('────────────────────────────────────────────────────────────────────────');
+    add('The purpose of the Adopt Phase is to configure the SmartRecruiters platform');
+    add('per the agreed design, leveraging EX3 model company content as a baseline.');
+    add('Iterative unit testing occurs throughout this phase.');
+    add('');
+    add('Key Tasks');
+    add('');
+    add('  Client and EX3                          EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Review configuration playbacks and       Configure route maps, job templates,');
+    add('  provide timely feedback                  offer management, screening');
+    add('');
+    add('  Confirm email copy and brand assets      Configure user accounts, RBP roles,');
+    add('  for career site build                    and approval chains');
+    add('');
+    add('  Sign off configuration before            Conduct unit testing and playback');
+    add('  Validate commences                       sessions');
+    add('');
+    add('Deliverables');
+    add('');
+    add('  Client                                  EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Approved email copy, branding assets,    Configured SmartRecruiters sandbox');
+    add('  offer letter content                     environment');
+    add('  Build sign-off                           Updated configuration workbooks');
+    add('                                           Unit test results and playback docs');
+    add('');
+
+    // ── VALIDATE PHASE ───────────────────────────────────────────────────────
+    add('Validate Phase');
+    add('────────────────────────────────────────────────────────────────────────');
+    add('The purpose of the Validate Phase is to confirm all configured functionality');
+    add('through client-led UAT. Written sign-off is required before go-live proceeds.');
+    add('');
+    add('Key Tasks');
+    add('');
+    add('  Client                                  EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Execute UAT test scripts and log         Deliver UAT test scripts and');
+    add('  all findings                             facilitate sessions');
+    add('');
+    add('  Coordinate feedback, triage calls,       Resolve all Critical and High');
+    add('  and final UAT sign-off                   priority defects within SLA');
+    add('');
+    add('  Creation of test users                   Update configuration workbooks');
+    add('                                           post-UAT');
+    add('');
+    add('Deliverables');
+    add('');
+    add('  Client                                  EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Signed UAT sign-off document             UAT test scripts');
+    add('                                           Defect log and resolution summary');
+    add('                                           Updated instance configuration');
+    add('');
+
+    // ── LAUNCH PHASE ──────────────────────────────────────────────────────────
+    add('Launch Phase');
+    add('────────────────────────────────────────────────────────────────────────');
+    add('The purpose of the Launch Phase is to move configuration to the production');
+    add('environment, support the go-live, deliver training, and provide post-go-live');
+    add('Hypercare for a smooth transition to BAU.');
+    add('');
+    add('Key Tasks');
+    add('');
+    add('  Client                                  EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  PROD smoke test                          Execute cutover checklist and move');
+    add('                                           configuration to PROD');
+    add('  Attend training sessions and             Deliver recruiter, admin and hiring');
+    add('  complete pre-reading                     manager training');
+    add('  Participate in go-live readiness         Administer Hypercare and project');
+    add('  review                                   closure');
+    add('');
+    add('Deliverables');
+    add('');
+    add('  Client                                  EX3');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  PROD smoke test sign-off                 Final PROD configuration');
+    add('  Project closeout complete                Post-implementation handover pack');
+    add('                                           HelpMyCloud Hypercare');
+    add('                                           Completed configuration workbooks');
+    add('');
+
+    // ── SCOPE OF WORK ─────────────────────────────────────────────────────────
+    add('Scope of Work');
+    add('────────────────────────────────────────────────────────────────────────');
+    add('');
+    add('SmartRecruiters Recruiting Management Scope — EXcelerate Deployment');
+    add('');
+
+    // Route Maps
+    add('Route Maps (Hiring Workflows)');
+    add('  • Configuration of ' + (a.numProcesses || '6–8') + ' route maps aligned to ' + clientName + ' hiring workflows');
+    add('  • Stage and status configuration per agreed route map design');
+    add('  • Rejection reason configuration');
+    add('  • Route map design to be confirmed and signed off during the Examine Phase');
+    add('');
+
+    // Job Templates
+    add('Job Templates');
+    add('  • Configuration of ' + (a.numTemplates || '5–8') + ' job templates with custom fields');
+    add('  • Department and location hierarchy setup');
+    add('  • Template structure and field requirements to be confirmed during Examine Phase');
+    add('');
+
+    // Application Template
+    add('Application Template');
+    add('  • 1 Application Template [Single Stage only — up to 3 fields additional or amended]');
+    if (a.screening && a.screening.indexOf('not required') < 0) {
+      add('  • Knockout / screening questions: ' + a.screening);
     } else {
-      add('    EX3 will deliver this project using the EXecute methodology, designed');
-      add('    for enterprise-grade SmartRecruiters deployments requiring phased');
-      add('    delivery, complex integrations, multi-country scope, or significant');
-      add('    data migration. EXecute provides structured governance with formal');
-      add('    stakeholder sign-off at each milestone.');
+      add('  • Knockout / screening questions: up to 5 standard screening questions per workflow');
+      add('    (e.g. right to work, minimum qualifications)');
     }
+    add('  • Screening question content to be provided by Client prior to configuration');
     add('');
-    add('    Phase 1 — Discovery & Design');
-    add('    Kick-off workshop, requirements capture, process mapping, platform design');
-    add('    sign-off, integration scoping, data migration assessment (if applicable).');
-    add('');
-    add('    Phase 2 — Build & Configuration');
-    add('    Platform configuration per agreed design: hiring workflows, job templates,');
-    add('    user roles and permissions, approval chains, offer management, screening,');
-    add('    email templates, career page, job board connections, integrations.');
-    add('');
-    add('    Phase 3 — Integration & Data Migration');
-    if (integrationsList.length > 0 || hasMigration) {
-      integrationsList.forEach(function(i) { add('    • ' + i); });
-      if (hasMigration) { add('    • Data migration: ' + a.dataMigration); }
+
+    // Offer Management
+    add('Offer Management');
+    if (hasOfferMgmt) {
+      add('  • 1 Offer Detail Template');
+      add('  • 1 Offer Letter Template');
+      add('  • Offer approval workflow configuration — approval chain to be confirmed during Examine Phase');
+      if (hasDocuSign) add('  • E-signature integration (DocuSign) — subject to integration scope below');
     } else {
-      add('    No integrations or data migration in scope for this engagement.');
+      add('  • Offer management is not in scope for this engagement');
     }
     add('');
-    add('    Phase 4 — Testing & UAT');
-    add('    UAT test script delivery, facilitation of client UAT sessions, defect');
-    add('    resolution, and written UAT sign-off prior to go-live.');
+
+    // Approval Workflows
+    add('Approval Workflows');
+    add('  • Requisition approval: ' + (a.reqApproval || 'multi-level approval chain (e.g. Line Manager → HR → Finance)'));
+    add('  • Exact approval chain structure to be confirmed and signed off during Examine Phase');
+    add('    before Adopt commences');
+    add('  • Up to ' + (a.numProcesses || '6–8') + ' approval workflow configurations');
     add('');
-    add('    Phase 5 — Training');
-    if (trainingList.length > 0) {
-      trainingList.forEach(function(t) { add('    • ' + t); });
-    } else {
-      add('    Training sessions to be confirmed during discovery.');
-    }
-    add('    All users will receive access to the EX3 SmartRecruiters Enablement Guide.');
+
+    // Candidate Profile & Status Pipeline
+    add('Candidate Profile & Status Pipeline');
+    add('  • 1 Candidate Profile');
+    add('  • 1 Applicant Status Pipeline');
+    add('  • Candidate profile fields and data capture configuration');
+    add('  • Status pipeline aligned to agreed route map stages');
+    add('  • Rejection reason configuration');
     add('');
-    add('    Phase 6 — Go-Live & Hypercare');
-    add('    Go-live readiness review, production cutover support, and hypercare period.');
+
+    // Email Templates
+    add('Email Templates');
+    add('  • Up to 20 recruiting email templates (e.g. application received, interview');
+    add('    invite, rejection, offer)');
+    add('  • 1 custom declined email template linked to status');
+    add('  • Client to provide email copy and branding prior to configuration');
     add('');
-    add('========================================================================');
-    add('');
-    add('4.  MODULE SCOPE');
-    add('');
-    add('4.1 Recruiting Management');
-    add('');
-    add('    Route Maps');
-    add('    • Configuration of ' + (a.numProcesses || 'agreed number of') + ' hiring process route maps');
-    add('    • Stage and status configuration aligned to ' + clientName + ' hiring workflow');
-    add('');
-    add('    Job Templates');
-    add('    • Configuration of ' + (a.numTemplates || 'agreed number of') + ' job templates with custom fields');
-    add('    • Department and location hierarchy setup');
-    add('');
-    add('    Application Template');
-    add('    • Custom application form fields per agreed requirements');
-    add('    • Screening / knockout questions: ' + (a.screening || 'to be defined during discovery'));
-    add('');
-    add('    Offer Management');
-    add('    • ' + (a.offerMgmt || 'Offer configuration to be confirmed during discovery'));
-    if (hasFullOffer) {
-      add('    • Offer letter template configuration (client to provide template content)');
-      add('    • E-signature integration scoped under Section ' + s2);
-    }
-    add('');
-    add('    Approval Workflow');
-    add('    • Requisition approval: ' + (a.reqApproval || 'to be confirmed during discovery'));
-    if (hasMultiApproval) {
-      add('    • Multi-level approval chain mapping to be completed in Phase 1 (Discovery)');
-      add('    • Approval chains must be signed off by Client before Phase 2 begins');
-    }
-    add('');
-    add('    Candidate Profile & Status Pipeline');
-    add('    • Candidate profile fields and data capture configuration');
-    add('    • Status pipeline aligned to route map stages');
-    add('    • Rejection reason configuration');
-    add('');
-    add('    Email Templates');
-    add('    • Application received, interview invite, rejection, and offer templates');
-    add('    • Client to provide email copy and branding prior to configuration');
-    add('');
+
+    // Agency / Vendor Portal
     if (hasAgency) {
-      add('    Agency / Vendor Portal');
-      add('    • ' + a.agencyPortal);
-      add('    • Agency account setup for agreed vendors (client to provide agency list)');
-      add('    • Agency submission workflow and visibility controls');
+      add('Agency / Vendor Portal');
+      add('  • Basic vendor portal configuration including agency account setup and job sharing');
+      add('  • Agency account setup for up to 5 agreed vendors (client to provide agency list)');
+      add('    or training provided on how to set up additional agencies independently');
+      add('  • Agency submission workflow and visibility controls');
       add('');
     }
-    add('    Interview Scheduling');
-    add('    • Interview scheduling configuration aligned to agreed route map stages');
-    add('    • Calendar integration subject to integration scope (Section ' + s2 + ')');
+
+    // Interview Scheduling
+    add('Interview Scheduling');
+    add('  • Interview scheduling configuration aligned to agreed route map stages');
+    add('  • Central interview scheduling setup (no Outlook / Google Calendar integration');
+    add('    unless separately scoped)');
     add('');
-    add('    Recruiting Posting');
+
+    // Referral Management
+    add('Referral Management');
+    add('  • Enablement of SmartRecruiters standard employee referral portal');
+    add('  • Employees can view open roles, submit referrals, and track referral status');
+    add('    natively within the platform');
+    add('  • Advanced referral programme features (bonus tracking, leaderboards, automated');
+    add('    payments) require a third-party Marketplace integration and are out of scope');
+    add('');
+
+    // Mobile Enablement
+    add('Mobile Enablement');
+    add('  • Mobile enablement for recruiters and hiring managers via SmartRecruiters');
+    add('    native mobile application (iOS and Android)');
+    add('  • Mobile-responsive career site configuration included within career site scope');
+    add('');
+
+    // Recruiting Posting
+    add('Recruiting Posting');
+    add('  • 1 Posting Profile');
     if (jobBoardsList.length > 0) {
-      add('    • Job boards: ' + jobBoardsList.join(', '));
+      add('  • Up to ' + Math.min(jobBoardsList.length, 5) + ' job boards: ' + jobBoardsList.slice(0, 5).join(', '));
     } else {
-      add('    • Job board connections: to be confirmed during discovery');
+      add('  • Up to 5 job boards (to be confirmed during Examine Phase — e.g. LinkedIn, Indeed, Bayt)');
     }
-    add('    • Internal posting configuration');
+    add('  • Basic field mapping — 5 key fields');
+    add('  • Internal posting configuration');
+    add('  • Standard Internal Careers options');
     add('');
-    add('    User Accounts & RBP Roles');
-    add('    • Creation of ' + (a.numUsers || 'agreed number of') + ' user accounts');
-    add('    • Role-Based Permission (RBP) configuration per agreed access matrix');
-    add('    • EX3 to provide RBP design template; Client to complete and sign off');
+
+    // User Accounts & RBP
+    add('User Accounts & Role-Based Permissions (RBP)');
+    add('  • Creation of ' + (a.numUsers || 'agreed number of') + ' user accounts');
+    add('  • 1 Recruiter RBP role (minimal admin permissions)');
+    add('  • RBP configuration per agreed access matrix');
+    add('  • EX3 to provide RBP design template; Client to complete and sign off before');
+    add('    Adopt commences');
     add('');
+
+    // Reporting & Analytics
+    add('Reporting & Analytics');
+    add('  • Standard SmartRecruiters dashboards and out-of-the-box reports');
+    add('  • Configuration of agreed saved reports and scheduled report distribution');
+    if (a.reporting && a.reporting.indexOf('Standard') < 0 && a.reporting.indexOf('standard') < 0) {
+      add('  • ' + a.reporting);
+    } else {
+      add('  • No custom report development is included');
+    }
+    add('');
+
+    // Career Site
     if (hasCareerPage) {
-      add('4.2 Recruiting Marketing / Career Site');
+      add('Recruiting Marketing / Career Site Scope — EXcelerate Deployment');
       add('');
-      add('    • Career site configuration: ' + a.careerPage);
-      add('    • Brand application (logo, colours, imagery) — client to provide assets');
-      add('    • Job search and apply flow testing');
-      add('    • Mobile responsiveness validation');
+      add('  • Integration of Recruiting Management and Career Site');
+      add('  • Field mapping between Recruiting Management and Career Site');
+      add('  • 1 Brand');
+      add('  • 1 Locale (English only)');
+      add('  • 1 Career Site Homepage');
+      add('  • Up to 8 Category Pages');
+      add('  • Up to 3 Content Pages');
+      add('  • Standard career site builder components only — bespoke front-end development');
+      add('    is out of scope');
+      add('  • Standard job search and apply flow');
+      add('  • Mobile-responsive career site validation');
+      add('  • Brand application (logo, colours, imagery) — Client to provide all assets');
+      add('    prior to configuration');
       add('');
     }
-    add(s2 + ' Integrations');
+
+    // Integrations
+    add('Integrations Scope — EXcelerate Deployment');
     add('');
     if (integrationsList.length > 0) {
-      add('    The following integrations are in scope:');
-      integrationsList.forEach(function(i) { add('    • ' + i); });
-      add('');
-      add('    All integrations use standard SmartRecruiters Marketplace connectors.');
-      add('    Custom API builds or non-standard connectors are out of scope.');
+      add('The following standard integrations are in scope:');
+      integrationsList.forEach(function(i){ add('  • ' + i); });
     } else {
-      add('    No third-party integrations are in scope for this engagement.');
+      add('The following standard integrations are in scope:');
+      if (hasSFEC || (!integrationsList.length && isMiddleEast)) {
+        add('  • Recruitment to Onboarding to Employee Central');
+        add('  • Integration to Position Management (EC) — requisition creation from approved positions');
+        add('  • E-signature / DocuSign — to be confirmed during Examine Phase');
+      } else {
+        add('  • No third-party integrations in scope for this engagement');
+      }
     }
     add('');
-    add(s3 + ' Reporting & Analytics');
+    add('All integrations use standard SmartRecruiters Marketplace connectors. Custom');
+    add('API builds or non-standard connectors are out of scope and would require a');
+    add('Change Order.');
     add('');
-    add('    • ' + (a.reporting || 'Standard SmartRecruiters reporting and analytics dashboards'));
-    add('    • Configuration of agreed saved reports and scheduled report distribution');
+
+    // Data Privacy & Compliance
+    add('Data Privacy & Compliance');
     add('');
-    add(s4 + ' Data Privacy & Compliance');
-    add('');
-    if (complianceList.length > 0) {
-      add('    The following compliance configurations are in scope:');
-      complianceList.forEach(function(c) { add('    • ' + c); });
+    add('  • Candidate consent and privacy notice configuration');
+    add('  • Data retention policy configuration (automated deletion schedules for');
+    add('    candidate records)');
+    if (isMiddleEast || complianceList.some(function(c){ return c.indexOf('PDPL') >= 0 || c.indexOf('PDPPL') >= 0; })) {
+      add('  • Compliance configuration aligned to applicable regional requirements including');
+      add('    UAE Personal Data Protection Law (PDPL), Saudi Arabia Personal Data Protection');
+      add('    Law (PDPPL), and GDPR where relevant');
+    } else if (complianceList.length > 0) {
+      complianceList.forEach(function(c){ add('  • ' + c); });
     } else {
-      add('    Standard SmartRecruiters data privacy defaults will be applied.');
+      add('  • Standard data privacy defaults will be applied');
     }
+    add('  • Specific regional compliance requirements to be confirmed during Examine Phase');
     add('');
-    add(s5 + ' Data Migration');
+
+    // Data Migration
+    add('Data Migration Scope');
     add('');
-    add('    • ' + (a.dataMigration || 'Data migration is not in scope for this engagement'));
     if (hasMigration) {
-      add('    • Data mapping document to be agreed in Phase 1 (Discovery)');
-      add('    • Client responsible for data extraction in the EX3-specified format');
-      add('    • Migration performed in sandbox environment first for validation');
+      add('  • ' + a.dataMigration);
+      add('  • Data mapping document to be agreed during Examine Phase');
+      add('  • Client responsible for data extraction in the EX3-specified format');
+      add('  • Migration performed in sandbox environment first for validation before cutover');
+      add('  • Maximum of 1 test cycle and 1 production migration cycle');
+    } else {
+      add('  • Migration of active job requisitions into SmartRecruiters is included in scope');
+      add('  • Data mapping document to be agreed during Examine Phase');
+      add('  • Client responsible for data extraction in the EX3-specified format');
+      add('  • Migration performed in sandbox environment first for validation before cutover');
+      add('  • Maximum of 1 test cycle and 1 production migration cycle');
     }
     add('');
-    add(s6 + ' Training');
+
+    // Training
+    add('Training Scope');
     add('');
     if (trainingList.length > 0) {
-      add('    The following training sessions are in scope:');
-      trainingList.forEach(function(t) { add('    • ' + t); });
+      trainingList.forEach(function(t){ add('  • ' + t); });
     } else {
-      add('    Training requirements to be confirmed during discovery.');
+      add('  • 1 Recruiter training session (up to 60 minutes — end-to-end hiring workflow,');
+      add('    candidate management, communication tools)');
+      add('  • 1 Administrator training session (up to 90 minutes — system configuration,');
+      add('    user management, reporting)');
+      add('  • 1 Hiring Manager training session (up to 45 minutes — job approval, candidate');
+      add('    review, interview scheduling)');
     }
-    add('    • All users receive access to the EX3 SmartRecruiters Enablement Guide');
-    add('    • Training materials provided in advance for pre-reading');
-    add('    • Sessions recorded and shared with Client for future reference');
+    add('  • All users receive access to the EX3 SmartRecruiters Enablement Guide');
+    add('  • Sessions recorded and shared with Client for future reference');
+    add('  • Training materials provided in advance for pre-reading');
     add('');
-    add('========================================================================');
+
+    // General Scope
+    add('General Scope');
     add('');
-    add('5.  OUT OF SCOPE');
+    add('Hypercare:');
+    add('  • ' + (a.hypercare ? a.hypercare + ' of Hypercare Support' : '10 hours or 20 days of Hypercare Support, whichever comes first'));
     add('');
-    add('    The following are excluded from this engagement. Any such items require');
-    add('    a formal Change Order signed by both parties before work begins:');
+    add('General Assumptions:');
+    add('  • A 3-tier landscape will be used for the project: DEV, STAGE (Test), and PROD');
+    add('  • ' + clientName + ' holds a valid SmartRecruiters licence for the project duration');
+    add('    including sandbox/test environments required');
+    add('  • Testing time will be allocated for both EX3 and the Client in each iteration');
     add('');
-    add('    • SmartRecruiters platform licensing fees (contracted directly between');
-    add('      ' + clientName + ' and SmartRecruiters)');
-    add('    • Any integrations not listed in Section ' + s2 + ' above');
-    add('    • Custom API development, bespoke connectors, or non-standard builds');
-    add('    • Ongoing platform administration or managed services after hypercare');
-    add('    • Additional training sessions beyond those listed in Section ' + s6);
-    add('    • Custom BI tool development or data warehouse integrations');
-    add('    • Countries or languages beyond those agreed in Section 1');
-    add('    • Recruitment process design or HR consultancy beyond configuration');
-    add('    • Content creation (job descriptions, email copy, brand assets)');
-    add('    • Changes arising from SmartRecruiters vendor platform updates');
+    add('Module Assumptions:');
+    add('  • We assume all requirements can be met by standard SmartRecruiters platform');
+    add('    functionality. Use of third-party applications not listed in scope would');
+    add('    require a Change Order and may impact timelines and cost');
+    add('  • New requirements arising during the project will be considered additional');
+    add('    scope and will require a Change Request (CR)');
+    add('  • EX3 is not responsible for managing any 3rd party vendors or issues that');
+    add('    can only be resolved by a 3rd party');
+    add('  • The project will be executed using EX3\'s EXcelerate Methodology, document');
+    add('    templates, and delivery project tools (Smartsheet)');
     add('');
-    add('========================================================================');
+
+    // ── OUT OF SCOPE ──────────────────────────────────────────────────────────
+    add('Out of Scope');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    add('6.  TESTING ACTIVITIES');
+    add('Any item, deliverable or activity not explicitly stated as in scope within');
+    add('this section is to be deemed out of scope for this SOW.');
     add('');
-    add('    -----------------------------------------------------------------------');
-    add('    Activity                          EX3             Client');
-    add('    -----------------------------------------------------------------------');
-    add('    Unit testing of configuration     EX3');
-    add('    Integration testing               EX3');
-    add('    UAT test script preparation       EX3');
-    add('    UAT execution                                     Client');
-    add('    Defect logging                    EX3             Client');
-    add('    Critical/High defect resolution   EX3');
-    add('    UAT sign-off                                      Client');
-    add('    Go-live readiness review          EX3             Client');
-    add('    -----------------------------------------------------------------------');
+    add('Other examples of items excluded from scope include:');
+    add('  • SmartRecruiters platform licensing fees (contracted directly between');
+    add('    ' + clientName + ' and SmartRecruiters)');
+    add('  • Any integrations not explicitly listed in the Integrations Scope section');
+    add('  • Custom API development, bespoke connectors, or non-standard integration builds');
+    add('  • Outlook or Google Calendar integration for interview scheduling');
+    add('  • Advanced referral programme features (bonus tracking, leaderboards,');
+    add('    automated payments)');
+    add('  • Ongoing platform administration or managed services after the Hypercare period');
+    add('  • Additional training sessions beyond those listed in the Training Scope section');
+    add('  • Custom dashboards and custom reports');
+    add('  • Any Training Material beyond the EX3 SmartRecruiters Enablement Guide');
+    add('  • Arabic or any language configuration other than English');
+    add('  • Countries or languages beyond those agreed in scope');
+    add('  • Recruitment process design or HR consultancy beyond system configuration');
+    add('  • Content creation (job descriptions, email copy, brand assets, offer letter text)');
+    add('  • Change Management consulting, communications development, or iterative');
+    add('    process mapping');
+    add('  • Management of client resources or creation of client internal project plans');
+    add('  • Changes arising from SmartRecruiters vendor platform updates');
     add('');
-    add('    EX3 will resolve all Critical and High priority defects raised during UAT.');
-    add('    Medium and Low items after UAT sign-off are logged for post-go-live');
-    add('    resolution and do not block go-live.');
+
+    // ── LANGUAGES ─────────────────────────────────────────────────────────────
+    add('Languages');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    add('========================================================================');
+    add('  • Platform language translation: English');
+    add('  • All communications and deliverables will occur in English');
+    add('  • The SmartRecruiters career site and all modules will be implemented in');
+    add('    English only. Arabic or any additional language configuration is out of');
+    add('    scope and would require a Change Order');
     add('');
-    add('7.  GO-LIVE SUPPORT & HYPERCARE');
+
+    // ── TESTING ───────────────────────────────────────────────────────────────
+    add('Testing');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    add('    Go-Live Day');
-    add('    • EX3 Engagement Lead on-call for the duration of go-live day');
-    add('    • Final production configuration checks prior to cutover');
-    add('    • Real-time issue triage and resolution support');
+    add('  Activities                                          EX3        Client');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Iterative Unit Testing                              Responsible');
+    add('  Systems Integration Test (where applicable)                    Responsible');
+    add('  Creation of Test Users                             Responsible');
+    add('  Detailed Test Scenarios in Smartsheets             Responsible');
+    add('  Confirmation of Testing Approach                   Responsible');
+    add('  Cutover to TEST                                    Responsible');
+    add('  Additional smoke testing cycle                                 Responsible');
+    add('  Cut-over planning                                  Responsible');
+    add('  Creation of UAT Approach and Plan                             Responsible');
+    add('  Coordination of UAT (feedback, defect, calls)                 Responsible');
+    add('  UAT execution                                                  Responsible');
+    add('  UAT coordination during UAT                                    Responsible');
+    add('  Triage / feedback calls with EX3 (daily)                      Responsible');
+    add('  Define Test Approach                                           Responsible');
+    add('  Delivery of Test Strategy Document                             Responsible');
+    add('  Click-level Test Scripts                                       Responsible');
+    add('  Testing Reports for Entry/Exit from each phase                 Responsible');
+    add('  All test planning & coordination                               Responsible');
+    add('  Full defect management through formal test phases              Responsible');
+    add('  Support for all Test Governance during deployment              Responsible');
     add('');
-    add('    Hypercare Period: ' + (a.hypercare || 'to be agreed'));
-    add('    • Daily check-in calls during Week 1 post go-live');
-    add('    • Weekly check-in calls for the remainder of the hypercare period');
-    add('    • EX3 available for issue resolution within 1 business day response time');
-    add('    • Formal handover pack and post-implementation documentation at close');
+
+    // ── DATA MIGRATION RACI ──────────────────────────────────────────────────
+    add('Data Migration');
+    add('────────────────────────────────────────────────────────────────────────');
     add('');
-    add('========================================================================');
+    add('  Activities                                          EX3        Client');
+    add('  ─────────────────────────────────────────────────────────────────────');
+    add('  Provision of Data Load Templates                   Responsible');
+    add('  Basic data validation (general format checks)      Responsible');
+    add('  Performing Data Loads (1 test + 1 production)      Responsible');
+    add('  Admin Training on BAU data loading                 Responsible');
+    add('  Confirmation of Data Migration Approach            Responsible');
+    add('  Coordination of data migration tasks               Responsible');
+    add('  Support for extraction process from client systems             Responsible');
+    add('  Support for governance around data migration                   Responsible');
+    add('  Delivery of Data Migration Strategy Document                   Responsible');
+    add('  Data Transformation to SmartRecruiters templates              Responsible');
+    add('  Additional cycle of data migration testing                     Responsible');
+    add('  Additional training on data loading                            Responsible');
+    add('  Data transformation                                             Responsible');
     add('');
-    add('8.  PROJECT ASSUMPTIONS');
-    add('');
-    add('8.1 General');
-    add('    • This SOW is based on information provided during initial scoping.');
-    add('      Material changes to requirements may impact timeline, scope, and cost.');
-    add('    • EX3 will not commence out-of-scope work without a signed Change Order.');
-    add('');
-    add('8.2 Project & Software');
-    add('    • ' + clientName + ' holds a valid SmartRecruiters licence for the project duration');
-    add('      including any sandbox/test environments required.');
-    add('    • All integrations use standard SmartRecruiters Marketplace connectors.');
-    add('    • User, workflow, and template counts do not exceed quantities stated');
-    add('      in this SOW without a formal Change Order.');
-    add('    • SmartRecruiters platform functionality will not materially change during');
-    add('      the engagement. Vendor-driven changes are outside EX3 control and scope.');
-    add('');
-    add('8.3 Client Roles & Responsibilities');
-    add('    • A named Project Owner with decision-making authority will be available');
-    add('      throughout the engagement and will attend all key sessions.');
-    add('    • Client feedback and approvals will be provided within 3 business days.');
-    add('      Delays beyond this may impact project timeline.');
-    add('    • All required IT access, credentials, and firewall clearance will be');
-    add('      provided at least 10 business days before the integration build phase.');
-    add('    • ' + clientName + ' is responsible for all content: job descriptions, email copy,');
-    add('      brand assets, offer letter templates, and screening questions.');
-    add('    • Approval chain definitions and RBP access matrix to be provided and');
-    add('      signed off by Client before Phase 2 (Build) begins.');
-    add('    • All users will complete pre-reading and attend designated training.');
-    if (hasMigration) {
-      add('    • Client will provide migration data in the EX3-specified format and');
-      add('      within the agreed timeline. Data quality issues are Client responsibility.');
-    }
-    add('');
-    add('8.4 Languages');
-    if (isMultiCountry) {
-      add('    • Translation of platform content into languages other than English is the');
-      add('      responsibility of ' + clientName + '. EX3 will configure the platform to');
-      add('      support the agreed languages once translations are provided.');
-      add('    • Languages in scope to be confirmed and signed off in Phase 1 (Discovery).');
-    } else {
-      add('    • This engagement is scoped for English-language configuration only.');
-      add('      Additional language requirements are out of scope (see Section 5).');
-    }
-    add('');
-    add('========================================================================');
-    add('');
-    add('9.  DELIVERABLES & ACCEPTANCE CRITERIA');
-    add('');
-    add('    All deliverables are subject to a 5-business-day review period. If no');
-    add('    written feedback is received within 5 business days, the deliverable is');
-    add('    deemed accepted.');
-    add('');
-    add('    -----------------------------------------------------------------------');
-    add('    Deliverable                         Phase  Acceptance Criteria');
-    add('    -----------------------------------------------------------------------');
-    add('    Discovery & Design Sign-off Doc      1     Client written approval');
-    add('    RBP Access Matrix                    1     Client written approval');
-    add('    Configured platform (sandbox)        2     Client written approval');
-    add('    Integration test results             3     All critical tests passed');
-    if (hasMigration) {
-      add('    Migration validation report          3     Client data sign-off');
-    }
-    add('    UAT test scripts                     4     Client written approval');
-    add('    UAT sign-off document                4     Signed by Client HR/TA Lead');
-    add('    Training materials                   5     Delivered pre-training');
-    add('    Go-live readiness checklist          6     Signed by both parties');
-    add('    Post-implementation handover pack    6     5-day review window');
-    add('    -----------------------------------------------------------------------');
-    add('');
-    add('========================================================================');
-    add('');
-    add('10. ISSUE MANAGEMENT & CHANGE CONTROL');
-    add('');
-    add('    RAID Log');
-    add('    EX3 will maintain a RAID log (Risks, Assumptions, Issues, Dependencies)');
-    add('    throughout the engagement. Shared with the Client at each weekly status');
-    add('    call and updated in real time.');
-    add('');
-    add('    Change Order Process');
-    add('    Any request to add, remove, or materially change scope must be submitted');
-    add('    as a formal Change Order. The Change Order will document:');
-    add('      • Description of the proposed change');
-    add('      • Impact on timeline and project plan');
-    add('      • Associated cost (if any)');
-    add('      • Revised deliverables (if applicable)');
-    add('');
-    add('    Change Orders must be approved in writing by both parties before any');
-    add('    out-of-scope work commences. Unsigned Change Orders expire after 10');
-    add('    business days.');
-    add('');
-    add('========================================================================');
-    add('');
-    add('11. SIGN-OFF');
-    add('');
-    add('    By signing below, both parties confirm they have read, understood, and');
-    add('    agree to the scope, responsibilities, and terms set out in this SOW.');
-    add('');
-    add('    EX3 CONSULTING');
-    add('    -----------------------------------------------------------------------');
-    add('    Name:          ________________________________');
-    add('    Title:         ________________________________');
-    add('    Signature:     ________________________________');
-    add('    Date:          ________________________________');
-    add('');
-    add('    ' + clientUpper);
-    add('    -----------------------------------------------------------------------');
-    add('    Name:          ________________________________');
-    add('    Title:         ________________________________');
-    add('    Signature:     ________________________________');
-    add('    Date:          ________________________________');
-    add('');
-    add('========================================================================');
-    add('Prepared by EX3 Consulting  |  Confidential  |  ex3consulting.com');
+
+    // ── FOOTER ────────────────────────────────────────────────────────────────
+    add('────────────────────────────────────────────────────────────────────────');
+    add('Prepared by EX3  |  Confidential  |  via EXcelerate');
 
     var sow = L.join('\\n');
 
@@ -2462,7 +3185,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
     const isLarge = a.orgSize && (a.orgSize.includes('Large') || a.orgSize.includes('Enterprise'));
     const hasFullOffer = a.offerMgmt && a.offerMgmt.includes('Full offer');
     const hasMultiApproval = a.reqApproval && (a.reqApproval.includes('multi-level') || a.reqApproval.includes('different chains'));
-    const isMultiCountry = a.geoScope && (a.geoScope.includes('European') || a.geoScope.includes('global') || a.geoScope.includes('Global'));
+    const isMultiCountry = a.geoScope && !a.geoScope.includes('single country');
     const hasAgency = a.agencyPortal && !a.agencyPortal.includes('No external');
     const complianceCount = Array.isArray(a.compliance) ? a.compliance.length : 0;
 
@@ -2532,11 +3255,10 @@ app.get('/consultant/sow-builder', (_req, res) => {
   }
 
   async function exportWord() {
-    const content = document.getElementById('sow-doc').textContent;
     const res = await fetch('/consultant/sow-export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, clientName: answers.clientName }),
+      body: JSON.stringify({ answers, clientName: answers.clientName }),
     });
     if (!res.ok) { alert('Export failed'); return; }
     const blob = await res.blob();
@@ -3067,13 +3789,13 @@ var steps = [
   {
     icon:'\uD83E\uDDED', title:'Consultant Portal', url:'/consultant',
     auto:[{d:800,a:{action:'showPhases'}},{d:1700,a:{action:'openPhase',index:0}},{d:3500,a:{action:'openPhase',index:1}},{d:5300,a:{action:'openPhase',index:2}},{d:7100,a:{action:'openPhase',index:3}}],
-    voice:"The consultant portal is your implementation command centre. Six phases — Discovery, Build, Integration, Testing, Training, Go-Live — each with detailed checklists, responsibilities, and timelines.",
-    callout:{label:'Full methodology',text:'Six phases, every checklist and deliverable',dot:{x:50,y:42},bubble:{x:60,y:28}}
+    voice:"The consultant portal is your EXcelerate implementation command centre. Four phases — Examine, Adopt, Validate, Launch — each with detailed checklists, client and EX3 responsibilities, deliverables, and timelines built around the SmartRecruiters deployment methodology.",
+    callout:{label:'EXcelerate methodology',text:'Examine · Adopt · Validate · Launch',dot:{x:50,y:42},bubble:{x:60,y:28}}
   },
   {
     icon:'\uD83D\uDCDD', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], hold:24000,
-    voice:"The SOW builder walks through 19 questions about the client's requirements — size, integrations, workflows, compliance, training, and more. Watch it complete every step automatically. The platform captures every detail — org size, integrations, approval chains, compliance requirements, training sessions, and go-live timeline.",
-    callout:{label:'19-step wizard',text:'Guided SOW building — every requirement captured',dot:{x:50,y:32},bubble:{x:60,y:18}}
+    voice:"The SOW builder walks through 19 questions covering every requirement — org size, geography, integrations, approval workflows, compliance, training, job boards, and go-live timeline. It generates a complete Statement of Work structured around the EXcelerate phases: Examine, Adopt, Validate, and Launch — with full scope sections for Route Maps, Job Templates, Offer Management, Career Site, Referral Management, Reporting and Analytics, Data Migration, and UAE and Saudi Arabia data privacy compliance.",
+    callout:{label:'19-step SOW wizard',text:'Every requirement captured — EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
   {
     icon:'\u2728', title:'AI SOW Rewrite', url:'/consultant/sow-builder', auto:[{d:1000,a:{action:'triggerAIRewrite'}}],
@@ -3082,8 +3804,8 @@ var steps = [
   },
   {
     icon:'\uD83D\uDCE7', title:'Export & Email', url:'/consultant/sow-builder', auto:[{d:800,a:{action:'scrollToExport'}}],
-    voice:"Export the finished SOW as a formatted Word document, or email it directly to the client without leaving the platform. From generation to delivery in one click.",
-    callout:{label:'One-click delivery',text:'Word export or direct email to client',dot:{x:50,y:78},bubble:{x:60,y:64}}
+    voice:"Export the finished SOW as a structured Word document — with proper headings, EXcelerate phase tables, scope sections, and RACI tables matching the format of a professional Statement of Work. Or email it directly to the client. From generation to delivery in one click.",
+    callout:{label:'One-click delivery',text:'Structured Word doc or direct email to client',dot:{x:50,y:78},bubble:{x:60,y:64}}
   },
   {
     icon:'\uD83D\uDCAC', title:'Conversation History',
