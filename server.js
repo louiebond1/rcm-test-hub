@@ -124,6 +124,24 @@ app.use((req, res, next) => {
 app.use((req, res, next) => { res.setHeader('ngrok-skip-browser-warning', '1'); next(); });
 app.use(express.static(path.join(__dirname)));
 
+const ttsCache = {};
+app.get('/api/tts', async (req, res) => {
+  const text = (req.query.text || '').trim();
+  if (!text) return res.status(400).end();
+  try {
+    if (!ttsCache[text]) {
+      const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: 'nova', input: text, speed: 0.92 });
+      ttsCache[text] = Buffer.from(await mp3.arrayBuffer());
+    }
+    res.set('Content-Type', 'audio/mpeg');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(ttsCache[text]);
+  } catch(e) {
+    console.error('TTS error:', e.message);
+    res.status(500).end();
+  }
+});
+
 app.post('/api/ask', async (req, res) => {
   const { question, threadId } = req.body;
 
@@ -3014,39 +3032,15 @@ var steps = [
 // ── State ──
 var cur = 0, prevCur = -1, paused = false, muted = false;
 var autoTimers = [], advTimer = null;
-var synth = window.speechSynthesis;
-var voices = [], voiceReady = false;
-var speechUnlocked = false;
 var narrationStepToken = 0;
+var currentAudio = null;
 
-function loadVoices(){
-  voices = synth.getVoices();
-  if(voices.length) voiceReady = true;
+function stopAudio(){
+  if(currentAudio){ currentAudio.pause(); currentAudio.src = ''; currentAudio = null; }
 }
-loadVoices();
-if(synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
-
-function getBestVoice(){
-  var want = [
-    'Google UK English Female','Microsoft Libby Online (Natural) - English (United Kingdom)',
-    'Microsoft George Online (Natural) - English (United Kingdom)',
-    'Google UK English Male','Microsoft Zira Desktop - English (United States)',
-    'Samantha','Karen','Moira','Daniel','Alex'
-  ];
-  for(var i=0;i<want.length;i++){
-    var v = voices.filter(function(vv){ return vv.name===want[i]; });
-    if(v.length) return v[0];
-  }
-  var eng = voices.filter(function(v){ return v.lang && v.lang.indexOf('en')===0; });
-  return eng.length ? eng[0] : (voices.length ? voices[0] : null);
-}
-
-function unlockSpeech(){
-  if(speechUnlocked) return;
-  speechUnlocked = true;
-  if(!synth) return;
-  try { synth.resume(); } catch(_) {}
-}
+function pauseAudio(){ if(currentAudio) currentAudio.pause(); }
+function resumeAudio(){ if(currentAudio) currentAudio.play().catch(function(){}); }
+function unlockSpeech(){}
 
 // ── Narration ──
 function buildWords(text){
@@ -3072,88 +3066,66 @@ function renderWords(text, charPos){
 }
 
 function speak(text, onDone, stepToken){
-  if(!synth || typeof SpeechSynthesisUtterance === 'undefined'){
-    renderWords(text, -1);
-    var noSpeechWait = Math.max(7000, text.split(' ').length * 430);
-    var noSpeechTimer = setTimeout(function(){
-      if(stepToken !== narrationStepToken) return;
-      document.getElementById('nar-pb-fill').style.width = '100%';
-      renderWords(text, text.length + 1);
-      if(onDone) onDone();
-    }, noSpeechWait);
-    autoTimers.push(noSpeechTimer);
-    return;
-  }
-
-  synth.cancel();
+  stopAudio();
   document.getElementById('bars').classList.remove('speaking');
+
   if(muted){
     renderWords(text, -1);
     var est = Math.max(7000, text.split(' ').length * 430);
-    var t = setTimeout(function(){
+    autoTimers.push(setTimeout(function(){
       if(stepToken !== narrationStepToken) return;
       if(onDone) onDone();
-    }, est);
-    autoTimers.push(t);
+    }, est));
     return;
   }
+
   renderWords(text, -1);
   document.getElementById('bars').classList.add('speaking');
 
-  // Split into sentences and queue ALL utterances upfront in one synchronous block.
-  // This avoids the Chrome bug where calling synth.speak() from inside onend fires onerror.
-  var sentences = text.match(/[^.!?]+[.!?]?\s*/g) || [text];
-  var v = getBestVoice();
+  var words = text.split(' ');
   var completed = false;
-  var charOffset = 0;
+  var wordTimer = null;
 
-  var timeoutDuration = Math.max(10000, text.split(' ').length * 560);
-  var fallback = setTimeout(function(){
-    if(stepToken !== narrationStepToken || completed) return;
+  function finish(){
+    if(completed) return;
     completed = true;
-    synth.cancel();
+    if(wordTimer){ clearInterval(wordTimer); wordTimer = null; }
+    stopAudio();
     document.getElementById('bars').classList.remove('speaking');
     document.getElementById('nar-pb-fill').style.width = '100%';
     renderWords(text, text.length + 1);
-    if(onDone) onDone();
-  }, timeoutDuration);
-  autoTimers.push(fallback);
+    setTimeout(function(){ if(onDone) onDone(); }, 300);
+  }
 
-  sentences.forEach(function(chunk, i){
-    var isLast = (i === sentences.length - 1);
-    var utt = new SpeechSynthesisUtterance(isLast ? chunk + ', , ,' : chunk);
-    if(v) utt.voice = v;
-    utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
-    var chunkStart = charOffset;
-    charOffset += chunk.length;
-    utt.onboundary = function(e){
-      if(e.name==='word'){
-        var abs = chunkStart + e.charIndex;
-        renderWords(text, abs);
-        document.getElementById('nar-pb-fill').style.width = Math.min(100, Math.round(abs / text.length * 100)) + '%';
-      }
-    };
-    if(isLast){
-      utt.onend = function(){
-        if(stepToken !== narrationStepToken || completed) return;
-        completed = true;
-        clearTimeout(fallback);
-        document.getElementById('bars').classList.remove('speaking');
-        document.getElementById('nar-pb-fill').style.width = '100%';
-        renderWords(text, text.length + 1);
-        setTimeout(function(){ if(onDone) onDone(); }, 400);
-      };
-      utt.onerror = function(e){
-        if(e && e.error === 'interrupted') return;
-        if(stepToken !== narrationStepToken || completed) return;
-        completed = true;
-        clearTimeout(fallback);
-        document.getElementById('bars').classList.remove('speaking');
-        if(onDone) onDone();
-      };
-    }
-    synth.speak(utt);
-  });
+  var audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
+  currentAudio = audio;
+
+  audio.oncanplay = function(){
+    if(stepToken !== narrationStepToken){ stopAudio(); return; }
+    audio.play().catch(function(){ if(stepToken === narrationStepToken) finish(); });
+  };
+
+  audio.onplay = function(){
+    // Animate word highlights proportionally to audio duration
+    wordTimer = setInterval(function(){
+      if(stepToken !== narrationStepToken){ clearInterval(wordTimer); return; }
+      if(!audio.duration || audio.paused) return;
+      var pct = audio.currentTime / audio.duration;
+      var charPos = Math.floor(pct * text.length);
+      renderWords(text, charPos);
+      document.getElementById('nar-pb-fill').style.width = Math.min(99, Math.round(pct * 100)) + '%';
+    }, 150);
+  };
+
+  audio.onended = function(){
+    if(stepToken !== narrationStepToken) return;
+    finish();
+  };
+
+  audio.onerror = function(){
+    if(stepToken !== narrationStepToken) return;
+    finish();
+  };
 }
 
 // ── Callout ──
@@ -3227,7 +3199,7 @@ function render(){
   showPill(s, cur);
   clearAuto();
   hideCallout();
-  synth.cancel();
+  stopAudio();
   document.getElementById('bars').classList.remove('speaking');
 
   // Frame
@@ -3273,14 +3245,14 @@ function togglePause(){
   paused = !paused;
   var btn = document.getElementById('pause-btn');
   if(paused){
-    synth.pause();
+    pauseAudio();
     btn.textContent = '\u25B6';
     btn.classList.add('on');
     if(advTimer){ clearTimeout(advTimer); advTimer = null; }
   } else {
     btn.textContent = '\u23F8';
     btn.classList.remove('on');
-    if(synth.speaking){ synth.resume(); }
+    if(currentAudio){ resumeAudio(); }
     else {
       var s = steps[cur];
       var stepToken = narrationStepToken;
@@ -3297,12 +3269,12 @@ function toggleMute(){
   var btn = document.getElementById('mute-btn');
   btn.textContent = muted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
   btn.classList.toggle('muted', muted);
-  if(muted) synth.cancel();
+  if(muted) stopAudio();
 }
 
 function restartDemo(){
   clearAuto();
-  synth.cancel();
+  stopAudio();
   paused = false;
   document.getElementById('pause-btn').textContent = '\u23F8';
   document.getElementById('pause-btn').classList.remove('on');
@@ -3312,7 +3284,7 @@ function restartDemo(){
 
 function jumpTo(i, isManual){
   clearAuto();
-  synth.cancel();
+  stopAudio();
   paused = false;
   document.getElementById('pause-btn').textContent = '\u23F8';
   document.getElementById('pause-btn').classList.remove('on');
@@ -3330,7 +3302,7 @@ function replayStep(){
 }
 
 function retryAudio(){
-  synth.cancel();
+  stopAudio();
   var step = steps[cur];
   narrationStepToken++;
   if(step.voice){
