@@ -2659,246 +2659,594 @@ app.get('/demo', (_req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EX3 SmartRecruiters — Product Demo</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>EX3 SmartRecruiters \u2014 Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Sora',sans-serif;background:#0a0a0a;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:48px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;flex-shrink:0}
-.tb-logo{font-size:14px;font-weight:700}.tb-logo em{color:#22c55e;font-style:normal}
-.tb-dots{display:flex;gap:5px;flex-wrap:wrap;max-width:420px;justify-content:center}
-.tb-dot{width:7px;height:7px;border-radius:50%;background:#222;transition:background .3s;flex-shrink:0}
-.tb-dot.done{background:#166534}.tb-dot.cur{background:#22c55e}
-.tb-right{display:flex;align-items:center;gap:14px}
-.tb-timer{font-size:16px;font-weight:800;color:#22c55e;font-variant-numeric:tabular-nums}
-.tb-count{font-size:11px;color:#444}
-.progress-bar{height:2px;background:#111;flex-shrink:0}
-.progress-fill{height:100%;background:#22c55e;transition:width .5s ease}
-.iframe-wrap{flex:1;position:relative;overflow:hidden}
-iframe{width:100%;height:100%;border:none;background:#fff}
-.placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:#0a0a0a}
-.ph-icon{font-size:64px}.ph-title{font-size:26px;font-weight:800;letter-spacing:-.5px}
-.ph-body{font-size:14px;color:#555;max-width:440px;text-align:center;line-height:1.75}
-.ph-link{display:inline-block;margin-top:8px;padding:12px 28px;background:#22c55e;color:#000;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;transition:opacity .15s}
-.ph-link:hover{opacity:.88}
-.bottombar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:76px;background:#0d0d0d;border-top:1px solid #1a1a1a;flex-shrink:0;gap:20px}
-.step-info{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
-.step-icon-wrap{font-size:26px;flex-shrink:0}
-.step-text{min-width:0}
-.step-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
-.step-desc{font-size:12px;color:#555;margin-top:3px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.nav{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.nav-btn{padding:9px 22px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #2a2a2a;background:#161616;color:#fff;transition:all .15s;white-space:nowrap}
-.nav-btn:hover:not(:disabled){background:#1e1e1e}
-.nav-btn.p{background:#22c55e;color:#000;border-color:#22c55e}
-.nav-btn.p:hover{opacity:.9}
-.nav-btn:disabled{opacity:.2;cursor:not-allowed}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Sora',sans-serif;background:#060606;color:#fff}
+
+/* ────── START SCREEN ────── */
+#start-screen{
+  position:fixed;inset:0;z-index:300;
+  background:#060606;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  transition:opacity .6s ease;
+}
+#start-screen.fade{opacity:0;pointer-events:none}
+.ss-logo{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#2a2a2a;margin-bottom:52px}
+.ss-logo em{color:#22c55e;font-style:normal}
+.ss-head{font-size:clamp(34px,5.5vw,64px);font-weight:800;letter-spacing:-.04em;text-align:center;line-height:1.05;max-width:680px}
+.ss-head em{color:#22c55e;font-style:normal;font-weight:800}
+.ss-sub{margin-top:22px;font-size:15px;color:#555;text-align:center;max-width:400px;line-height:1.8}
+.ss-pills{display:flex;gap:10px;margin-top:36px;flex-wrap:wrap;justify-content:center}
+.ss-pill{padding:7px 15px;border:1px solid #1a1a1a;border-radius:100px;font-size:12px;color:#666;background:#0d0d0d;white-space:nowrap}
+.ss-btn{
+  margin-top:48px;
+  padding:17px 56px;background:#22c55e;color:#000;
+  font-family:inherit;font-size:15px;font-weight:800;
+  border:none;border-radius:14px;cursor:pointer;
+  letter-spacing:-.01em;
+  display:flex;align-items:center;gap:10px;
+  transition:opacity .15s,transform .15s;
+}
+.ss-btn:hover{opacity:.9;transform:translateY(-2px)}
+.ss-note{margin-top:18px;font-size:11px;color:#2a2a2a}
+
+/* ────── DEMO SHELL ────── */
+#demo{display:flex;flex-direction:column;height:100vh;opacity:0;transition:opacity .5s}
+#demo.show{opacity:1}
+
+/* Top bar */
+.topbar{
+  height:48px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  background:#0a0a0a;border-bottom:1px solid #111;
+}
+.tb-logo{font-size:13px;font-weight:700;letter-spacing:.04em}
+.tb-logo em{color:#22c55e;font-style:normal}
+.tb-step-label{font-size:11px;color:#333;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.tb-ctrl{display:flex;align-items:center;gap:6px}
+.cbtn{
+  width:30px;height:30px;border-radius:7px;border:1px solid #1e1e1e;background:#111;
+  color:#666;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;font-family:inherit;flex-shrink:0;
+}
+.cbtn:hover{color:#fff;border-color:#2e2e2e;background:#181818}
+.cbtn.on{background:#22c55e;color:#000;border-color:#22c55e}
+.cbtn.muted{background:#ef4444;color:#fff;border-color:#ef4444}
+
+/* Progress strip */
+.prog-strip{height:2px;flex-shrink:0;background:#0f0f0f}
+.prog-fill{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);transition:width .6s ease;width:0%}
+
+/* Dots */
+.dots-row{
+  height:34px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  background:#080808;border-bottom:1px solid #0f0f0f;
+}
+.dot{width:6px;height:6px;border-radius:3px;background:#161616;transition:all .4s ease;cursor:pointer}
+.dot:hover{background:#2e2e2e}
+.dot.done{background:#166534;width:10px;border-radius:4px}
+.dot.cur{background:#22c55e;width:22px;border-radius:4px}
+
+/* Frame area */
+.frame-area{flex:1;position:relative;overflow:hidden;min-height:0}
+iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
+.ph{
+  position:absolute;inset:0;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:18px;
+  background:#0a0a0a;
+}
+.ph-icon{font-size:52px}
+.ph-title{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.ph-body{font-size:13px;color:#555;max-width:380px;text-align:center;line-height:1.8}
+.ph-cta{display:inline-block;margin-top:6px;padding:11px 24px;background:#22c55e;color:#000;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;transition:opacity .15s}
+.ph-cta:hover{opacity:.88}
+
+/* Callout overlay */
+#callout-layer{position:absolute;inset:0;pointer-events:none;z-index:10}
+.callout-bubble{
+  position:absolute;
+  background:rgba(10,10,10,.92);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(34,197,94,.35);
+  border-left:3px solid #22c55e;
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:12px;font-weight:600;color:#d4d4d4;
+  line-height:1.5;max-width:220px;
+  box-shadow:0 4px 24px rgba(0,0,0,.6),0 0 20px rgba(34,197,94,.1);
+  opacity:0;transform:translateY(6px);
+  transition:opacity .4s ease,transform .4s ease;
+  pointer-events:none;
+}
+.callout-bubble.show{opacity:1;transform:translateY(0)}
+.callout-bubble strong{color:#22c55e;display:block;font-size:11px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em}
+.callout-dot{
+  position:absolute;
+  width:14px;height:14px;border-radius:50%;
+  background:#22c55e;
+  box-shadow:0 0 0 0 rgba(34,197,94,.5);
+  animation:ring 2s ease-in-out infinite;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+.callout-dot.show{opacity:1}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 14px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+
+/* Step title pill (floats over iframe) */
+#step-pill{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%) translateY(-8px);
+  background:rgba(8,8,8,.9);backdrop-filter:blur(10px);
+  border:1px solid #1e1e1e;border-radius:100px;
+  padding:7px 18px;
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:700;white-space:nowrap;
+  z-index:20;pointer-events:none;
+  opacity:0;transition:opacity .4s,transform .4s;
+}
+#step-pill.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#pill-icon{font-size:16px}
+
+/* ────── NARRATOR PANEL ────── */
+.narrator{
+  flex-shrink:0;
+  background:#0a0a0a;border-top:1px solid #111;
+  padding:14px 18px 12px;
+}
+.nar-inner{display:flex;align-items:flex-start;gap:12px;max-width:1000px;margin:0 auto}
+.nar-mic{
+  width:34px;height:34px;flex-shrink:0;margin-top:1px;
+  border-radius:50%;background:#111;border:1px solid #1e1e1e;
+  display:flex;align-items:center;justify-content:center;
+}
+.bars{display:flex;align-items:center;gap:2.5px;height:16px}
+.bar{width:3px;border-radius:2px;background:#333;transition:background .3s,height .15s}
+.bar:nth-child(1){height:4px}.bar:nth-child(2){height:10px}.bar:nth-child(3){height:7px}.bar:nth-child(4){height:12px}.bar:nth-child(5){height:5px}.bar:nth-child(6){height:8px}
+@keyframes b1{0%,100%{height:4px}50%{height:13px}}
+@keyframes b2{0%,100%{height:10px}50%{height:4px}}
+@keyframes b3{0%,100%{height:7px}50%{height:15px}}
+@keyframes b4{0%,100%{height:12px}50%{height:3px}}
+@keyframes b5{0%,100%{height:5px}50%{height:12px}}
+@keyframes b6{0%,100%{height:8px}50%{height:4px}}
+.speaking .bar{background:#22c55e}
+.speaking .bar:nth-child(1){animation:b1 .5s ease-in-out infinite}
+.speaking .bar:nth-child(2){animation:b2 .5s ease-in-out infinite .08s}
+.speaking .bar:nth-child(3){animation:b3 .5s ease-in-out infinite .16s}
+.speaking .bar:nth-child(4){animation:b4 .5s ease-in-out infinite .04s}
+.speaking .bar:nth-child(5){animation:b5 .5s ease-in-out infinite .12s}
+.speaking .bar:nth-child(6){animation:b6 .5s ease-in-out infinite .2s}
+.nar-text{flex:1;min-width:0}
+.nar-words{font-size:13.5px;line-height:1.75;color:#444;min-height:46px;padding-right:4px}
+.nar-words .w.past{color:#666}
+.nar-words .w.now{color:#fff;font-weight:600}
+.nar-words .w.future{color:#2a2a2a}
+.nar-foot{display:flex;align-items:center;margin-top:8px;gap:10px}
+.nar-tag{font-size:10px;font-weight:700;color:#22c55e;letter-spacing:.06em;text-transform:uppercase;flex-shrink:0}
+.nar-pb{flex:1;height:2px;background:#141414;border-radius:1px}
+.nar-pb-fill{height:100%;background:#22c55e;border-radius:1px;transition:width .3s linear;width:0%}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <div class="tb-logo">EX3 <em>SmartRecruiters</em></div>
-  <div class="tb-dots" id="dots"></div>
-  <div class="tb-right">
-    <span class="tb-count" id="tb-count"></span>
-    <span class="tb-timer" id="timer">00:00</span>
+
+<!-- ── Start screen ── -->
+<div id="start-screen">
+  <div class="ss-logo">EX3 <em>SmartRecruiters</em></div>
+  <h1 class="ss-head">The complete<br><em>implementation platform</em></h1>
+  <p class="ss-sub">Training, AI guidance, WhatsApp bot, consultant portal, and SOW builder — all in one place.</p>
+  <div class="ss-pills">
+    <div class="ss-pill">\uD83C\uDF93 Role-based training</div>
+    <div class="ss-pill">\uD83E\uDD16 AI assistant</div>
+    <div class="ss-pill">\uD83D\uDCF1 WhatsApp bot</div>
+    <div class="ss-pill">\uD83E\uDDED Consultant portal</div>
+    <div class="ss-pill">\uD83D\uDCDD SOW builder</div>
+    <div class="ss-pill">\u2728 AI rewrite</div>
   </div>
+  <button class="ss-btn" onclick="beginDemo()">\u25B6&nbsp;&nbsp;Start Demo</button>
+  <p class="ss-note">Voice narration + auto-advance &nbsp;&middot;&nbsp; ~3 minutes &nbsp;&middot;&nbsp; 13 features</p>
 </div>
-<div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
-<div class="iframe-wrap">
-  <iframe id="liveFrame" src="/"></iframe>
-  <div class="placeholder" id="placeholder" style="display:none">
-    <div class="ph-icon" id="ph-icon"></div>
-    <div class="ph-title" id="ph-title"></div>
-    <div class="ph-body" id="ph-body"></div>
-    <a class="ph-link" id="ph-link" href="#" target="_blank" style="display:none"></a>
-  </div>
-</div>
-<div class="bottombar">
-  <div class="step-info">
-    <div class="step-icon-wrap" id="s-icon"></div>
-    <div class="step-text">
-      <div class="step-title" id="s-title"></div>
-      <div class="step-desc" id="s-desc"></div>
+
+<!-- ── Demo ── -->
+<div id="demo">
+  <div class="topbar">
+    <div class="tb-logo">EX3 <em>SmartRecruiters</em></div>
+    <div class="tb-step-label" id="tb-step">Step 1 of 13</div>
+    <div class="tb-ctrl">
+      <button class="cbtn" id="mute-btn" onclick="toggleMute()" title="Mute voice">\uD83D\uDD0A</button>
+      <button class="cbtn" id="pause-btn" onclick="togglePause()" title="Pause">\u23F8</button>
+      <button class="cbtn" onclick="go(-1)" title="Previous">\u2190</button>
+      <button class="cbtn" onclick="go(1)" title="Next">\u2192</button>
+      <button class="cbtn" onclick="restartDemo()" title="Restart">\u21BA</button>
     </div>
   </div>
-  <div class="nav">
-    <button class="nav-btn" id="btn-prev" onclick="go(-1)">\u2190 Prev</button>
-    <button class="nav-btn p" id="btn-next" onclick="go(1)">Next \u2192</button>
+  <div class="prog-strip"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="dots-row" id="dots-row"></div>
+  <div class="frame-area" id="frame-area">
+    <iframe id="liveFrame" src="/"></iframe>
+    <div class="ph" id="ph">
+      <div class="ph-icon" id="ph-icon"></div>
+      <div class="ph-title" id="ph-title"></div>
+      <div class="ph-body" id="ph-body"></div>
+      <a class="ph-cta" id="ph-cta" href="#" target="_blank" style="display:none"></a>
+    </div>
+    <div id="callout-layer">
+      <div class="callout-bubble" id="cbubble"></div>
+      <div class="callout-dot" id="cdot"></div>
+    </div>
+    <div id="step-pill"><span id="pill-icon"></span><span id="pill-title"></span></div>
+  </div>
+  <div class="narrator">
+    <div class="nar-inner">
+      <div class="nar-mic"><div class="bars" id="bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></div>
+      <div class="nar-text">
+        <div class="nar-words" id="nar-words"></div>
+        <div class="nar-foot">
+          <span class="nar-tag" id="nar-tag"></span>
+          <div class="nar-pb"><div class="nar-pb-fill" id="nar-pb-fill"></div></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
 <script>
+// ── Steps ──
 var steps = [
   {
-    icon:'\uD83C\uDF10', title:'The EX3 SmartRecruiters Platform',
-    desc:'A complete enablement and implementation system — training, AI support, consultant tools, and SOW generation all in one place.',
-    url:'/', auto:[]
+    icon:'\uD83C\uDF10', title:'The EX3 Platform', url:'/', auto:[],
+    voice:"Welcome to EX3's SmartRecruiters implementation platform — the complete toolkit for delivering world-class SmartRecruiters rollouts. In the next few minutes I'll show you everything it does.",
+    callout:null
   },
   {
-    icon:'\uD83D\uDCCB', title:'Recruiter Training',
-    desc:'Recruiters see their own dedicated training track — posting jobs, managing candidates, interview coordination, and offer management step by step.',
-    url:'/', auto:[{d:700, a:{action:'setRole',role:'rec'}}]
+    icon:'\uD83D\uDCCB', title:'Recruiter Training', url:'/', auto:[{d:800,a:{action:'setRole',role:'rec'}}],
+    voice:"Start with role-based training. Click Recruiter, and the platform reveals a complete step-by-step guide — covering every task from job posting to candidate pipeline management.",
+    callout:{label:'Role-based training',text:'Dedicated guide for every recruiter task',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
-    icon:'\uD83D\uDC54', title:'Hiring Manager Training',
-    desc:'Hiring managers get a completely different view — job approvals, candidate review, interview feedback, and decisions. No irrelevant content cluttering their experience.',
-    url:'/', auto:[{d:700, a:{action:'setRole',role:'hm'}}]
+    icon:'\uD83D\uDC54', title:'Hiring Manager Training', url:'/', auto:[{d:700,a:{action:'setRole',role:'hm'}}],
+    voice:"Switch to Hiring Manager and the content transforms instantly — application review, interview feedback, and offer approvals. Completely different view, same platform.",
+    callout:{label:'Hiring Manager view',text:'Tailored content — no irrelevant clutter',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
-    icon:'\uD83D\uDC64', title:'Candidate & Admin Training',
-    desc:'Candidates get guidance on applying and tracking their application. Admins see full system configuration, user management, and reporting — one platform, every audience.',
-    url:'/', auto:[
-      {d:700,  a:{action:'setRole',role:'cand'}},
-      {d:4000, a:{action:'setRole',role:'adm'}}
-    ]
+    icon:'\uD83D\uDC64', title:'Candidate & Admin Training', url:'/', auto:[{d:700,a:{action:'setRole',role:'cand'}},{d:4500,a:{action:'setRole',role:'adm'}}],
+    voice:"Candidates and system administrators each get their own dedicated section. Four distinct roles, one platform — every person covered, nothing shared that shouldn't be.",
+    callout:{label:'4 roles covered',text:'Candidate, Recruiter, Hiring Manager, Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
-    icon:'\uD83E\uDD16', title:'AI Assistant — Instant Answers',
-    desc:'Any user can ask anything about SmartRecruiters and get an exact, sourced answer with navigation paths — no ticket, no waiting, no Googling.',
-    url:'/', auto:[
-      {d:700,  a:{action:'openAI'}},
-      {d:1500, a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}
-    ]
+    icon:'\uD83E\uDD16', title:'AI Assistant', url:'/', auto:[{d:800,a:{action:'openAI'}},{d:1900,a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}],
+    voice:"The AI assistant answers any SmartRecruiters question instantly. No tickets, no waiting — type your question and get a precise, sourced answer in seconds. Available to consultants and clients alike.",
+    callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
   },
   {
-    icon:'\uD83D\uDCAD', title:'AI Memory — Full Context',
-    desc:'The AI remembers everything said in the session. Ask follow-up questions without repeating yourself — exactly like talking to a real consultant who was in the room.',
-    url:'/', auto:[
-      {d:600,  a:{action:'openAI'}},
-      {d:1400, a:{action:'typeAndAsk',query:'What about for a volume hiring campaign with 500 applicants?'}}
-    ]
+    icon:'\uD83D\uDCAD', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:1500,a:{action:'typeAndAsk',query:'What about for a volume hiring campaign with 500 applicants?'}}],
+    voice:"It maintains full conversation context throughout the session. Ask a follow-up question about a complex scenario, and the AI connects the dots — just like talking to a senior consultant.",
+    callout:{label:'Context memory',text:'Smart follow-ups — no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
   },
   {
     icon:'\uD83D\uDCF1', title:'WhatsApp AI Bot',
-    desc:'The same AI is available 24/7 on WhatsApp — no app download, no login required. Candidates and recruiters can ask questions from any device, including via voice message.',
     url:null,
-    ph:{icon:'\uD83D\uDCF1', title:'WhatsApp AI Bot',
-        body:'Scan or click to message the EX3 AI on WhatsApp. Ask questions, get answers, send voice notes — no app download or login needed. Available around the clock.',
-        link:{label:'Message the Bot on WhatsApp \u2197',url:'https://wa.me/14155238886'}},
-    auto:[]
+    ph:{icon:'\uD83D\uDCF1',title:'WhatsApp AI Bot',body:'The same AI on WhatsApp — no app download, no login required. Text or voice note, answered in seconds.',link:{label:'Message the bot on WhatsApp \u2197',url:'https://wa.me/14155238886'}},
+    auto:[],
+    voice:"The same AI is available 24/7 on WhatsApp. No app to install, no login required — consultants and clients just message the bot and get an expert answer, even via voice note.",
+    callout:null
   },
   {
-    icon:'\uD83E\uDDED', title:'Consultant Portal — Implementation Phases',
-    desc:'The full SmartRecruiters implementation methodology — every phase, every deliverable, every checklist — structured so any consultant can pick it up and run.',
-    url:'/consultant', auto:[
-      {d:800,  a:{action:'showPhases'}},
-      {d:1700, a:{action:'openPhase',index:0}},
-      {d:3500, a:{action:'openPhase',index:1}},
-      {d:5300, a:{action:'openPhase',index:2}},
-      {d:7100, a:{action:'openPhase',index:3}}
-    ]
+    icon:'\uD83E\uDDED', title:'Consultant Portal', url:'/consultant',
+    auto:[{d:800,a:{action:'showPhases'}},{d:1700,a:{action:'openPhase',index:0}},{d:3500,a:{action:'openPhase',index:1}},{d:5300,a:{action:'openPhase',index:2}},{d:7100,a:{action:'openPhase',index:3}}],
+    voice:"The consultant portal is your implementation command centre. Six phases — Discovery, Build, Integration, Testing, Training, Go-Live — each with detailed checklists, responsibilities, and timelines.",
+    callout:{label:'Full methodology',text:'Six phases, every checklist and deliverable',dot:{x:50,y:42},bubble:{x:60,y:28}}
   },
   {
-    icon:'\uD83D\uDCDD', title:'SOW Builder — All 19 Steps Live',
-    desc:'Watch the full Statement of Work wizard fill itself in automatically — every question answered, every option selected, the SOW generated at the end.',
-    url:'/consultant/sow-builder', auto:[{d:500, a:{action:'demoWalkSOW'}}]
+    icon:'\uD83D\uDCDD', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}],
+    voice:"The SOW builder walks through 19 questions about the client's requirements — size, integrations, workflows, compliance, training, and more. Watch it complete every step automatically.",
+    callout:{label:'19-step wizard',text:'Guided SOW building — every requirement captured',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
   {
-    icon:'\u2728', title:'AI SOW Rewrite',
-    desc:'One click and GPT-4 rewrites the draft into polished, client-ready consulting language — streamed word by word, right in the browser.',
-    url:'/consultant/sow-builder', auto:[{d:1000, a:{action:'triggerAIRewrite'}}]
+    icon:'\u2728', title:'AI SOW Rewrite', url:'/consultant/sow-builder', auto:[{d:1000,a:{action:'triggerAIRewrite'}}],
+    voice:"One click and the AI rewrites the draft into polished, client-ready consulting language — streamed live, word by word. A complete professional Statement of Work in under a minute.",
+    callout:{label:'AI rewrite',text:'GPT-4 powered — client-ready language instantly',dot:{x:50,y:54},bubble:{x:60,y:40}}
   },
   {
-    icon:'\uD83D\uDCE7', title:'Export to Word & Email to Client',
-    desc:'The finished SOW can be downloaded as a formatted Word document or emailed directly to the client — without leaving the platform.',
-    url:'/consultant/sow-builder', auto:[{d:800, a:{action:'scrollToExport'}}]
+    icon:'\uD83D\uDCE7', title:'Export & Email', url:'/consultant/sow-builder', auto:[{d:800,a:{action:'scrollToExport'}}],
+    voice:"Export the finished SOW as a formatted Word document, or email it directly to the client without leaving the platform. From generation to delivery in one click.",
+    callout:{label:'One-click delivery',text:'Word export or direct email to client',dot:{x:50,y:78},bubble:{x:60,y:64}}
   },
   {
     icon:'\uD83D\uDCAC', title:'Conversation History',
-    desc:'Every web chat and WhatsApp session is stored as a full thread — searchable by keyword, filterable by source, replayable in full. Like ChatGPT, but for your implementation.',
     url:null,
-    ph:{icon:'\uD83D\uDCAC', title:'Conversation History',
-        body:'Every AI conversation — web or WhatsApp — is captured as a full thread. Search, filter, and replay any session. Nothing gets lost.',
-        link:{label:'Open Conversation History \u2197',url:'/conversations'}},
-    auto:[]
+    ph:{icon:'\uD83D\uDCAC',title:'Conversation History',body:'Every web chat and WhatsApp session stored as a searchable, replayable thread. Nothing gets lost.',link:{label:'Open Conversation History \u2197',url:'/conversations'}},
+    auto:[],
+    voice:"Every conversation — web and WhatsApp combined — is stored as a searchable, replayable thread. Nothing gets lost between consultants or sessions.",
+    callout:null
   },
   {
-    icon:'\uD83D\uDE80', title:"What's Next",
-    desc:'Version 1 — built in weeks. Role training, AI assistant, WhatsApp bot, consultant portal, SOW builder, conversation history. The foundation is laid. What do you want to build on it?',
-    url:'/', auto:[{d:600, a:{action:'setRole',role:'rec'}}]
+    icon:'\uD83D\uDE80', title:"What's Next", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
+    voice:"That's the EX3 SmartRecruiters platform. Role training, AI assistant, WhatsApp bot, consultant portal, SOW builder with AI rewrite, and conversation history — all in one place. Ready to use on your next engagement.",
+    callout:null
   }
 ];
 
-var cur = 0, prevCur = -1, startTime = Date.now(), autoTimers = [];
+// ── State ──
+var cur = 0, prevCur = -1, paused = false, muted = false;
+var autoTimers = [], advTimer = null;
+var synth = window.speechSynthesis;
+var voices = [], voiceReady = false;
 
-setInterval(function(){
-  var s = Math.floor((Date.now()-startTime)/1000);
-  document.getElementById('timer').textContent =
-    String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-}, 1000);
-
-function renderDots(){
-  document.getElementById('dots').innerHTML = steps.map(function(_,i){
-    var cls = i<cur?'tb-dot done':i===cur?'tb-dot cur':'tb-dot';
-    return '<div class="'+cls+'"></div>';
-  }).join('');
+function loadVoices(){
+  voices = synth.getVoices();
+  if(voices.length) voiceReady = true;
 }
+loadVoices();
+if(synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
 
-function render(){
-  var s = steps[cur];
-  document.getElementById('prog').style.width = Math.round(((cur+1)/steps.length)*100)+'%';
-  document.getElementById('tb-count').textContent = (cur+1)+' / '+steps.length;
-  document.getElementById('btn-prev').disabled = cur===0;
-  document.getElementById('btn-next').textContent = cur===steps.length-1 ? 'Finish \u2713' : 'Next \u2192';
-  document.getElementById('s-icon').textContent = s.icon;
-  document.getElementById('s-title').textContent = s.title;
-  document.getElementById('s-desc').textContent = s.desc;
-  renderDots();
-  clearAuto();
-
-  if(s.url){
-    var sameUrl = prevCur >= 0 && steps[prevCur] && steps[prevCur].url === s.url;
-    document.getElementById('placeholder').style.display = 'none';
-    document.getElementById('liveFrame').style.display = 'block';
-    if(!sameUrl){
-      document.getElementById('liveFrame').src = s.url;
-      if(s.auto && s.auto.length){
-        document.getElementById('liveFrame').onload = function(){
-          s.auto.forEach(function(cmd){
-            autoTimers.push(setTimeout(function(){ postToFrame(cmd.a); }, cmd.d));
-          });
-          document.getElementById('liveFrame').onload = null;
-        };
-      }
-    } else {
-      s.auto.forEach(function(cmd){
-        autoTimers.push(setTimeout(function(){ postToFrame(cmd.a); }, cmd.d));
-      });
-    }
-  } else {
-    document.getElementById('liveFrame').style.display = 'none';
-    var ph = s.ph || {};
-    document.getElementById('placeholder').style.display = 'flex';
-    document.getElementById('ph-icon').textContent = ph.icon || s.icon;
-    document.getElementById('ph-title').textContent = ph.title || s.title;
-    document.getElementById('ph-body').textContent = ph.body || '';
-    var lnk = document.getElementById('ph-link');
-    if(ph.link){ lnk.style.display='inline-block'; lnk.textContent=ph.link.label; lnk.href=ph.link.url; }
-    else { lnk.style.display='none'; }
+function getBestVoice(){
+  var want = [
+    'Google UK English Female','Microsoft Libby Online (Natural) - English (United Kingdom)',
+    'Microsoft George Online (Natural) - English (United Kingdom)',
+    'Google UK English Male','Microsoft Zira Desktop - English (United States)',
+    'Samantha','Karen','Moira','Daniel','Alex'
+  ];
+  for(var i=0;i<want.length;i++){
+    var v = voices.filter(function(vv){ return vv.name===want[i]; });
+    if(v.length) return v[0];
   }
-  prevCur = cur;
+  var eng = voices.filter(function(v){ return v.lang && v.lang.indexOf('en')===0; });
+  return eng.length ? eng[0] : (voices.length ? voices[0] : null);
 }
 
+// ── Narration ──
+function buildWords(text){
+  return text.split(' ').map(function(w,i){ return {w:w,i:i}; });
+}
+
+function renderWords(text, charPos){
+  var words = text.split(' ');
+  var pos = 0;
+  var html = '';
+  for(var i=0;i<words.length;i++){
+    var start = pos;
+    var end = pos + words[i].length;
+    var cls;
+    if(charPos < 0){ cls = 'w future'; }
+    else if(charPos > end){ cls = 'w past'; }
+    else if(charPos >= start){ cls = 'w now'; }
+    else { cls = 'w future'; }
+    html += '<span class="'+cls+'">'+words[i]+' </span>';
+    pos = end + 1;
+  }
+  document.getElementById('nar-words').innerHTML = html;
+}
+
+function speak(text, onDone){
+  synth.cancel();
+  document.getElementById('bars').classList.remove('speaking');
+  if(muted){
+    renderWords(text, -1);
+    var est = Math.max(7000, text.split(' ').length * 430);
+    var t = setTimeout(function(){ if(onDone) onDone(); }, est);
+    autoTimers.push(t);
+    return;
+  }
+  renderWords(text, -1);
+  var utt = new SpeechSynthesisUtterance(text);
+  var v = getBestVoice();
+  if(v) utt.voice = v;
+  utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
+  document.getElementById('bars').classList.add('speaking');
+  utt.onboundary = function(e){
+    if(e.name==='word'){
+      renderWords(text, e.charIndex);
+      var pct = Math.min(100, Math.round(e.charIndex / text.length * 100));
+      document.getElementById('nar-pb-fill').style.width = pct + '%';
+    }
+  };
+  utt.onend = function(){
+    document.getElementById('bars').classList.remove('speaking');
+    document.getElementById('nar-pb-fill').style.width = '100%';
+    renderWords(text, text.length + 1);
+    if(onDone) onDone();
+  };
+  utt.onerror = function(){
+    document.getElementById('bars').classList.remove('speaking');
+    if(onDone) onDone();
+  };
+  synth.speak(utt);
+}
+
+// ── Callout ──
+function showCallout(c){
+  var bub = document.getElementById('cbubble');
+  var dot = document.getElementById('cdot');
+  bub.classList.remove('show'); dot.classList.remove('show');
+  if(!c) return;
+  var fa = document.getElementById('frame-area');
+  var fw = fa.offsetWidth, fh = fa.offsetHeight;
+  dot.style.left = Math.round(fw * c.dot.x / 100) + 'px';
+  dot.style.top  = Math.round(fh * c.dot.y / 100) + 'px';
+  var bx = Math.round(fw * c.bubble.x / 100);
+  var by = Math.round(fh * c.bubble.y / 100);
+  bub.style.left = bx + 'px';
+  bub.style.top  = by + 'px';
+  bub.innerHTML = '<strong>'+c.label+'</strong>'+c.text;
+  setTimeout(function(){ bub.classList.add('show'); dot.classList.add('show'); }, 900);
+}
+
+function hideCallout(){
+  document.getElementById('cbubble').classList.remove('show');
+  document.getElementById('cdot').classList.remove('show');
+}
+
+// ── Dots ──
+function renderDots(){
+  document.getElementById('dots-row').innerHTML = steps.map(function(_,i){
+    var cls = i<cur?'dot done':i===cur?'dot cur':'dot';
+    return '<div class="'+cls+'" onclick="jumpTo('+i+')" title="'+steps[i].title+'"></div>';
+  }).join('');
+  document.getElementById('prog-fill').style.width = Math.round((cur+1)/steps.length*100)+'%';
+}
+
+// ── Step pill ──
+function showPill(s, idx){
+  var el = document.getElementById('step-pill');
+  el.classList.remove('show');
+  document.getElementById('pill-icon').textContent = s.icon;
+  document.getElementById('pill-title').textContent = s.title;
+  setTimeout(function(){ el.classList.add('show'); }, 150);
+  setTimeout(function(){ el.classList.remove('show'); }, 4500);
+}
+
+// ── postMessage ──
 function postToFrame(msg){
   try{ document.getElementById('liveFrame').contentWindow.postMessage(Object.assign({type:'EX3_DEMO'},msg),'*'); }catch(e){}
 }
 
 function clearAuto(){
-  autoTimers.forEach(function(t){ clearTimeout(t); });
-  autoTimers = [];
+  autoTimers.forEach(function(t){ clearTimeout(t); }); autoTimers = [];
+  if(advTimer){ clearTimeout(advTimer); advTimer = null; }
 }
 
-function go(dir){
-  cur = Math.max(0, Math.min(steps.length-1, cur+dir));
+function fireAuto(s){
+  if(!s.auto) return;
+  s.auto.forEach(function(cmd){
+    autoTimers.push(setTimeout(function(){ postToFrame(cmd.a); }, cmd.d));
+  });
+}
+
+// ── Render ──
+function render(){
+  if(paused) return;
+  var s = steps[cur];
+  document.getElementById('tb-step').textContent = 'Step '+(cur+1)+' of '+steps.length;
+  document.getElementById('nar-tag').textContent = s.icon+'  '+s.title;
+  document.getElementById('nar-pb-fill').style.width = '0%';
+  renderDots();
+  showPill(s, cur);
+  clearAuto();
+  hideCallout();
+  synth.cancel();
+  document.getElementById('bars').classList.remove('speaking');
+
+  // Frame
+  if(s.url){
+    var same = prevCur>=0 && steps[prevCur] && steps[prevCur].url===s.url;
+    document.getElementById('ph').style.display = 'none';
+    document.getElementById('liveFrame').style.display = 'block';
+    if(!same){
+      document.getElementById('liveFrame').src = s.url;
+      document.getElementById('liveFrame').onload = function(){
+        fireAuto(s);
+        document.getElementById('liveFrame').onload = null;
+      };
+    } else {
+      fireAuto(s);
+    }
+  } else {
+    document.getElementById('liveFrame').style.display = 'none';
+    var ph = s.ph || {};
+    document.getElementById('ph').style.display = 'flex';
+    document.getElementById('ph-icon').textContent = ph.icon || s.icon;
+    document.getElementById('ph-title').textContent = ph.title || s.title;
+    document.getElementById('ph-body').textContent = ph.body || '';
+    var cta = document.getElementById('ph-cta');
+    if(ph.link){ cta.style.display='inline-block'; cta.textContent=ph.link.label; cta.href=ph.link.url; }
+    else{ cta.style.display='none'; }
+  }
+  prevCur = cur;
+
+  // Show callout after a short delay
+  var calloutTimer = setTimeout(function(){ showCallout(s.callout); }, 1500);
+  autoTimers.push(calloutTimer);
+
+  // Speak, then auto-advance
+  speak(s.voice, function(){
+    if(paused) return;
+    advTimer = setTimeout(function(){
+      if(!paused && cur < steps.length-1){ cur++; render(); }
+    }, 1800);
+  });
+}
+
+// ── Controls ──
+function togglePause(){
+  paused = !paused;
+  var btn = document.getElementById('pause-btn');
+  if(paused){
+    synth.pause();
+    btn.textContent = '\u25B6';
+    btn.classList.add('on');
+    if(advTimer){ clearTimeout(advTimer); advTimer = null; }
+  } else {
+    btn.textContent = '\u23F8';
+    btn.classList.remove('on');
+    if(synth.speaking){ synth.resume(); }
+    else {
+      var s = steps[cur];
+      speak(s.voice, function(){
+        if(!paused && cur<steps.length-1){
+          advTimer = setTimeout(function(){ cur++; render(); }, 1800);
+        }
+      });
+      showCallout(s.callout);
+    }
+  }
+}
+
+function toggleMute(){
+  muted = !muted;
+  var btn = document.getElementById('mute-btn');
+  btn.textContent = muted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+  btn.classList.toggle('muted', muted);
+  if(muted) synth.cancel();
+}
+
+function restartDemo(){
+  clearAuto();
+  synth.cancel();
+  paused = false;
+  document.getElementById('pause-btn').textContent = '\u23F8';
+  document.getElementById('pause-btn').classList.remove('on');
+  cur = 0; prevCur = -1;
   render();
 }
 
-document.addEventListener('keydown', function(e){
-  if(e.key==='ArrowRight'||e.key===' ') go(1);
+function jumpTo(i){
+  clearAuto();
+  synth.cancel();
+  paused = false;
+  document.getElementById('pause-btn').textContent = '\u23F8';
+  document.getElementById('pause-btn').classList.remove('on');
+  cur = i;
+  render();
+}
+
+function go(d){
+  var n = Math.max(0,Math.min(steps.length-1,cur+d));
+  if(n !== cur) jumpTo(n);
+}
+
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key===' '){ e.preventDefault(); go(1); }
   if(e.key==='ArrowLeft') go(-1);
+  if(e.key==='p'||e.key==='P') togglePause();
+  if(e.key==='m'||e.key==='M') toggleMute();
+  if(e.key==='r'||e.key==='R') restartDemo();
 });
 
-render();
+// ── Begin ──
+function beginDemo(){
+  var ss = document.getElementById('start-screen');
+  ss.classList.add('fade');
+  setTimeout(function(){
+    ss.style.display = 'none';
+    document.getElementById('demo').classList.add('show');
+    render();
+  }, 600);
+}
 </script>
 </body>
 </html>`);
