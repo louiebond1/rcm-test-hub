@@ -3036,6 +3036,12 @@ var narrationStepToken = 0;
 var currentAudio = null;
 var frameInteracted = false;
 
+function markFrameInteracted(){
+  frameInteracted = true;
+  clearAuto();
+  hideCallout();
+}
+
 function stopAudio(){
   if(currentAudio){ currentAudio.pause(); currentAudio.src = ''; currentAudio = null; }
 }
@@ -3196,16 +3202,18 @@ function bindFrameInteractionHandlers(){
     var frame = document.getElementById('liveFrame');
     var win = frame.contentWindow;
     if(!win || win.__ex3DemoBound) return;
-    var markInteracted = function(){
-      frameInteracted = true;
-      clearAuto();
-      hideCallout();
-    };
-    win.addEventListener('pointerdown', markInteracted, { passive: true });
-    win.addEventListener('keydown', markInteracted);
+    win.addEventListener('pointerdown', markFrameInteracted, { passive: true });
+    win.addEventListener('keydown', markFrameInteracted);
+    frame.addEventListener('pointerdown', markFrameInteracted, { passive: true });
+    frame.addEventListener('focus', markFrameInteracted);
     win.__ex3DemoBound = true;
   } catch(e) {}
 }
+
+window.addEventListener('message', function(e){
+  if(!e.data || e.data.type !== 'EX3_DEMO_INTERACTION') return;
+  markFrameInteracted();
+});
 
 // ── Render ──
 function render(){
