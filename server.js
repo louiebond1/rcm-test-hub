@@ -2419,7 +2419,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('========================================================================');
     add('Prepared by EX3 Consulting  |  Confidential  |  ex3consulting.com');
 
-    var sow = L.join('\n');
+    var sow = L.join('\\n');
 
     // ── end of SOW ──
     document.getElementById('sow-doc').textContent = sow;
