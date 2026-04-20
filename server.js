@@ -3321,8 +3321,6 @@ document.addEventListener('keydown',function(e){
 
 // ── Begin ──
 function beginDemo(){
-  unlockSpeech();
-  loadVoices();
   var ss = document.getElementById('start-screen');
   ss.classList.add('fade');
   setTimeout(function(){
