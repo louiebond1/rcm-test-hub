@@ -2829,6 +2829,11 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 .nar-tag{font-size:10px;font-weight:700;color:#22c55e;letter-spacing:.06em;text-transform:uppercase;flex-shrink:0}
 .nar-pb{flex:1;height:2px;background:#141414;border-radius:1px}
 .nar-pb-fill{height:100%;background:#22c55e;border-radius:1px;transition:width .3s linear;width:0%}
+.nar-controls{display:flex;gap:8px;margin-top:10px}
+.nar-btn{padding:9px 12px;border-radius:8px;border:1px solid #222;background:#101010;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.nar-btn:hover{background:#171717;border-color:#2e2e2e}
+.nar-btn.next{background:#22c55e;color:#000;border-color:#22c55e}
+.nar-btn.next:hover{opacity:.92}
 </style>
 </head>
 <body>
@@ -2847,7 +2852,7 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
     <div class="ss-pill">\u2728 AI rewrite</div>
   </div>
   <button class="ss-btn" onclick="beginDemo()">\u25B6&nbsp;&nbsp;Start Demo</button>
-  <p class="ss-note">Voice narration + auto-advance &nbsp;&middot;&nbsp; ~3 minutes &nbsp;&middot;&nbsp; 13 features</p>
+  <p class="ss-note">Voice narration + manual next &nbsp;&middot;&nbsp; ~4 minutes &nbsp;&middot;&nbsp; 19 features</p>
 </div>
 
 <!-- ── Demo ── -->
@@ -2888,6 +2893,12 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
           <span class="nar-tag" id="nar-tag"></span>
           <div class="nar-pb"><div class="nar-pb-fill" id="nar-pb-fill"></div></div>
         </div>
+        <div class="nar-controls">
+          <button class="nar-btn" onclick="go(-1)">\u2190 Prev Step</button>
+          <button class="nar-btn" onclick="replayStep()">\u21BB Replay Step</button>
+          <button class="nar-btn" onclick="retryAudio()">🔄 Retry Audio</button>
+          <button class="nar-btn next" onclick="go(1)">Next Step \u2192</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2922,9 +2933,39 @@ var steps = [
     callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
   },
   {
-    icon:'\uD83D\uDCAD', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What about for a volume hiring campaign with 500 applicants?'}}],
+    icon:'\uD83D\uDCAD', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What changes for high-volume hiring?'}}],
     voice:"It maintains full conversation context throughout the session. Ask a follow-up question about a complex scenario, and the AI connects the dots — just like talking to a senior consultant.",
     callout:{label:'Context memory',text:'Smart follow-ups — no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
+  },
+  {
+    icon:'\uD83E\uDDE9', title:'One-Go Workflow', url:'/', auto:[{d:700,a:{action:'closeAI'}},{d:1500,a:{action:'openUnifiedFlow'}}],
+    voice:"There is also an all-in-one workflow builder. Instead of jumping between separate guides, you can assemble the exact hiring processes you need into a single end-to-end execution path.",
+    callout:{label:'One-go workflow',text:'Build one combined hiring runbook from multiple processes',dot:{x:33,y:38},bubble:{x:40,y:22}}
+  },
+  {
+    icon:'\u2699\uFE0F', title:'Customise The Flow', url:'/', auto:[{d:700,a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}}],
+    voice:"Each process is fully customisable. Pick the exact mix you want — for example posting the job, scheduling interviews, adding workflow automation, and configuring assessments — then generate the complete sequence instantly.",
+    callout:{label:'Custom process mix',text:'Choose the exact processes you want in one combined flow',dot:{x:27,y:24},bubble:{x:38,y:10}}
+  },
+  {
+    icon:'\u2728', title:'Workflow AI Assist', url:'/', auto:[{d:700,a:{action:'runUnifiedFlowAI'}}],
+    voice:"Once that flow is built, EX3 can generate an AI execution checklist for it automatically — owners by role, prerequisites, handoff points, and the biggest delivery risks to watch out for.",
+    callout:{label:'AI-tailored checklist',text:'Turn the selected workflow into a guided execution checklist',dot:{x:84,y:86},bubble:{x:52,y:70}}
+  },
+  {
+    icon:'\uD83D\uDD0D', title:'Open Full Process Guide', url:'/', auto:[{d:700,a:{action:'closeAI'}},{d:1500,a:{action:'openTaskDetail',taskId:'add-workflow'}},{d:2500,a:{action:'expandTaskSteps',taskId:'add-workflow',indices:[0,1]}}],
+    voice:"From any combined flow, you can jump straight into the full process guide. That opens every step in detail, along with who owns it, what must be true before you start, and the most important implementation context.",
+    callout:{label:'Full process detail',text:'Open the full guide with steps, owners, prerequisites, and context',dot:{x:52,y:50},bubble:{x:60,y:28}}
+  },
+  {
+    icon:'\u26A0\uFE0F', title:'Troubleshoot A Step', url:'/', auto:[{d:900,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}}],
+    voice:"If a step is not working, every guide includes a built-in troubleshooting helper. Click the warning button and EX3 surfaces the common failure reasons, what to check first, and who can help fix it.",
+    callout:{label:'Step troubleshooting',text:'Built-in stuck helper for blocked workflow steps',dot:{x:30,y:78},bubble:{x:40,y:62}}
+  },
+  {
+    icon:'\uD83E\uDD16', title:'AI From A Blocker', url:'/', auto:[{d:900,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}],
+    voice:"And if the troubleshooting hints are not enough, one click sends that exact blocked step to EX3 AI automatically. The assistant opens with the right context already loaded, so the user gets a targeted answer immediately.",
+    callout:{label:'AI handoff from stuck state',text:'Escalate a blocked step to EX3 AI with the full context prefilled',dot:{x:84,y:86},bubble:{x:50,y:70}}
   },
   {
     icon:'\uD83D\uDCF1', title:'WhatsApp AI Bot',
@@ -2965,7 +3006,7 @@ var steps = [
   },
   {
     icon:'\uD83D\uDE80', title:"What's Next", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
-    voice:"That's the EX3 SmartRecruiters platform. Role training, AI assistant, WhatsApp bot, consultant portal, SOW builder with AI rewrite, and conversation history — all in one place. Ready to use on your next engagement.",
+    voice:"That's the EX3 SmartRecruiters platform. Role training, AI assistant, one-go workflow building, step-level troubleshooting, WhatsApp bot, consultant tools, SOW generation, and conversation history — all in one place. Ready to use on your next engagement.",
     callout:null
   }
 ];
@@ -2975,6 +3016,8 @@ var cur = 0, prevCur = -1, paused = false, muted = false;
 var autoTimers = [], advTimer = null;
 var synth = window.speechSynthesis;
 var voices = [], voiceReady = false;
+var speechUnlocked = false;
+var narrationStepToken = 0;
 
 function loadVoices(){
   voices = synth.getVoices();
@@ -2996,6 +3039,13 @@ function getBestVoice(){
   }
   var eng = voices.filter(function(v){ return v.lang && v.lang.indexOf('en')===0; });
   return eng.length ? eng[0] : (voices.length ? voices[0] : null);
+}
+
+function unlockSpeech(){
+  if(speechUnlocked) return;
+  speechUnlocked = true;
+  if(!synth) return;
+  try { synth.resume(); } catch(_) {}
 }
 
 // ── Narration ──
@@ -3021,13 +3071,29 @@ function renderWords(text, charPos){
   document.getElementById('nar-words').innerHTML = html;
 }
 
-function speak(text, onDone){
+function speak(text, onDone, stepToken){
+  if(!synth || typeof SpeechSynthesisUtterance === 'undefined'){
+    renderWords(text, -1);
+    var noSpeechWait = Math.max(7000, text.split(' ').length * 430);
+    var noSpeechTimer = setTimeout(function(){
+      if(stepToken !== narrationStepToken) return;
+      document.getElementById('nar-pb-fill').style.width = '100%';
+      renderWords(text, text.length + 1);
+      if(onDone) onDone();
+    }, noSpeechWait);
+    autoTimers.push(noSpeechTimer);
+    return;
+  }
+
   synth.cancel();
   document.getElementById('bars').classList.remove('speaking');
   if(muted){
     renderWords(text, -1);
     var est = Math.max(7000, text.split(' ').length * 430);
-    var t = setTimeout(function(){ if(onDone) onDone(); }, est);
+    var t = setTimeout(function(){
+      if(stepToken !== narrationStepToken) return;
+      if(onDone) onDone();
+    }, est);
     autoTimers.push(t);
     return;
   }
@@ -3037,6 +3103,20 @@ function speak(text, onDone){
   if(v) utt.voice = v;
   utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
   document.getElementById('bars').classList.add('speaking');
+  
+  var audioCompleted = false;
+  var timeoutDuration = Math.max(10000, text.split(' ').length * 530);
+  var audioTimeout = setTimeout(function(){
+    if(stepToken !== narrationStepToken || audioCompleted) return;
+    audioCompleted = true;
+    synth.cancel();
+    document.getElementById('bars').classList.remove('speaking');
+    document.getElementById('nar-pb-fill').style.width = '100%';
+    renderWords(text, text.length + 1);
+    if(onDone) onDone();
+  }, timeoutDuration);
+  autoTimers.push(audioTimeout);
+  
   utt.onboundary = function(e){
     if(e.name==='word'){
       renderWords(text, e.charIndex);
@@ -3045,16 +3125,29 @@ function speak(text, onDone){
     }
   };
   utt.onend = function(){
+    if(stepToken !== narrationStepToken || audioCompleted) return;
+    audioCompleted = true;
+    clearTimeout(audioTimeout);
     document.getElementById('bars').classList.remove('speaking');
     document.getElementById('nar-pb-fill').style.width = '100%';
     renderWords(text, text.length + 1);
     if(onDone) onDone();
   };
   utt.onerror = function(){
+    if(stepToken !== narrationStepToken || audioCompleted) return;
+    audioCompleted = true;
+    clearTimeout(audioTimeout);
     document.getElementById('bars').classList.remove('speaking');
     if(onDone) onDone();
   };
-  synth.speak(utt);
+  try {
+    synth.speak(utt);
+  } catch(_) {
+    audioCompleted = true;
+    clearTimeout(audioTimeout);
+    document.getElementById('bars').classList.remove('speaking');
+    if(onDone) onDone();
+  }
 }
 
 // ── Callout ──
@@ -3084,7 +3177,7 @@ function hideCallout(){
 function renderDots(){
   document.getElementById('dots-row').innerHTML = steps.map(function(_,i){
     var cls = i<cur?'dot done':i===cur?'dot cur':'dot';
-    return '<div class="'+cls+'" onclick="jumpTo('+i+')" title="'+steps[i].title+'"></div>';
+    return '<div class="'+cls+'" onclick="jumpTo('+i+', true)" title="'+steps[i].title+'"></div>';
   }).join('');
   document.getElementById('prog-fill').style.width = Math.round((cur+1)/steps.length*100)+'%';
 }
@@ -3120,6 +3213,7 @@ function fireAuto(s){
 function render(){
   if(paused) return;
   var s = steps[cur];
+  var stepToken = ++narrationStepToken;
   document.getElementById('tb-step').textContent = 'Step '+(cur+1)+' of '+steps.length;
   document.getElementById('nar-tag').textContent = s.icon+'  '+s.title;
   document.getElementById('nar-pb-fill').style.width = '0%';
@@ -3161,13 +3255,11 @@ function render(){
   var calloutTimer = setTimeout(function(){ showCallout(s.callout); }, 1500);
   autoTimers.push(calloutTimer);
 
-  // Speak, then auto-advance (respect optional hold time for long steps)
+  // Speak only. Step progression is always manual.
   speak(s.voice, function(){
+    if(stepToken !== narrationStepToken) return;
     if(paused) return;
-    advTimer = setTimeout(function(){
-      if(!paused && cur < steps.length-1){ cur++; render(); }
-    }, 1800 + (s.hold || 0));
-  });
+  }, stepToken);
 }
 
 // ── Controls ──
@@ -3185,11 +3277,10 @@ function togglePause(){
     if(synth.speaking){ synth.resume(); }
     else {
       var s = steps[cur];
+      var stepToken = narrationStepToken;
       speak(s.voice, function(){
-        if(!paused && cur<steps.length-1){
-          advTimer = setTimeout(function(){ cur++; render(); }, 1800);
-        }
-      });
+        if(stepToken !== narrationStepToken) return;
+      }, stepToken);
       showCallout(s.callout);
     }
   }
@@ -3213,7 +3304,7 @@ function restartDemo(){
   render();
 }
 
-function jumpTo(i){
+function jumpTo(i, isManual){
   clearAuto();
   synth.cancel();
   paused = false;
@@ -3225,7 +3316,20 @@ function jumpTo(i){
 
 function go(d){
   var n = Math.max(0,Math.min(steps.length-1,cur+d));
-  if(n !== cur) jumpTo(n);
+  if(n !== cur) jumpTo(n, true);
+}
+
+function replayStep(){
+  jumpTo(cur, true);
+}
+
+function retryAudio(){
+  synth.cancel();
+  var step = steps[cur];
+  narrationStepToken++;
+  if(step.voice){
+    speak(step.voice, null, narrationStepToken);
+  }
 }
 
 document.addEventListener('keydown',function(e){
@@ -3239,6 +3343,8 @@ document.addEventListener('keydown',function(e){
 
 // ── Begin ──
 function beginDemo(){
+  unlockSpeech();
+  loadVoices();
   var ss = document.getElementById('start-screen');
   ss.classList.add('fade');
   setTimeout(function(){

@@ -861,13 +861,13 @@ hr.rule{border:none;border-top:1px solid var(--border);margin:36px 0}
 @keyframes toastOut{to{opacity:0;transform:translateX(100%)}}
 
 .assistant-float{position:fixed;bottom:24px;right:24px;z-index:800;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
-.assistant-panel{width:400px;background:var(--white);border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.15);overflow:hidden;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}
+.assistant-panel{width:400px;max-height:min(680px,calc(100vh - 104px));background:var(--white);border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.15);overflow:hidden;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s ease,transform .2s ease;display:flex;flex-direction:column}
 .assistant-panel.open{opacity:1;transform:translateY(0);pointer-events:auto}
 .assistant-header{padding:14px 16px;background:var(--canvas);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .assistant-title{font-size:14px;font-weight:700;color:var(--ink)}
 .assistant-close{width:28px;height:28px;border:none;border-radius:10px;background:var(--white);color:var(--ink-2);cursor:pointer;display:grid;place-items:center}
-.assistant-body{padding:14px 16px;display:grid;gap:10px}
-.assistant-response{font-size:13px;color:var(--ink-3);line-height:1.6;padding:12px 14px;border-radius:14px;background:var(--canvas);max-height:320px;overflow-y:auto}
+.assistant-body{padding:14px 16px;display:grid;gap:10px;overflow-y:auto;min-height:0}
+.assistant-response{font-size:13px;color:var(--ink-3);line-height:1.6;padding:12px 14px;border-radius:14px;background:var(--canvas);max-height:min(320px,42vh);overflow-y:auto}
 .assistant-response p{margin-bottom:8px}.assistant-response p:last-child{margin-bottom:0}
 .assistant-response ul,.assistant-response ol{padding-left:18px;margin-bottom:8px}
 .assistant-response li{margin-bottom:4px}
@@ -4640,11 +4640,12 @@ function goL3(role, catId) {
   enhanceKeyboardAccess();
 }
 
-function goL4(taskId) {
+function goL4(taskId, inFlow) {
   const t = TASK_DETAIL[taskId];
   const role = t?.role||state.role;
   const m = ROLE_META[role];
-  document.getElementById('l4-back').onclick = ()=>goL3(state.role,state.cat);
+  const inFlowMode = inFlow && currentFlowContext.currentIndex >= 0;
+  document.getElementById('l4-back').onclick = inFlowMode ? prevFlowProcess : ()=>goL3(state.role,state.cat);
   if(!t){
     document.getElementById('l4-content').innerHTML=`<p style="color:var(--ink-3);padding:32px 0">Guide coming soon.</p>`;
     showView('v-l4'); return;
@@ -4701,6 +4702,13 @@ function goL4(taskId) {
     </div>`;
   }).join('');
   const total=(t.steps||[]).length;
+  const inFlowMode = inFlow && currentFlowContext.currentIndex >= 0;
+  const flowNav = inFlowMode ? `
+    <div style="display:flex;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button onclick="prevFlowProcess()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--ink-1);cursor:pointer;font-size:13px;font-weight:600">← Back to workflow</button>
+      ${currentFlowContext.currentIndex + 1 < currentFlowContext.ids.length ? `<button onclick="nextFlowProcess()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--ink-1);cursor:pointer;font-size:13px;font-weight:600">Next process →</button>` : ''}
+      <div style="flex:1;text-align:right;font-size:12px;color:var(--ink-3);display:flex;align-items:center;justify-content:flex-end">Process ${currentFlowContext.currentIndex + 1} of ${currentFlowContext.ids.length}</div>
+    </div>` : '';
   document.getElementById('l4-content').innerHTML=`
     <div class="task-layout">
       <div>
@@ -4713,7 +4721,7 @@ function goL4(taskId) {
               <div class="th-desc">${t.desc}</div>
             </div>
           </div>
-          ${pathHtml?`<div class="th-path">${pathHtml}</div>`:''}
+          ${pathHtml?`<div class="th-path">${pathHtml}</div>`+flowNav:flowNav}
         </div>
         <div class="prog">
           <div class="prog-bar"><div class="prog-fill ${m.cls}" id="pf_${taskId}" style="width:0%"></div></div>
@@ -5024,10 +5032,13 @@ function validateSelectedFlowIds(ids){
   return true;
 }
 
+var currentFlowContext = { ids: [], currentIndex: -1 };
+
 function openUnifiedFlow(){
   document.getElementById('flow-back').onclick = goHome;
   renderFlowSelectors(FLOW_DEFAULT_IDS);
   renderUnifiedFlow(FLOW_DEFAULT_IDS);
+  currentFlowContext = { ids: FLOW_DEFAULT_IDS, currentIndex: -1 };
   setBreadcrumb([{label:'Home',fn:goHome},{label:'One-go workflow',fn:null}]);
   showView('v-flow');
   enhanceKeyboardAccess();
@@ -5047,7 +5058,7 @@ function renderUnifiedFlow(selectedIds){
       </div>
       <div class="flow-steps">
         ${steps.map((s,i)=>`<div class="flow-step"><div class="flow-step-num">${String(i+1).padStart(2,'0')}</div><div class="flow-step-text">${s.title}</div></div>`).join('')}
-        <div class="flow-step"><div class="flow-step-num">→</div><div class="flow-step-text"><button class="tb-search-btn" onclick="goL4('${id}')">Open full process guide</button></div></div>
+        <div class="flow-step"><div class="flow-step-num">→</div><div class="flow-step-text"><button class="tb-search-btn" onclick="goL4_withFlow('${id}',${processIdx})">Open full process guide</button></div></div>
       </div>
     </section>`;
   }).join('');
@@ -5059,14 +5070,41 @@ function renderUnifiedFlow(selectedIds){
 function buildCombinedFlow(){
   const selectedIds = getSelectedFlowIds();
   if(!validateSelectedFlowIds(selectedIds)) return;
+  currentFlowContext = { ids: selectedIds, currentIndex: -1 };
   renderUnifiedFlow(selectedIds);
   showToast('Combined flow generated');
 }
 
 function resetCombinedFlow(){
+  currentFlowContext = { ids: FLOW_DEFAULT_IDS, currentIndex: -1 };
   renderFlowSelectors(FLOW_DEFAULT_IDS);
   renderUnifiedFlow(FLOW_DEFAULT_IDS);
   showToast('Default flow loaded');
+}
+
+function goL4_withFlow(taskId, flowIndex){
+  currentFlowContext.currentIndex = flowIndex;
+  goL4(taskId, true);
+}
+
+function nextFlowProcess(){
+  if(currentFlowContext.currentIndex >= 0 && currentFlowContext.currentIndex + 1 < currentFlowContext.ids.length){
+    const nextId = currentFlowContext.ids[currentFlowContext.currentIndex + 1];
+    goL4_withFlow(nextId, currentFlowContext.currentIndex + 1);
+  }
+}
+
+function prevFlowProcess(){
+  if(currentFlowContext.currentIndex > 0){
+    const prevId = currentFlowContext.ids[currentFlowContext.currentIndex - 1];
+    goL4_withFlow(prevId, currentFlowContext.currentIndex - 1);
+  } else {
+    goUnifiedFlow();
+  }
+}
+
+function goUnifiedFlow(){
+  openUnifiedFlow();
 }
 
 function buildLocalFlowChecklist(selectedIds){
@@ -5201,7 +5239,9 @@ function toggleAssistant(){
 
 function newAssistantChat(){
   currentThreadId = null;
-  document.getElementById('assistantResponse').innerHTML = 'Need help quickly? Choose one of the smart shortcuts below, or ask EX3 a question.';
+  const response = document.getElementById('assistantResponse');
+  response.innerHTML = 'Need help quickly? Choose one of the smart shortcuts below, or ask EX3 a question.';
+  response.scrollTop = 0;
   document.getElementById('assistantDynamic').innerHTML = '';
   document.getElementById('assistantQuery').value = '';
   document.getElementById('assistantDefaultPrompts').style.display = '';
@@ -5223,6 +5263,7 @@ async function askAssistant(question, opts = {}){
   const response = document.getElementById('assistantResponse');
   const dynamic = document.getElementById('assistantDynamic');
   response.innerHTML = '<em style="color:var(--ink-4)">Thinking...</em>';
+  response.scrollTop = 0;
   dynamic.innerHTML = '';
   document.getElementById('assistantDefaultPrompts').style.display = 'none';
 
@@ -5238,6 +5279,7 @@ async function askAssistant(question, opts = {}){
 
     currentThreadId = data.threadId;
     response.innerHTML = formatAIResponse(data.answer);
+  response.scrollTop = 0;
     dynamic.innerHTML = '';
 
     // New conversation link
@@ -5270,9 +5312,11 @@ async function askAssistant(question, opts = {}){
   } catch (error) {
     if(opts.disableSearchFallback){
       response.innerHTML = 'Sorry, EX3 could not connect. Using local checklist fallback.';
+      response.scrollTop = 0;
       return { ok:false, reason:'api_unavailable' };
     }
     response.innerHTML = 'Sorry, EX3 could not connect. Showing search results instead.';
+    response.scrollTop = 0;
     showToast('AI service not available, using search fallback');
     showView('v-search');
     const searchInput = document.getElementById('mainSearch');
@@ -5543,6 +5587,49 @@ function stuckAskAI(prompt){
   askAssistant(prompt);
   const floatEl = document.getElementById('assistantFloat');
   if(floatEl) floatEl.scrollIntoView({behavior:'smooth', block:'end'});
+}
+
+function demoSetFlowProcesses(ids, buildNow){
+  if(!Array.isArray(ids) || !ids.length) return;
+  openUnifiedFlow();
+  setTimeout(function(){
+    renderFlowSelectors(ids);
+    if(buildNow !== false) renderUnifiedFlow(ids);
+  }, 120);
+}
+
+function demoOpenTaskDetail(taskId){
+  if(!taskId || !TASK_DETAIL[taskId]) return;
+  goL4(taskId);
+}
+
+function demoExpandTaskSteps(taskId, indices){
+  if(!taskId || !Array.isArray(indices)) return;
+  goL4(taskId);
+  setTimeout(function(){
+    indices.forEach(function(idx, order){
+      setTimeout(function(){
+        var body = document.getElementById('sb_' + taskId + '_' + idx);
+        if(body && !body.classList.contains('open')) togStep(taskId, idx);
+      }, order * 420);
+    });
+  }, 180);
+}
+
+function demoOpenStuck(taskId, stepIdx){
+  demoExpandTaskSteps(taskId, [stepIdx]);
+  setTimeout(function(){
+    toggleStuck('stuck_' + taskId + '_' + stepIdx, taskId, stepIdx);
+  }, 680);
+}
+
+function demoAskAIForStuck(taskId, stepIdx){
+  demoOpenStuck(taskId, stepIdx);
+  setTimeout(function(){
+    var panel = document.getElementById('stuck_' + taskId + '_' + stepIdx);
+    var btn = panel ? panel.querySelector('.stuck-ask') : null;
+    if(btn) btn.click();
+  }, 1100);
 }
 
 // ─── RELATED TASKS (Feature 6) ─────────────────────
@@ -6053,6 +6140,10 @@ window.addEventListener('message', function(e){
   if(!e.data || e.data.type !== 'EX3_DEMO') return;
   var d = e.data;
   if(d.action === 'setRole') setRole(d.role);
+  if(d.action === 'closeAI'){
+    var closePanel = document.getElementById('assistantPanel');
+    if(closePanel && closePanel.classList.contains('open')) toggleAssistant();
+  }
   if(d.action === 'openAI'){
     var panel = document.getElementById('assistantPanel');
     if(panel && !panel.classList.contains('open')) toggleAssistant();
@@ -6069,6 +6160,13 @@ window.addEventListener('message', function(e){
       input.value += q[i++];
     }, 38);
   }
+  if(d.action === 'openUnifiedFlow') openUnifiedFlow();
+  if(d.action === 'setFlowProcesses') demoSetFlowProcesses(d.ids, d.buildNow);
+  if(d.action === 'runUnifiedFlowAI') runUnifiedFlowAI();
+  if(d.action === 'openTaskDetail') demoOpenTaskDetail(d.taskId);
+  if(d.action === 'expandTaskSteps') demoExpandTaskSteps(d.taskId, d.indices || []);
+  if(d.action === 'openStuck') demoOpenStuck(d.taskId, d.stepIdx);
+  if(d.action === 'askAIForStuck') demoAskAIForStuck(d.taskId, d.stepIdx);
 });
 
 
