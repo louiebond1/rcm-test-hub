@@ -3807,7 +3807,7 @@ var steps = [
   },
   {
     icon:'', title:'AI Assistant', url:'/', auto:[{d:800,a:{action:'openAI'}},{d:1900,a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}],
-    minHold:9000,
+    minHold:18000,
     voice:"She has a question about setting up a hiring process. Types it in. The answer is back before she has finished reading it. No ticket, no waiting, no one to chase.",
     callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
   },
