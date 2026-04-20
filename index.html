@@ -331,17 +331,22 @@ select{font-family:inherit}
   background:var(--border);
   border:1px solid var(--border);
   border-radius:8px;overflow:hidden;
+  position:relative;
+  z-index:1;
   margin-bottom:48px;
 }
 .role-card{
   background:var(--white);padding:24px 22px;
   cursor:pointer;transition:background .15s, transform .2s ease, box-shadow .2s ease;
   position:relative;
+  z-index:2;
+  pointer-events:auto;
 }
 .role-card:hover{background:var(--canvas); transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,0.1)}
 .role-card::after{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   transform:scaleX(0);transform-origin:left;transition:transform .25s;
+  pointer-events:none;
 }
 .role-card.rc::after{background:var(--a-rec)}
 .role-card.hc::after{background:var(--a-hm)}
@@ -893,7 +898,7 @@ hr.rule{border:none;border-top:1px solid var(--border);margin:36px 0}
    ONBOARDING WIZARD
 ═══════════════════════════════════════════════════ */
 .onboard-overlay{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px}
-.onboard-overlay.hidden{display:none}
+.onboard-overlay.hidden{display:none;pointer-events:none}
 .onboard-modal{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:36px;max-width:480px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.2);animation:appear .3s ease}
 .onboard-step{display:none}
 .onboard-step.active{display:block}
@@ -4547,6 +4552,16 @@ function setRole(r) {
 }
 
 function setRoleAndGo(r) { setRole(r); goL2(); }
+
+document.addEventListener('click', function(ev){
+  const card = ev.target.closest('.role-card');
+  if(!card) return;
+  const match = (card.className || '').match(/\b(rc|hc|cc|ac)\b/);
+  if(!match) return;
+  const roleMap = { rc:'rec', hc:'hm', cc:'cand', ac:'adm' };
+  const roleKey = roleMap[match[1]];
+  if(roleKey) setRoleAndGo(roleKey);
+});
 
 function goHome() {
   setBreadcrumb([{label:'Home',fn:null}]);
