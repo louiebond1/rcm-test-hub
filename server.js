@@ -2629,9 +2629,9 @@ app.get('/consultant/sow-builder', (_req, res) => {
     }
     add('EX3 will apply the EXcelerate methodology, which is optimised for rapid');
     add('deployment using model company content. EXcelerate is designed to deliver a');
-    add('high-quality SmartRecruiters implementation efficiently, leveraging EX3\'s');
+    add('high-quality SmartRecruiters implementation efficiently, leveraging EX3\\'s');
     add('pre-built assets as a baseline while allowing for configuration aligned to');
-    add(clientName + '\'s hiring processes.');
+    add(clientName + '\\'s hiring processes.');
     add('');
 
     // ── PERIOD OF PERFORMANCE ────────────────────────────────────────────────
@@ -3063,7 +3063,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('    scope and will require a Change Request (CR)');
     add('  • EX3 is not responsible for managing any 3rd party vendors or issues that');
     add('    can only be resolved by a 3rd party');
-    add('  • The project will be executed using EX3\'s EXcelerate Methodology, document');
+    add('  • The project will be executed using EX3\\'s EXcelerate Methodology, document');
     add('    templates, and delivery project tools (Smartsheet)');
     add('');
 
