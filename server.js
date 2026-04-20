@@ -3098,12 +3098,15 @@ function speak(text, onDone, stepToken){
     return;
   }
   renderWords(text, -1);
-  var utt = new SpeechSynthesisUtterance(text + ' .');
+  var utt = new SpeechSynthesisUtterance(text + ', , ,');
   var v = getBestVoice();
   if(v) utt.voice = v;
   utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
   document.getElementById('bars').classList.add('speaking');
   
+  // Chrome bug: speechSynthesis silently pauses itself after ~14s. Resume it periodically.
+  var resumeTimer = setInterval(function(){ if(synth.paused) synth.resume(); }, 5000);
+
   var audioCompleted = false;
   var timeoutDuration = Math.max(10000, text.split(' ').length * 530);
   var audioTimeout = setTimeout(function(){
@@ -3128,6 +3131,7 @@ function speak(text, onDone, stepToken){
     if(stepToken !== narrationStepToken || audioCompleted) return;
     audioCompleted = true;
     clearTimeout(audioTimeout);
+    clearInterval(resumeTimer);
     document.getElementById('bars').classList.remove('speaking');
     document.getElementById('nar-pb-fill').style.width = '100%';
     renderWords(text, text.length + 1);
@@ -3137,6 +3141,7 @@ function speak(text, onDone, stepToken){
     if(stepToken !== narrationStepToken || audioCompleted) return;
     audioCompleted = true;
     clearTimeout(audioTimeout);
+    clearInterval(resumeTimer);
     document.getElementById('bars').classList.remove('speaking');
     if(onDone) onDone();
   };
@@ -3145,6 +3150,7 @@ function speak(text, onDone, stepToken){
   } catch(_) {
     audioCompleted = true;
     clearTimeout(audioTimeout);
+    clearInterval(resumeTimer);
     document.getElementById('bars').classList.remove('speaking');
     if(onDone) onDone();
   }
