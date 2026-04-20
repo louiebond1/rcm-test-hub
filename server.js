@@ -3627,6 +3627,48 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 .wa-waveform{flex:1;display:flex;align-items:center;gap:2px;height:22px}
 .wa-wbar{border-radius:2px;background:rgba(0,0,0,.28);width:3px}
 .wa-voice-dur{font-size:11px;color:#999;flex-shrink:0;margin-left:4px}
+
+/* Chapter card panel */
+.card-panel{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:#060606;overflow:hidden;z-index:5}
+.card-panel.active{display:flex}
+.card-panel::before{content:'';position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(34,197,94,.06) 0%,transparent 65%);pointer-events:none}
+.card-chap{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#22c55e;margin-bottom:18px;opacity:0;transform:translateY(10px);transition:opacity .6s ease .1s,transform .6s ease .1s}
+.card-panel.active .card-chap{opacity:1;transform:translateY(0)}
+.card-headline{font-size:clamp(34px,5vw,64px);font-weight:800;letter-spacing:-.04em;line-height:1.07;text-align:center;max-width:600px;opacity:0;transform:translateY(20px);transition:opacity .6s ease .28s,transform .6s ease .28s}
+.card-panel.active .card-headline{opacity:1;transform:translateY(0)}
+.card-headline em{color:#22c55e;font-style:normal}
+
+/* Recording scene */
+#wa-recording-scene{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:#080808;z-index:6;transition:opacity .5s ease}
+#wa-recording-scene.active{display:flex}
+.rec-time{font-size:clamp(52px,9vw,86px);font-weight:800;letter-spacing:-.04em;color:#fff;line-height:1;font-variant-numeric:tabular-nums;opacity:0;transform:translateY(16px);transition:opacity .5s ease .05s,transform .5s ease .05s}
+#wa-recording-scene.active .rec-time{opacity:1;transform:translateY(0)}
+.rec-info{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#2a2a2a;margin-top:12px;opacity:0;transition:opacity .5s ease .22s}
+#wa-recording-scene.active .rec-info{opacity:1}
+.rec-row{display:flex;align-items:center;gap:12px;margin-top:30px;opacity:0;transition:opacity .5s ease .38s}
+#wa-recording-scene.active .rec-row{opacity:1}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:#ef4444;animation:rec-pulse 1.2s ease-in-out infinite;flex-shrink:0}
+@keyframes rec-pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+.rec-wave{display:flex;align-items:center;gap:3px;height:30px}
+.rec-wbar{width:3.5px;border-radius:2px;background:#22c55e;height:6px}
+@keyframes rw1{0%,100%{height:5px}50%{height:22px}}
+@keyframes rw2{0%,100%{height:10px}50%{height:26px}}
+@keyframes rw3{0%,100%{height:16px}50%{height:7px}}
+@keyframes rw4{0%,100%{height:22px}50%{height:5px}}
+@keyframes rw5{0%,100%{height:7px}50%{height:24px}}
+@keyframes rw6{0%,100%{height:18px}50%{height:6px}}
+@keyframes rw7{0%,100%{height:12px}50%{height:28px}}
+@keyframes rw8{0%,100%{height:5px}50%{height:18px}}
+.rec-wbar:nth-child(1){animation:rw1 .65s ease-in-out infinite}
+.rec-wbar:nth-child(2){animation:rw2 .65s ease-in-out infinite .09s}
+.rec-wbar:nth-child(3){animation:rw3 .65s ease-in-out infinite .18s}
+.rec-wbar:nth-child(4){animation:rw4 .65s ease-in-out infinite .05s}
+.rec-wbar:nth-child(5){animation:rw5 .65s ease-in-out infinite .14s}
+.rec-wbar:nth-child(6){animation:rw6 .65s ease-in-out infinite .22s}
+.rec-wbar:nth-child(7){animation:rw7 .65s ease-in-out infinite .11s}
+.rec-wbar:nth-child(8){animation:rw8 .65s ease-in-out infinite .07s}
+.rec-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#333;margin-top:18px;opacity:0;transition:opacity .5s ease .48s}
+#wa-recording-scene.active .rec-label{opacity:1}
 </style>
 </head>
 <body>
@@ -3684,6 +3726,22 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
         </div>
       </div>
     </div>
+    <div class="card-panel" id="card-panel">
+      <div class="card-chap" id="card-chap"></div>
+      <div class="card-headline" id="card-headline"></div>
+    </div>
+    <div id="wa-recording-scene">
+      <div class="rec-time">6:14 AM</div>
+      <div class="rec-info">En route to client site</div>
+      <div class="rec-row">
+        <div class="rec-dot"></div>
+        <div class="rec-wave">
+          <div class="rec-wbar"></div><div class="rec-wbar"></div><div class="rec-wbar"></div><div class="rec-wbar"></div>
+          <div class="rec-wbar"></div><div class="rec-wbar"></div><div class="rec-wbar"></div><div class="rec-wbar"></div>
+        </div>
+      </div>
+      <div class="rec-label">Recording</div>
+    </div>
     <div id="callout-layer">
       <div class="callout-bubble" id="cbubble"></div>
       <div class="callout-dot" id="cdot"></div>
@@ -3722,68 +3780,78 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 var steps = [
   {
     icon:'', title:'The EX3 Platform', url:'/', auto:[],
-    voice:"This is EX3. The complete toolkit for SmartRecruiters implementations. In the next four minutes — every feature your team will use on a live engagement.",
+    voice:"EX3. The complete SmartRecruiters implementation platform. Everything your team needs, from day one.",
     callout:null
   },
   {
     icon:'', title:'Recruiter Training', url:'/', auto:[{d:800,a:{action:'setRole',role:'rec'}}],
-    voice:"A recruiter opens this on day one. Every task they need — job posting, candidate pipelines, offer management — step by step. Tailored for their role. Nothing else.",
+    voice:"Recruiter mode. Every task they will ever touch — posting jobs, managing pipelines, handling offers — step by step, role by role.",
     callout:{label:'Role-based training',text:'Every recruiter task, step by step',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
     icon:'', title:'Hiring Manager Training', url:'/', auto:[{d:700,a:{action:'setRole',role:'hm'}}],
-    voice:"Switch to Hiring Manager. The content transforms instantly — application review, interview feedback, offer approvals. Same platform, completely different experience.",
+    voice:"Hiring Manager mode. Application review, interview feedback, offer approvals. Completely different content. Same platform.",
     callout:{label:'Hiring Manager view',text:'Tailored content — no irrelevant clutter',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
     icon:'', title:'Candidate & Admin Training', url:'/', auto:[{d:700,a:{action:'setRole',role:'cand'}},{d:4500,a:{action:'setRole',role:'adm'}}],
-    voice:"Candidates get a guided experience. Admins get a full system config walkthrough. Four roles, one platform — every person covered on day one.",
+    voice:"Four roles. Candidates, Recruiters, Hiring Managers, Admins. Each one covered. Nothing shared that should not be.",
     callout:{label:'4 roles covered',text:'Candidate, Recruiter, Hiring Manager, Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
+    type:'card', icon:'', title:'Ask anything.', chap:'Chapter II', headline:'Ask anything.<br><em>Get an answer.</em>', countdown:4, auto:[], callout:null,
+    voice:"The AI assistant. Any SmartRecruiters question, answered instantly."
+  },
+  {
     icon:'', title:'AI Assistant', url:'/', auto:[{d:800,a:{action:'openAI'}},{d:1900,a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}],
-    voice:"Stuck on a question? The AI assistant answers instantly. No tickets, no waiting — type your question and get a precise, sourced answer in seconds.",
+    voice:"Ask it anything. SmartRecruiters questions answered in seconds. No tickets. No waiting. Just answers.",
     callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
   },
   {
     icon:'', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What changes for high-volume hiring?'}}],
-    voice:"Ask a follow-up and it connects the dots. Full conversation memory — like talking to a senior consultant who never forgets what you said.",
+    voice:"It remembers. Full conversation context. Ask a follow-up — it connects the dots. Every time.",
     callout:{label:'Context memory',text:'Smart follow-ups — no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
   },
   {
     icon:'', title:'One-Go Workflow', url:'/', auto:[{d:700,a:{action:'closeAI'}},{d:1500,a:{action:'openUnifiedFlow'}}],
-    voice:"Instead of jumping between separate guides, build one end-to-end runbook. Pick your processes, stack them in sequence, execute the whole thing from one place.",
+    voice:"Build one end-to-end runbook. Every process stacked in sequence. Execute it all from one place.",
     callout:{label:'One-go workflow',text:'Build one combined hiring runbook from multiple processes',dot:{x:33,y:38},bubble:{x:40,y:22}}
   },
   {
     icon:'', title:'Customise The Flow', url:'/', auto:[{d:700,a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}}],
-    voice:"Pick exactly what you need — post the job, schedule interviews, add workflow automation, configure assessments — and generate the complete sequence in one click.",
+    voice:"Choose your exact mix. Post the job, schedule interviews, add automation, configure assessments. One click. Complete sequence.",
     callout:{label:'Custom process mix',text:'Choose the exact processes you want in one combined flow',dot:{x:27,y:24},bubble:{x:38,y:10}}
   },
   {
     icon:'', title:'Workflow AI Assist', url:'/', auto:[{d:700,a:{action:'runUnifiedFlowAI'}}],
-    voice:"Then let the AI turn it into an execution checklist — owners by role, prerequisites, handoff points, delivery risks. The whole thing generated automatically.",
+    voice:"The AI builds the execution checklist. Owners by role, prerequisites, handoffs, delivery risks. All automatic.",
     callout:{label:'AI-tailored checklist',text:'Turn the selected workflow into a guided execution checklist',dot:{x:84,y:86},bubble:{x:52,y:70}}
   },
   {
     icon:'', title:'Open Full Process Guide', url:'/', auto:[{d:700,a:{action:'closeAI'}},{d:1500,a:{action:'openTaskDetail',taskId:'add-workflow'}},{d:2500,a:{action:'expandTaskSteps',taskId:'add-workflow',indices:[0,1]}}],
-    voice:"From any combined flow, jump straight into the full process detail — every step, who owns it, what must be done first, and the context that actually matters on a live engagement.",
+    voice:"Jump into any process. Every step, every owner, every prerequisite, every detail that matters on a live engagement.",
     callout:{label:'Full process detail',text:'Steps, owners, prerequisites, and context',dot:{x:52,y:50},bubble:{x:60,y:28}}
   },
   {
     icon:'', title:'Troubleshoot A Step', url:'/', auto:[{d:900,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}}],
-    voice:"Step not working? Every guide has a built-in troubleshooter — common failures, what to check first, who can fix it. Surfaced in seconds, not Slack threads.",
+    voice:"A step is not working. Built-in troubleshooter. Common failures, what to check first, who can fix it. Seconds — not Slack threads.",
     callout:{label:'Step troubleshooting',text:'Built-in stuck helper for blocked workflow steps',dot:{x:30,y:78},bubble:{x:40,y:62}}
   },
   {
     icon:'', title:'AI From A Blocker', url:'/', auto:[{d:900,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}],
-    voice:"One click sends the blocked step straight to EX3 AI — with the context already loaded. Targeted answer, no copy-pasting, no re-explaining.",
+    voice:"One click. The blocked step goes straight to EX3 AI — context already loaded. Targeted answer. Done.",
     callout:{label:'AI handoff from stuck state',text:'Escalate a blocked step to EX3 AI with full context prefilled',dot:{x:84,y:86},bubble:{x:50,y:70}}
+  },
+  {
+    type:'card', icon:'', title:'Same AI. On WhatsApp.', chap:'Chapter III', headline:'Same AI.<br><em>On WhatsApp.</em>', countdown:4, auto:[], callout:null,
+    voice:"No app. No login. Just WhatsApp."
   },
   {
     icon:'', title:'WhatsApp AI Bot',
     url:null,
-    ph:{icon:'',title:'WhatsApp AI Bot',body:'',link:null},
+    ph:{icon:'',title:'',body:'',link:null},
+    recordingScene:true,
+    calloutDelay:7500,
     waChat:[
       {from:'me', type:'voice', delay:600},
       {from:'them', text:"The Send Offer button only appears once three things are in place:\n\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\n2\ufe0f\u20e3 The job has an active offer letter template\n3\ufe0f\u20e3 You have the *Offer Manager* permission\n\nWhich one would you like to check first?", delay:2400},
@@ -3791,28 +3859,32 @@ var steps = [
       {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\n\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\n\nIf it's missing your SR admin can add it in about 2 minutes.", delay:8000}
     ],
     auto:[],
-    voice:"It's 6am. A consultant is on the way to a client site. They send a voice note — no typing, just talk. The answer arrives before they park. The same AI, available 24/7 on WhatsApp. No app to install. No login.",
+    voice:"6:14 AM. A consultant on the way to a client. Sends a voice note. Gets the answer before they arrive. No app. No login. Just WhatsApp.",
     callout:{label:'WhatsApp AI bot',text:'Voice notes supported — no app, no login',dot:{x:50,y:50},bubble:{x:55,y:32}}
   },
   {
     icon:'', title:'Consultant Portal', url:'/consultant',
     auto:[{d:800,a:{action:'showPhases'}},{d:1700,a:{action:'openPhase',index:0}},{d:3500,a:{action:'openPhase',index:1}},{d:5300,a:{action:'openPhase',index:2}},{d:7100,a:{action:'openPhase',index:3}}],
-    voice:"The consultant portal is the EXcelerate command centre. Four phases — Examine, Adopt, Validate, Launch — each with full checklists, RACI, deliverables, and timelines built around the SmartRecruiters deployment methodology.",
+    voice:"The EXcelerate command centre. Four phases — Examine, Adopt, Validate, Launch. Checklists, RACI, deliverables, timelines. Built for SmartRecruiters deployments.",
     callout:{label:'EXcelerate methodology',text:'Examine · Adopt · Validate · Launch',dot:{x:50,y:42},bubble:{x:60,y:28}}
   },
   {
+    type:'card', icon:'', title:'A complete SOW. In 45 seconds.', chap:'Chapter IV', headline:'A complete SOW.<br><em>In 45 seconds.</em>', countdown:4, auto:[], callout:null,
+    voice:"Every requirement. Every phase. Generated automatically."
+  },
+  {
     icon:'', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], hold:32000,
-    voice:"Nineteen questions. Every requirement captured — org size, geography, integrations, compliance, training, go-live date. A complete Statement of Work structured around EXcelerate phases, generated in under a minute.",
+    voice:"Nineteen questions. Org size, geography, integrations, compliance, training, go-live date. Statement of Work structured by EXcelerate phase — generated automatically.",
     callout:{label:'19-step SOW wizard',text:'Every requirement captured — EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
   {
     icon:'', title:'AI SOW Rewrite', url:'/consultant/sow-builder', auto:[{d:1000,a:{action:'triggerAIRewrite'}}],
-    voice:"One click. The AI rewrites it into polished, client-ready consulting language — streamed live, word by word. A complete professional Statement of Work before the meeting starts.",
+    voice:"One click. Polished, client-ready consulting language — streamed live, word by word. Done before the meeting starts.",
     callout:{label:'AI rewrite',text:'Client-ready language, generated instantly',dot:{x:50,y:54},bubble:{x:60,y:40}}
   },
   {
     icon:'', title:'Export & Email', url:'/consultant/sow-builder', auto:[{d:800,a:{action:'scrollToExport'}}],
-    voice:"Export as a structured Word document — proper headings, EXcelerate phase tables, scope sections, RACI matrices. Or email it directly to the client. Generation to delivery in one workflow.",
+    voice:"Structured Word document — headings, phase tables, RACI matrices. Or email it straight to the client. Generation to delivery in one workflow.",
     callout:{label:'One-click delivery',text:'Structured Word doc or direct email to client',dot:{x:50,y:78},bubble:{x:60,y:64}}
   },
   {
@@ -3820,12 +3892,12 @@ var steps = [
     url:null,
     ph:{icon:'',title:'Conversation History',body:'Every web chat and WhatsApp session stored as a searchable, replayable thread. Nothing gets lost.',link:{label:'Open Conversation History \u2197',url:'/conversations'}},
     auto:[],
-    voice:"Every conversation — web and WhatsApp combined — stored as a searchable, replayable thread. Nothing lost between consultants. Nothing lost between sessions.",
+    voice:"Every conversation — web and WhatsApp combined. Stored, searchable, replayable. Nothing lost between consultants. Nothing lost between sessions.",
     callout:null
   },
   {
     icon:'', title:"What's Next", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
-    voice:"Role training. AI assistant. WhatsApp — including voice notes. SOW builder. Consultant tools. Conversation history. The complete implementation platform, ready for your next engagement.",
+    voice:"That is EX3. Training for every role. AI that answers everything. WhatsApp — including voice notes. SOW builder. Consultant tools. The complete SmartRecruiters implementation platform.",
     callout:null
   }
 ];
@@ -4026,6 +4098,8 @@ function clearWaChat(){
   if(msgs) msgs.innerHTML = '';
   var typ = document.getElementById('wa-typing');
   if(typ) typ.classList.remove('show');
+  var rec = document.getElementById('wa-recording-scene');
+  if(rec){ rec.classList.remove('active'); rec.style.opacity = ''; }
 }
 function startWaChat(msgs){
   var list = document.getElementById('wa-msgs');
@@ -4123,7 +4197,20 @@ function render(){
   document.getElementById('bars').classList.remove('speaking');
 
   // Frame
-  if(s.url){
+  var cardPanel = document.getElementById('card-panel');
+  var recScene = document.getElementById('wa-recording-scene');
+  if(cardPanel) cardPanel.classList.remove('active');
+  if(recScene){ recScene.classList.remove('active'); recScene.style.opacity = ''; }
+
+  if(s.type === 'card'){
+    document.getElementById('liveFrame').style.display = 'none';
+    document.getElementById('ph').style.display = 'none';
+    if(cardPanel){
+      document.getElementById('card-chap').textContent = s.chap || '';
+      document.getElementById('card-headline').innerHTML = s.headline || '';
+      setTimeout(function(){ cardPanel.classList.add('active'); }, 20);
+    }
+  } else if(s.url){
     var same = prevCur>=0 && steps[prevCur] && steps[prevCur].url===s.url;
     document.getElementById('ph').style.display = 'none';
     document.getElementById('liveFrame').style.display = 'block';
@@ -4148,8 +4235,22 @@ function render(){
       document.getElementById('ph-title').textContent = '';
       document.getElementById('ph-body').textContent = '';
       document.getElementById('ph-cta').style.display = 'none';
-      document.getElementById('wa-shell').classList.add('active');
-      startWaChat(s.waChat);
+      if(s.recordingScene && recScene){
+        recScene.classList.add('active');
+        autoTimers.push(setTimeout(function(){
+          if(narrationStepToken !== stepToken) return;
+          recScene.style.opacity = '0';
+          autoTimers.push(setTimeout(function(){
+            recScene.classList.remove('active');
+            recScene.style.opacity = '';
+            document.getElementById('wa-shell').classList.add('active');
+            startWaChat(s.waChat);
+          }, 500));
+        }, 3200));
+      } else {
+        document.getElementById('wa-shell').classList.add('active');
+        startWaChat(s.waChat);
+      }
     } else {
       var ph = s.ph || {};
       document.getElementById('ph-icon').textContent = ph.icon || s.icon;
@@ -4163,14 +4264,14 @@ function render(){
   prevCur = cur;
 
   // Show callout after a short delay
-  var calloutTimer = setTimeout(function(){ showCallout(s.callout); }, 1500);
+  var calloutTimer = setTimeout(function(){ showCallout(s.callout); }, s.calloutDelay || 1500);
   autoTimers.push(calloutTimer);
 
-  // Speak, then auto-advance after 5 s
+  // Speak, then auto-advance
   speak(s.voice, function(){
     if(stepToken !== narrationStepToken) return;
     if(paused) return;
-    if(cur < steps.length-1) startAutoAdvance(10, function(){ go(1); });
+    if(cur < steps.length-1) startAutoAdvance(s.countdown || 10, function(){ go(1); });
   }, stepToken);
 }
 
