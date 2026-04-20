@@ -2764,6 +2764,28 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 .ph-cta{display:inline-block;margin-top:6px;padding:11px 24px;background:#22c55e;color:#000;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;transition:opacity .15s}
 .ph-cta:hover{opacity:.88}
 
+/* Fake WhatsApp demo */
+.wa-shell{display:none;width:100%;height:100%;flex-direction:column;background:#e5ddd5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;overflow:hidden}
+.wa-shell.active{display:flex}
+.wa-header-wa{background:#075e54;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.wa-avatar{width:38px;height:38px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.wa-hname{font-weight:700;font-size:14px;line-height:1.3}
+.wa-hsub{font-size:11px;opacity:.75}
+.wa-msgs{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:7px;min-height:0}
+.wa-bubble{max-width:72%;padding:7px 10px 22px 10px;border-radius:8px;font-size:13px;line-height:1.55;position:relative;word-break:break-word;white-space:pre-line;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.wa-bubble.show{opacity:1;transform:translateY(0)}
+.wa-bubble.them{background:#fff;align-self:flex-start;border-top-left-radius:0;color:#111}
+.wa-bubble.me{background:#dcf8c6;align-self:flex-end;border-top-right-radius:0;color:#111}
+.wa-time{position:absolute;bottom:4px;right:8px;font-size:10px;color:#999}
+.wa-tick{margin-left:2px;color:#4fc3f7}
+.wa-typing-row{padding:4px 10px;flex-shrink:0}
+.wa-typing-bubble{display:none;background:#fff;border-radius:8px;border-top-left-radius:0;padding:9px 14px;width:fit-content;align-items:center;gap:4px}
+.wa-typing-bubble.show{display:flex}
+.wa-dot-t{width:7px;height:7px;border-radius:50%;background:#bbb;animation:wa-bounce .9s infinite ease-in-out}
+.wa-dot-t:nth-child(2){animation-delay:.2s}
+.wa-dot-t:nth-child(3){animation-delay:.4s}
+@keyframes wa-bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+
 /* Callout overlay */
 #callout-layer{position:absolute;inset:0;pointer-events:none;z-index:10}
 .callout-bubble{
@@ -2895,6 +2917,18 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
       <div class="ph-title" id="ph-title"></div>
       <div class="ph-body" id="ph-body"></div>
       <a class="ph-cta" id="ph-cta" href="#" target="_blank" style="display:none"></a>
+      <div class="wa-shell" id="wa-shell">
+        <div class="wa-header-wa">
+          <div class="wa-avatar">🤖</div>
+          <div><div class="wa-hname">EX3 AI Assistant</div><div class="wa-hsub">WhatsApp · usually replies instantly</div></div>
+        </div>
+        <div class="wa-msgs" id="wa-msgs"></div>
+        <div class="wa-typing-row">
+          <div class="wa-typing-bubble" id="wa-typing">
+            <div class="wa-dot-t"></div><div class="wa-dot-t"></div><div class="wa-dot-t"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="callout-layer">
       <div class="callout-bubble" id="cbubble"></div>
@@ -2988,10 +3022,16 @@ var steps = [
   {
     icon:'\uD83D\uDCF1', title:'WhatsApp AI Bot',
     url:null,
-    ph:{icon:'\uD83D\uDCF1',title:'WhatsApp AI Bot',body:'The same AI on WhatsApp — no app download, no login required. Text or voice note, answered in seconds.',link:{label:'Message the bot on WhatsApp \u2197',url:'https://wa.me/14155238886'}},
+    ph:{icon:'\uD83D\uDCF1',title:'WhatsApp AI Bot',body:'',link:null},
+    waChat:[
+      {from:'me',  text:'Hi, I can\'t find the Send Offer button for a candidate — any idea why?', delay:600},
+      {from:'them', text:'The Send Offer button only appears once three things are in place:\n\n1️⃣ The candidate is in the *Offer* stage\n2️⃣ The job has an active offer letter template\n3️⃣ You have the *Offer Manager* permission\n\nWhich one would you like to check first?', delay:1800},
+      {from:'me',  text:'Probably permissions — how do I check that?', delay:5200},
+      {from:'them', text:'Go to *Admin → User Management*, find your name, and look at your assigned role.\n\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\n\nIf it\'s missing your SR admin can add it in about 2 minutes. 👍', delay:7000}
+    ],
     auto:[],
     voice:"The same AI is available 24/7 on WhatsApp. No app to install, no login required — consultants and clients just message the bot and get an expert answer, even via voice note.",
-    callout:null
+    callout:{label:'WhatsApp AI bot',text:'Same expert answers via WhatsApp — no login needed',dot:{x:50,y:50},bubble:{x:55,y:32}}
   },
   {
     icon:'\uD83E\uDDED', title:'Consultant Portal', url:'/consultant',
@@ -3182,6 +3222,55 @@ function postToFrame(msg){
   try{ document.getElementById('liveFrame').contentWindow.postMessage(Object.assign({type:'EX3_DEMO'},msg),'*'); }catch(e){}
 }
 
+var waTimers = [];
+function clearWaChat(){
+  waTimers.forEach(clearTimeout); waTimers = [];
+  var shell = document.getElementById('wa-shell');
+  if(shell) shell.classList.remove('active');
+  var msgs = document.getElementById('wa-msgs');
+  if(msgs) msgs.innerHTML = '';
+  var typ = document.getElementById('wa-typing');
+  if(typ) typ.classList.remove('show');
+}
+function startWaChat(msgs){
+  var list = document.getElementById('wa-msgs');
+  var typ = document.getElementById('wa-typing');
+  if(!list) return;
+  var now = new Date();
+  var ts = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  msgs.forEach(function(msg){
+    if(msg.from === 'them'){
+      waTimers.push(setTimeout(function(){
+        typ.classList.add('show');
+        list.scrollTop = list.scrollHeight;
+        waTimers.push(setTimeout(function(){
+          typ.classList.remove('show');
+          var b = document.createElement('div');
+          b.className = 'wa-bubble them';
+          b.textContent = msg.text;
+          var t = document.createElement('span'); t.className='wa-time'; t.textContent=ts;
+          b.appendChild(t);
+          list.appendChild(b);
+          setTimeout(function(){ b.classList.add('show'); },20);
+          list.scrollTop = list.scrollHeight;
+        }, 1400));
+      }, msg.delay));
+    } else {
+      waTimers.push(setTimeout(function(){
+        var b = document.createElement('div');
+        b.className = 'wa-bubble me';
+        b.textContent = msg.text;
+        var t = document.createElement('span'); t.className='wa-time';
+        t.innerHTML = ts + ' <span class="wa-tick">✓✓</span>';
+        b.appendChild(t);
+        list.appendChild(b);
+        setTimeout(function(){ b.classList.add('show'); },20);
+        list.scrollTop = list.scrollHeight;
+      }, msg.delay));
+    }
+  });
+}
+
 function clearAuto(){
   autoTimers.forEach(function(t){ clearTimeout(t); }); autoTimers = [];
   if(advTimer){ clearTimeout(advTimer); advTimer = null; }
@@ -3249,14 +3338,24 @@ function render(){
     }
   } else {
     document.getElementById('liveFrame').style.display = 'none';
-    var ph = s.ph || {};
     document.getElementById('ph').style.display = 'flex';
-    document.getElementById('ph-icon').textContent = ph.icon || s.icon;
-    document.getElementById('ph-title').textContent = ph.title || s.title;
-    document.getElementById('ph-body').textContent = ph.body || '';
-    var cta = document.getElementById('ph-cta');
-    if(ph.link){ cta.style.display='inline-block'; cta.textContent=ph.link.label; cta.href=ph.link.url; }
-    else{ cta.style.display='none'; }
+    clearWaChat();
+    if(s.waChat){
+      document.getElementById('ph-icon').textContent = '';
+      document.getElementById('ph-title').textContent = '';
+      document.getElementById('ph-body').textContent = '';
+      document.getElementById('ph-cta').style.display = 'none';
+      document.getElementById('wa-shell').classList.add('active');
+      startWaChat(s.waChat);
+    } else {
+      var ph = s.ph || {};
+      document.getElementById('ph-icon').textContent = ph.icon || s.icon;
+      document.getElementById('ph-title').textContent = ph.title || s.title;
+      document.getElementById('ph-body').textContent = ph.body || '';
+      var cta = document.getElementById('ph-cta');
+      if(ph.link){ cta.style.display='inline-block'; cta.textContent=ph.link.label; cta.href=ph.link.url; }
+      else{ cta.style.display='none'; }
+    }
   }
   prevCur = cur;
 
