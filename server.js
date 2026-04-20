@@ -2922,7 +2922,7 @@ var steps = [
     callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
   },
   {
-    icon:'\uD83D\uDCAD', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:1500,a:{action:'typeAndAsk',query:'What about for a volume hiring campaign with 500 applicants?'}}],
+    icon:'\uD83D\uDCAD', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What about for a volume hiring campaign with 500 applicants?'}}],
     voice:"It maintains full conversation context throughout the session. Ask a follow-up question about a complex scenario, and the AI connects the dots — just like talking to a senior consultant.",
     callout:{label:'Context memory',text:'Smart follow-ups — no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
   },
@@ -2941,8 +2941,8 @@ var steps = [
     callout:{label:'Full methodology',text:'Six phases, every checklist and deliverable',dot:{x:50,y:42},bubble:{x:60,y:28}}
   },
   {
-    icon:'\uD83D\uDCDD', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}],
-    voice:"The SOW builder walks through 19 questions about the client's requirements — size, integrations, workflows, compliance, training, and more. Watch it complete every step automatically.",
+    icon:'\uD83D\uDCDD', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], hold:24000,
+    voice:"The SOW builder walks through 19 questions about the client's requirements — size, integrations, workflows, compliance, training, and more. Watch it complete every step automatically. The platform captures every detail — org size, integrations, approval chains, compliance requirements, training sessions, and go-live timeline.",
     callout:{label:'19-step wizard',text:'Guided SOW building — every requirement captured',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
   {
@@ -3161,12 +3161,12 @@ function render(){
   var calloutTimer = setTimeout(function(){ showCallout(s.callout); }, 1500);
   autoTimers.push(calloutTimer);
 
-  // Speak, then auto-advance
+  // Speak, then auto-advance (respect optional hold time for long steps)
   speak(s.voice, function(){
     if(paused) return;
     advTimer = setTimeout(function(){
       if(!paused && cur < steps.length-1){ cur++; render(); }
-    }, 1800);
+    }, 1800 + (s.hold || 0));
   });
 }
 
