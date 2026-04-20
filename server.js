@@ -3100,43 +3100,32 @@ function speak(text, onDone, stepToken){
   renderWords(text, -1);
   document.getElementById('bars').classList.add('speaking');
 
-  // Split into sentences to avoid Chrome's ~15s speechSynthesis cutoff bug.
-  // Chrome silently stops long utterances; speaking sentence-by-sentence avoids it entirely.
-  var sentences = text.match(/[^.!?—]+[.!?—]?\s*/g) || [text];
-  var chunkIndex = 0;
-  var audioCompleted = false;
+  // Split into sentences and queue ALL utterances upfront in one synchronous block.
+  // This avoids the Chrome bug where calling synth.speak() from inside onend fires onerror.
+  var sentences = text.match(/[^.!?]+[.!?]?\s*/g) || [text];
+  var v = getBestVoice();
+  var completed = false;
   var charOffset = 0;
-  var timeoutDuration = Math.max(10000, text.split(' ').length * 530);
-  var audioTimeout = setTimeout(function(){
-    if(stepToken !== narrationStepToken || audioCompleted) return;
-    audioCompleted = true;
+
+  var timeoutDuration = Math.max(10000, text.split(' ').length * 560);
+  var fallback = setTimeout(function(){
+    if(stepToken !== narrationStepToken || completed) return;
+    completed = true;
     synth.cancel();
     document.getElementById('bars').classList.remove('speaking');
     document.getElementById('nar-pb-fill').style.width = '100%';
     renderWords(text, text.length + 1);
     if(onDone) onDone();
   }, timeoutDuration);
-  autoTimers.push(audioTimeout);
+  autoTimers.push(fallback);
 
-  function speakChunk(){
-    if(stepToken !== narrationStepToken || audioCompleted) return;
-    if(chunkIndex >= sentences.length){
-      if(audioCompleted) return;
-      audioCompleted = true;
-      clearTimeout(audioTimeout);
-      document.getElementById('bars').classList.remove('speaking');
-      document.getElementById('nar-pb-fill').style.width = '100%';
-      renderWords(text, text.length + 1);
-      setTimeout(function(){ if(onDone) onDone(); }, 400);
-      return;
-    }
-    var chunk = sentences[chunkIndex];
-    var isLast = chunkIndex === sentences.length - 1;
+  sentences.forEach(function(chunk, i){
+    var isLast = (i === sentences.length - 1);
     var utt = new SpeechSynthesisUtterance(isLast ? chunk + ', , ,' : chunk);
-    var v = getBestVoice();
     if(v) utt.voice = v;
     utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
     var chunkStart = charOffset;
+    charOffset += chunk.length;
     utt.onboundary = function(e){
       if(e.name==='word'){
         var abs = chunkStart + e.charIndex;
@@ -3144,29 +3133,27 @@ function speak(text, onDone, stepToken){
         document.getElementById('nar-pb-fill').style.width = Math.min(100, Math.round(abs / text.length * 100)) + '%';
       }
     };
-    utt.onend = function(){
-      if(stepToken !== narrationStepToken || audioCompleted) return;
-      charOffset += chunk.length;
-      chunkIndex++;
-      speakChunk();
-    };
-    utt.onerror = function(){
-      if(stepToken !== narrationStepToken || audioCompleted) return;
-      audioCompleted = true;
-      clearTimeout(audioTimeout);
-      document.getElementById('bars').classList.remove('speaking');
-      if(onDone) onDone();
-    };
-    try {
-      synth.speak(utt);
-    } catch(_) {
-      audioCompleted = true;
-      clearTimeout(audioTimeout);
-      document.getElementById('bars').classList.remove('speaking');
-      if(onDone) onDone();
+    if(isLast){
+      utt.onend = function(){
+        if(stepToken !== narrationStepToken || completed) return;
+        completed = true;
+        clearTimeout(fallback);
+        document.getElementById('bars').classList.remove('speaking');
+        document.getElementById('nar-pb-fill').style.width = '100%';
+        renderWords(text, text.length + 1);
+        setTimeout(function(){ if(onDone) onDone(); }, 400);
+      };
+      utt.onerror = function(e){
+        if(e && e.error === 'interrupted') return;
+        if(stepToken !== narrationStepToken || completed) return;
+        completed = true;
+        clearTimeout(fallback);
+        document.getElementById('bars').classList.remove('speaking');
+        if(onDone) onDone();
+      };
     }
-  }
-  speakChunk();
+    synth.speak(utt);
+  });
 }
 
 // ── Callout ──
