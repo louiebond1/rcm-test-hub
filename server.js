@@ -3098,24 +3098,18 @@ function speak(text, onDone, stepToken){
     return;
   }
   renderWords(text, -1);
-  var utt = new SpeechSynthesisUtterance(text + ', , ,');
-  var v = getBestVoice();
-  if(v) utt.voice = v;
-  utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
   document.getElementById('bars').classList.add('speaking');
-  
-  // Chrome bug: speechSynthesis silently stops after ~14s without setting synth.paused.
-  // Force a pause/resume cycle every 10s to keep it alive.
-  var resumeTimer = setInterval(function(){
-    if(synth.speaking){ synth.pause(); synth.resume(); }
-  }, 10000);
 
+  // Split into sentences to avoid Chrome's ~15s speechSynthesis cutoff bug.
+  // Chrome silently stops long utterances; speaking sentence-by-sentence avoids it entirely.
+  var sentences = text.match(/[^.!?—]+[.!?—]?\s*/g) || [text];
+  var chunkIndex = 0;
   var audioCompleted = false;
+  var charOffset = 0;
   var timeoutDuration = Math.max(10000, text.split(' ').length * 530);
   var audioTimeout = setTimeout(function(){
     if(stepToken !== narrationStepToken || audioCompleted) return;
     audioCompleted = true;
-    clearInterval(resumeTimer);
     synth.cancel();
     document.getElementById('bars').classList.remove('speaking');
     document.getElementById('nar-pb-fill').style.width = '100%';
@@ -3123,41 +3117,56 @@ function speak(text, onDone, stepToken){
     if(onDone) onDone();
   }, timeoutDuration);
   autoTimers.push(audioTimeout);
-  
-  utt.onboundary = function(e){
-    if(e.name==='word'){
-      renderWords(text, e.charIndex);
-      var pct = Math.min(100, Math.round(e.charIndex / text.length * 100));
-      document.getElementById('nar-pb-fill').style.width = pct + '%';
+
+  function speakChunk(){
+    if(stepToken !== narrationStepToken || audioCompleted) return;
+    if(chunkIndex >= sentences.length){
+      if(audioCompleted) return;
+      audioCompleted = true;
+      clearTimeout(audioTimeout);
+      document.getElementById('bars').classList.remove('speaking');
+      document.getElementById('nar-pb-fill').style.width = '100%';
+      renderWords(text, text.length + 1);
+      setTimeout(function(){ if(onDone) onDone(); }, 400);
+      return;
     }
-  };
-  utt.onend = function(){
-    if(stepToken !== narrationStepToken || audioCompleted) return;
-    audioCompleted = true;
-    clearTimeout(audioTimeout);
-    clearInterval(resumeTimer);
-    document.getElementById('bars').classList.remove('speaking');
-    document.getElementById('nar-pb-fill').style.width = '100%';
-    renderWords(text, text.length + 1);
-    setTimeout(function(){ if(onDone) onDone(); }, 400);
-  };
-  utt.onerror = function(){
-    if(stepToken !== narrationStepToken || audioCompleted) return;
-    audioCompleted = true;
-    clearTimeout(audioTimeout);
-    clearInterval(resumeTimer);
-    document.getElementById('bars').classList.remove('speaking');
-    if(onDone) onDone();
-  };
-  try {
-    synth.speak(utt);
-  } catch(_) {
-    audioCompleted = true;
-    clearTimeout(audioTimeout);
-    clearInterval(resumeTimer);
-    document.getElementById('bars').classList.remove('speaking');
-    if(onDone) onDone();
+    var chunk = sentences[chunkIndex];
+    var isLast = chunkIndex === sentences.length - 1;
+    var utt = new SpeechSynthesisUtterance(isLast ? chunk + ', , ,' : chunk);
+    var v = getBestVoice();
+    if(v) utt.voice = v;
+    utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
+    var chunkStart = charOffset;
+    utt.onboundary = function(e){
+      if(e.name==='word'){
+        var abs = chunkStart + e.charIndex;
+        renderWords(text, abs);
+        document.getElementById('nar-pb-fill').style.width = Math.min(100, Math.round(abs / text.length * 100)) + '%';
+      }
+    };
+    utt.onend = function(){
+      if(stepToken !== narrationStepToken || audioCompleted) return;
+      charOffset += chunk.length;
+      chunkIndex++;
+      speakChunk();
+    };
+    utt.onerror = function(){
+      if(stepToken !== narrationStepToken || audioCompleted) return;
+      audioCompleted = true;
+      clearTimeout(audioTimeout);
+      document.getElementById('bars').classList.remove('speaking');
+      if(onDone) onDone();
+    };
+    try {
+      synth.speak(utt);
+    } catch(_) {
+      audioCompleted = true;
+      clearTimeout(audioTimeout);
+      document.getElementById('bars').classList.remove('speaking');
+      if(onDone) onDone();
+    }
   }
+  speakChunk();
 }
 
 // ── Callout ──
