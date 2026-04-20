@@ -3098,7 +3098,7 @@ function speak(text, onDone, stepToken){
     return;
   }
   renderWords(text, -1);
-  var utt = new SpeechSynthesisUtterance(text);
+  var utt = new SpeechSynthesisUtterance(text + ' .');
   var v = getBestVoice();
   if(v) utt.voice = v;
   utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
@@ -3131,7 +3131,7 @@ function speak(text, onDone, stepToken){
     document.getElementById('bars').classList.remove('speaking');
     document.getElementById('nar-pb-fill').style.width = '100%';
     renderWords(text, text.length + 1);
-    if(onDone) onDone();
+    setTimeout(function(){ if(onDone) onDone(); }, 400);
   };
   utt.onerror = function(){
     if(stepToken !== narrationStepToken || audioCompleted) return;
