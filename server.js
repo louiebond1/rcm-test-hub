@@ -2710,6 +2710,29 @@ body{font-family:'Sora',sans-serif;background:#060606;color:#fff}
 }
 .ss-btn:hover{opacity:.9;transform:translateY(-2px)}
 .ss-note{margin-top:18px;font-size:11px;color:#2a2a2a}
+/* Ambient glow */
+#start-screen{overflow:hidden}
+#start-screen::before{content:'';position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(34,197,94,.08) 0%,transparent 65%);animation:ss-glow 5s ease-in-out infinite;pointer-events:none;z-index:0}
+@keyframes ss-glow{0%,100%{transform:scale(1) translate(-10%,10%);opacity:.5}50%{transform:scale(1.25) translate(-10%,10%);opacity:1}}
+#start-screen>*{position:relative;z-index:1}
+/* Stat counters */
+.ss-stats{display:flex;gap:52px;margin-top:44px}
+.ss-stat{text-align:center}
+.ss-stat-n{display:block;font-size:46px;font-weight:800;letter-spacing:-.04em;color:#22c55e;font-variant-numeric:tabular-nums;line-height:1}
+.ss-stat-l{display:block;font-size:11px;color:#333;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-top:6px}
+/* CTA wrap with pulse rings */
+.ss-cta-wrap{position:relative;margin-top:44px;display:inline-block}
+.ss-ring{position:absolute;inset:-10px;border-radius:24px;border:1.5px solid rgba(34,197,94,.3);animation:ss-ring-p 2.5s ease-in-out infinite;pointer-events:none}
+.ss-ring2{position:absolute;inset:-20px;border-radius:30px;border:1px solid rgba(34,197,94,.12);animation:ss-ring-p 2.5s ease-in-out infinite .7s;pointer-events:none}
+@keyframes ss-ring-p{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.9;transform:scale(1.025)}}
+.ss-btn{margin:0}
+/* Auto-advance ring */
+#auto-ring{width:38px;height:38px;flex-shrink:0;cursor:pointer;display:none;position:relative;align-self:center}
+#auto-ring.show{display:block}
+#auto-ring-n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#22c55e;font-family:inherit}
+/* Frame crossfade */
+#frame-fade{position:absolute;inset:0;background:#0a0a0a;z-index:8;opacity:0;pointer-events:none;transition:opacity .22s ease}
+#frame-fade.in{opacity:1}
 
 /* ────── DEMO SHELL ────── */
 #demo{display:flex;flex-direction:column;height:100vh;opacity:0;transition:opacity .5s}
@@ -2912,6 +2935,7 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
   <div class="dots-row" id="dots-row"></div>
   <div class="frame-area" id="frame-area">
     <iframe id="liveFrame" src="/"></iframe>
+    <div id="frame-fade"></div>
     <div class="ph" id="ph">
       <div class="ph-icon" id="ph-icon"></div>
       <div class="ph-title" id="ph-title"></div>
@@ -2951,6 +2975,13 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
           <button class="nar-btn" onclick="retryAudio()">🔄 Retry Audio</button>
           <button class="nar-btn next" onclick="go(1)">Next Step \u2192</button>
         </div>
+      </div>
+      <div id="auto-ring" onclick="stopAutoAdvance();go(1)" title="Click to advance now">
+        <svg viewBox="0 0 38 38" width="38" height="38">
+          <circle cx="19" cy="19" r="16" fill="none" stroke="#1e1e1e" stroke-width="3"/>
+          <circle id="auto-ring-fill" cx="19" cy="19" r="16" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5" transform="rotate(-90 19 19)"/>
+        </svg>
+        <div id="auto-ring-n"></div>
       </div>
     </div>
   </div>
@@ -3075,6 +3106,56 @@ var autoTimers = [], advTimer = null;
 var narrationStepToken = 0;
 var currentAudio = null;
 var frameInteracted = false;
+
+// ── Chime ──
+function playChime(){
+  try{
+    var ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [[0,.0,523],[.16,0,659],[.32,0,784]].forEach(function(n){
+      var osc=ctx.createOscillator(), g=ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value=n[2]; osc.type='sine';
+      g.gain.setValueAtTime(0,ctx.currentTime+n[0]);
+      g.gain.linearRampToValueAtTime(.07,ctx.currentTime+n[0]+.05);
+      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+n[0]+.55);
+      osc.start(ctx.currentTime+n[0]); osc.stop(ctx.currentTime+n[0]+.6);
+    });
+  }catch(e){}
+}
+
+// ── Frame crossfade ──
+function flashFrame(){
+  var el=document.getElementById('frame-fade');
+  if(!el) return;
+  el.classList.add('in');
+  setTimeout(function(){ el.classList.remove('in'); },300);
+}
+
+// ── Auto-advance ring ──
+var autoRingInterval=null;
+function startAutoAdvance(secs, onDone){
+  stopAutoAdvance();
+  var remaining=secs;
+  var ring=document.getElementById('auto-ring');
+  var fill=document.getElementById('auto-ring-fill');
+  var num=document.getElementById('auto-ring-n');
+  var circ=100.5;
+  if(!ring) return;
+  ring.classList.add('show');
+  num.textContent=remaining;
+  fill.style.strokeDashoffset=circ;
+  autoRingInterval=setInterval(function(){
+    remaining--;
+    num.textContent=remaining;
+    fill.style.strokeDashoffset=Math.round(circ - circ*((secs-remaining)/secs));
+    if(remaining<=0){ stopAutoAdvance(); onDone(); }
+  },1000);
+}
+function stopAutoAdvance(){
+  if(autoRingInterval){ clearInterval(autoRingInterval); autoRingInterval=null; }
+  var ring=document.getElementById('auto-ring');
+  if(ring) ring.classList.remove('show');
+}
 
 function markFrameInteracted(){
   frameInteracted = true;
@@ -3274,6 +3355,7 @@ function startWaChat(msgs){
 function clearAuto(){
   autoTimers.forEach(function(t){ clearTimeout(t); }); autoTimers = [];
   if(advTimer){ clearTimeout(advTimer); advTimer = null; }
+  stopAutoAdvance();
 }
 
 function fireAuto(s){
@@ -3326,6 +3408,7 @@ function render(){
     document.getElementById('ph').style.display = 'none';
     document.getElementById('liveFrame').style.display = 'block';
     if(!same){
+      flashFrame();
       document.getElementById('liveFrame').src = s.url;
       document.getElementById('liveFrame').onload = function(){
         bindFrameInteractionHandlers();
@@ -3363,10 +3446,11 @@ function render(){
   var calloutTimer = setTimeout(function(){ showCallout(s.callout); }, 1500);
   autoTimers.push(calloutTimer);
 
-  // Speak only. Step progression is always manual.
+  // Speak, then auto-advance after 5 s
   speak(s.voice, function(){
     if(stepToken !== narrationStepToken) return;
     if(paused) return;
+    if(cur < steps.length-1) startAutoAdvance(5, function(){ go(1); });
   }, stepToken);
 }
 
@@ -3418,13 +3502,14 @@ function jumpTo(i, isManual){
   paused = false;
   document.getElementById('pause-btn').textContent = '\u23F8';
   document.getElementById('pause-btn').classList.remove('on');
+  if(isManual && i>cur) playChime();
   cur = i;
   render();
 }
 
 function go(d){
   var n = Math.max(0,Math.min(steps.length-1,cur+d));
-  if(n !== cur) jumpTo(n, true);
+  if(n !== cur) jumpTo(n, d>0);
 }
 
 function replayStep(){
@@ -3459,6 +3544,22 @@ function beginDemo(){
     render();
   }, 600);
 }
+
+// ── Count-up stats on load ──
+(function(){
+  var targets = [{id:'stat-features',val:19},{id:'stat-roles',val:4},{id:'stat-time',val:4}];
+  targets.forEach(function(t,idx){
+    setTimeout(function(){
+      var el = document.getElementById(t.id); if(!el) return;
+      var count=0, step=1, dur=700, interval=Math.round(dur/t.val);
+      var iv = setInterval(function(){
+        count += step;
+        el.textContent = count;
+        if(count >= t.val){ el.textContent = t.val; clearInterval(iv); }
+      }, interval);
+    }, idx*120);
+  });
+})();
 </script>
 </body>
 </html>`);
