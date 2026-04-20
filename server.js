@@ -3107,22 +3107,6 @@ var narrationStepToken = 0;
 var currentAudio = null;
 var frameInteracted = false;
 
-// ── Chime ──
-function playChime(){
-  try{
-    var ctx = new (window.AudioContext||window.webkitAudioContext)();
-    [[0,.0,523],[.16,0,659],[.32,0,784]].forEach(function(n){
-      var osc=ctx.createOscillator(), g=ctx.createGain();
-      osc.connect(g); g.connect(ctx.destination);
-      osc.frequency.value=n[2]; osc.type='sine';
-      g.gain.setValueAtTime(0,ctx.currentTime+n[0]);
-      g.gain.linearRampToValueAtTime(.07,ctx.currentTime+n[0]+.05);
-      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+n[0]+.55);
-      osc.start(ctx.currentTime+n[0]); osc.stop(ctx.currentTime+n[0]+.6);
-    });
-  }catch(e){}
-}
-
 // ── Frame crossfade ──
 function flashFrame(){
   var el=document.getElementById('frame-fade');
@@ -3450,7 +3434,7 @@ function render(){
   speak(s.voice, function(){
     if(stepToken !== narrationStepToken) return;
     if(paused) return;
-    if(cur < steps.length-1) startAutoAdvance(5, function(){ go(1); });
+    if(cur < steps.length-1) startAutoAdvance(10, function(){ go(1); });
   }, stepToken);
 }
 
@@ -3502,7 +3486,7 @@ function jumpTo(i, isManual){
   paused = false;
   document.getElementById('pause-btn').textContent = '\u23F8';
   document.getElementById('pause-btn').classList.remove('on');
-  if(isManual && i>cur) playChime();
+  if(isManual && i>cur) {} // no chime
   cur = i;
   render();
 }
