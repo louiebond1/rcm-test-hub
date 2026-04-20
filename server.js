@@ -3795,7 +3795,7 @@ var steps = [
   },
   {
     icon:'\uD83D\uDCDD', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], hold:32000,
-    voice:"The SOW builder walks through 19 questions covering every requirement — org size, geography, integrations, approval workflows, compliance, training, job boards, and go-live timeline. It generates a complete Statement of Work structured around the EXcelerate phases: Examine, Adopt, Validate, and Launch — with full scope sections for Route Maps, Job Templates, Offer Management, Career Site, Referral Management, Reporting and Analytics, Data Migration, and UAE and Saudi Arabia data privacy compliance.",
+    voice:"The SOW builder walks through 19 questions covering every requirement — org size, geography, integrations, approval workflows, compliance, training, job boards, and go-live timeline. It generates a complete Statement of Work structured around the EXcelerate phases: Examine, Adopt, Validate, and Launch — with full scope sections for Route Maps, Job Templates, Offer Management, Career Site, Referral Management, Reporting and Analytics, Data Migration, and regional data privacy compliance.",
     callout:{label:'19-step SOW wizard',text:'Every requirement captured — EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
   {
