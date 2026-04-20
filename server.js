@@ -127,39 +127,37 @@ app.use(express.static(path.join(__dirname)));
 const ttsCache = {};
 app.get('/api/tts', async (req, res) => {
   const text = (req.query.text || '').trim();
+  const stressed = req.query.stressed === '1';
   if (!text) return res.status(400).end();
+  const cacheKey = (stressed ? 'stressed:' : '') + text;
   try {
-    if (!ttsCache[text]) {
+    if (!ttsCache[cacheKey]) {
       if (process.env.ELEVENLABS_API_KEY) {
-        // ElevenLabs — genuinely human voice. Change ELEVENLABS_VOICE_ID in .env to swap voice.
-        // Default: Rachel (21m00Tcm4TlvDq8ikWAM) — warm, professional, narrative.
         const voiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+        const voiceSettings = stressed
+          ? { stability: 0.22, similarity_boost: 0.78, style: 0.65, use_speaker_boost: true }
+          : { stability: 0.42, similarity_boost: 0.82, style: 0.18, use_speaker_boost: true };
         const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
           method: 'POST',
           headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text,
-            model_id: 'eleven_monolingual_v1',
-            voice_settings: { stability: 0.45, similarity_boost: 0.82 }
-          })
+          body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2', voice_settings: voiceSettings })
         });
         if (!elRes.ok) {
           const errBody = await elRes.text().catch(()=>'');
           console.error('ElevenLabs ' + elRes.status + ':', errBody.slice(0,200), '— falling back to OpenAI');
-          const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: 'nova', input: text, speed: 0.92 });
-          ttsCache[text] = Buffer.from(await mp3.arrayBuffer());
+          const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: stressed ? 'echo' : 'nova', input: text, speed: stressed ? 1.05 : 0.92 });
+          ttsCache[cacheKey] = Buffer.from(await mp3.arrayBuffer());
         } else {
-          ttsCache[text] = Buffer.from(await elRes.arrayBuffer());
+          ttsCache[cacheKey] = Buffer.from(await elRes.arrayBuffer());
         }
       } else {
-        // Fallback: OpenAI nova (robotic but functional without ElevenLabs key)
-        const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: 'nova', input: text, speed: 0.92 });
-        ttsCache[text] = Buffer.from(await mp3.arrayBuffer());
+        const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: stressed ? 'echo' : 'nova', input: text, speed: stressed ? 1.05 : 0.92 });
+        ttsCache[cacheKey] = Buffer.from(await mp3.arrayBuffer());
       }
     }
     res.set('Content-Type', 'audio/mpeg');
     res.set('Cache-Control', 'public, max-age=3600');
-    res.send(ttsCache[text]);
+    res.send(ttsCache[cacheKey]);
   } catch(e) {
     console.error('TTS error:', e.message);
     res.status(500).end();
@@ -3755,7 +3753,7 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
       <div class="card-headline" id="card-headline"></div>
     </div>
     <div id="wa-recording-scene">
-      <div class="rec-time">6:14 AM</div>
+      <div class="rec-time">06:07</div>
       <div class="rec-info">En route to client site</div>
       <div class="rec-row">
         <div class="rec-dot"></div>
@@ -3846,13 +3844,13 @@ var steps = [
     auto:[
       {d:700,  a:{action:'closeAI'}},
       {d:1400, a:{action:'openUnifiedFlow'}},
-      {d:5800, a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}},
-      {d:10500,a:{action:'openTaskDetail',taskId:'add-workflow'}},
-      {d:12500,a:{action:'expandTaskSteps',taskId:'add-workflow',indices:[0,1]}},
-      {d:15500,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}},
-      {d:19000,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}
+      {d:7000, a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}},
+      {d:14500,a:{action:'openTaskDetail',taskId:'add-workflow'}},
+      {d:18500,a:{action:'expandTaskSteps',taskId:'add-workflow',indices:[0,1]}},
+      {d:23500,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}},
+      {d:28000,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}
     ],
-    minHold:28000,
+    minHold:40000,
     voice:"After the call she starts building the implementation runbook. Picks the exact processes the client needs — posting the job, scheduling interviews, workflow automation, assessments. One click, the full sequence generates. She opens Workflow Automation, expands the steps. Step two is not landing. She flags it. EX3 surfaces the likely causes right away. One more click and that exact step goes straight to the AI with everything already loaded. Watch it answer.",
     callout:{label:'End-to-end workflow',text:'Build, troubleshoot, and escalate — without leaving EX3',dot:{x:52,y:50},bubble:{x:60,y:28}}
   },
@@ -3868,13 +3866,13 @@ var steps = [
     calloutDelay:7500,
     minHold:16000,
     waChat:[
-      {from:'me', type:'voice', delay:600},
-      {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\\n2\ufe0f\u20e3 The job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich one would you like to check first?", delay:2400},
-      {from:'me',  text:"Probably permissions \u2014 how do I check that?", delay:6000},
-      {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:8000}
+      {from:'me', type:'voice', delay:600, ts:'06:07', voiceText:"Quick one. I\\'m five minutes from the client site. Their hiring manager just messaged me — the Send Offer button isn\\'t showing up on their end. I need to know what\\'s blocking it before I walk in. Thanks."},
+      {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\\n2\ufe0f\u20e3 The job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich one would you like to check first?", delay:4000, ts:'06:07'},
+      {from:'me',  text:"Probably permissions \u2014 how do I check that?", delay:8500, ts:'06:08'},
+      {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:11000, ts:'06:08'}
     ],
     auto:[],
-    voice:"Next morning. Six AM. She is in the car, on the way to the client site. Instead of typing, she just talks — records a voice note on WhatsApp. The answer lands before she even parks. That is the same AI, running around the clock. No app to download. No login. Just WhatsApp.",
+    voice:"Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged — the Send Offer button is gone. She does not type. She records a voice note on WhatsApp, presses send, and watches the answer come back before she even gets out of the car. Same AI. No app. No login. Around the clock.",
     callout:{label:'WhatsApp AI bot',text:'Voice notes supported — no app, no login',dot:{x:50,y:50},bubble:{x:55,y:32}}
   },
   {
@@ -4123,8 +4121,9 @@ function startWaChat(msgs){
   var typ = document.getElementById('wa-typing');
   if(!list) return;
   var now = new Date();
-  var ts = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  var defaultTs = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
   msgs.forEach(function(msg){
+    var ts = msg.ts || defaultTs;
     if(msg.from === 'them'){
       waTimers.push(setTimeout(function(){
         typ.classList.add('show');
@@ -4140,7 +4139,7 @@ function startWaChat(msgs){
           setTimeout(function(){ b.classList.add('show'); },20);
           list.scrollTop = list.scrollHeight;
         }, 1400));
-      }, msg.delay));
+      }, msg.delay || 0));
     } else {
       waTimers.push(setTimeout(function(){
         var b = document.createElement('div');
@@ -4148,7 +4147,15 @@ function startWaChat(msgs){
         if(msg.type === 'voice'){
           var bh = [4,6,9,14,18,20,16,10,14,20,12,8,6,14,18,14,10,8,12,16,10,8,6,10,14];
           var barHtml = bh.map(function(h){ return '<div class="wa-wbar" style="height:'+h+'px"></div>'; }).join('');
-          b.innerHTML = '<div class="wa-voice-note"><div class="wa-voice-play"><span style="color:#fff;font-size:11px;margin-left:2px">\u25B6</span></div><div class="wa-waveform">'+barHtml+'</div><span class="wa-voice-dur">0:08</span></div>';
+          var dur = msg.voiceText ? Math.round(msg.voiceText.length / 14) : 8;
+          b.innerHTML = '<div class="wa-voice-note"><div class="wa-voice-play"><span style="color:#fff;font-size:11px;margin-left:2px">\u25B6</span></div><div class="wa-waveform">'+barHtml+'</div><span class="wa-voice-dur">0:'+dur.toString().padStart(2,'0')+'</span></div>';
+          if(msg.voiceText){
+            var vt = encodeURIComponent(msg.voiceText);
+            setTimeout(function(){
+              var aud = new Audio('/api/tts?text='+vt+'&stressed=1');
+              aud.play().catch(function(){});
+            }, 500);
+          }
         } else {
           b.textContent = msg.text;
         }
@@ -4158,7 +4165,7 @@ function startWaChat(msgs){
         list.appendChild(b);
         setTimeout(function(){ b.classList.add('show'); },20);
         list.scrollTop = list.scrollHeight;
-      }, msg.delay));
+      }, msg.delay || 0));
     }
   });
 }
