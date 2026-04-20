@@ -139,12 +139,18 @@ app.get('/api/tts', async (req, res) => {
           headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_turbo_v2_5',
-            voice_settings: { stability: 0.45, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true }
+            model_id: 'eleven_monolingual_v1',
+            voice_settings: { stability: 0.45, similarity_boost: 0.82 }
           })
         });
-        if (!elRes.ok) throw new Error('ElevenLabs ' + elRes.status);
-        ttsCache[text] = Buffer.from(await elRes.arrayBuffer());
+        if (!elRes.ok) {
+          const errBody = await elRes.text().catch(()=>'');
+          console.error('ElevenLabs ' + elRes.status + ':', errBody.slice(0,200), '— falling back to OpenAI');
+          const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: 'nova', input: text, speed: 0.92 });
+          ttsCache[text] = Buffer.from(await mp3.arrayBuffer());
+        } else {
+          ttsCache[text] = Buffer.from(await elRes.arrayBuffer());
+        }
       } else {
         // Fallback: OpenAI nova (robotic but functional without ElevenLabs key)
         const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: 'nova', input: text, speed: 0.92 });
