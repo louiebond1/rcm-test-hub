@@ -3034,6 +3034,7 @@ var cur = 0, prevCur = -1, paused = false, muted = false;
 var autoTimers = [], advTimer = null;
 var narrationStepToken = 0;
 var currentAudio = null;
+var frameInteracted = false;
 
 function stopAudio(){
   if(currentAudio){ currentAudio.pause(); currentAudio.src = ''; currentAudio = null; }
@@ -3183,8 +3184,27 @@ function clearAuto(){
 function fireAuto(s){
   if(!s.auto) return;
   s.auto.forEach(function(cmd){
-    autoTimers.push(setTimeout(function(){ postToFrame(cmd.a); }, cmd.d));
+    autoTimers.push(setTimeout(function(){
+      if(frameInteracted) return;
+      postToFrame(cmd.a);
+    }, cmd.d));
   });
+}
+
+function bindFrameInteractionHandlers(){
+  try {
+    var frame = document.getElementById('liveFrame');
+    var win = frame.contentWindow;
+    if(!win || win.__ex3DemoBound) return;
+    var markInteracted = function(){
+      frameInteracted = true;
+      clearAuto();
+      hideCallout();
+    };
+    win.addEventListener('pointerdown', markInteracted, { passive: true });
+    win.addEventListener('keydown', markInteracted);
+    win.__ex3DemoBound = true;
+  } catch(e) {}
 }
 
 // ── Render ──
@@ -3192,6 +3212,7 @@ function render(){
   if(paused) return;
   var s = steps[cur];
   var stepToken = ++narrationStepToken;
+  frameInteracted = false;
   document.getElementById('tb-step').textContent = 'Step '+(cur+1)+' of '+steps.length;
   document.getElementById('nar-tag').textContent = s.icon+'  '+s.title;
   document.getElementById('nar-pb-fill').style.width = '0%';
@@ -3210,10 +3231,12 @@ function render(){
     if(!same){
       document.getElementById('liveFrame').src = s.url;
       document.getElementById('liveFrame').onload = function(){
+        bindFrameInteractionHandlers();
         fireAuto(s);
         document.getElementById('liveFrame').onload = null;
       };
     } else {
+      bindFrameInteractionHandlers();
       fireAuto(s);
     }
   } else {
