@@ -3331,43 +3331,44 @@ app.get('/consultant/sow-builder', (_req, res) => {
       function runDemoWalk(){
         var actions = [];
         function sc(delay, fn){ var last = actions.length ? actions[actions.length-1][0] : 0; actions.push([last+delay, fn]); }
-        sc(500, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-2 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-3 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-4 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-5 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#integrations-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[1])o[1].click(); },380); });
-        sc(1350, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#jobboards-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[1])o[1].click(); },300); setTimeout(function(){ if(o[3])o[3].click(); },600); });
-        sc(1400, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-8 .opt'); if(o[0])o[0].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-9 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-10 .opt'); if(o[1])o[1].click(); setTimeout(function(){ if(o[2])o[2].click(); },380); });
-        sc(1300, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-11 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-12 .opt'); if(o[2])o[2].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-13 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-14 .opt'); if(o[2])o[2].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-15 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-16 .opt'); if(o[1])o[1].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#compliance-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[3])o[3].click(); },380); });
-        sc(1300, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-18 .opt'); if(o[0])o[0].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
-        sc(950, function(){ var o=document.querySelectorAll('#step-19 .opt'); if(o[0])o[0].click(); });
-        sc(850, function(){ document.getElementById('btn-next').click(); });
+        var nxt = function(){ document.getElementById('btn-next').click(); };
+        sc(400, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-2 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-3 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-4 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-5 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#integrations-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[1])o[1].click(); },250); });
+        sc(900, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#jobboards-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[1])o[1].click(); },220); setTimeout(function(){ if(o[3])o[3].click(); },440); });
+        sc(950, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-8 .opt'); if(o[0])o[0].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-9 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-10 .opt'); if(o[1])o[1].click(); setTimeout(function(){ if(o[2])o[2].click(); },250); });
+        sc(900, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-11 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-12 .opt'); if(o[2])o[2].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-13 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-14 .opt'); if(o[2])o[2].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-15 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-16 .opt'); if(o[1])o[1].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#compliance-options .opt'); if(o[0])o[0].click(); setTimeout(function(){ if(o[2])o[2].click(); },250); });
+        sc(900, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-18 .opt'); if(o[0])o[0].click(); });
+        sc(500, nxt);
+        sc(650, function(){ var o=document.querySelectorAll('#step-19 .opt'); if(o[0])o[0].click(); });
+        sc(500, nxt);
         actions.forEach(function(a){ setTimeout(a[1], a[0]); });
       }
     }
@@ -3793,7 +3794,7 @@ var steps = [
     callout:{label:'EXcelerate methodology',text:'Examine · Adopt · Validate · Launch',dot:{x:50,y:42},bubble:{x:60,y:28}}
   },
   {
-    icon:'\uD83D\uDCDD', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], hold:24000,
+    icon:'\uD83D\uDCDD', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], hold:32000,
     voice:"The SOW builder walks through 19 questions covering every requirement — org size, geography, integrations, approval workflows, compliance, training, job boards, and go-live timeline. It generates a complete Statement of Work structured around the EXcelerate phases: Examine, Adopt, Validate, and Launch — with full scope sections for Route Maps, Job Templates, Offer Management, Career Site, Referral Management, Reporting and Analytics, Data Migration, and UAE and Saudi Arabia data privacy compliance.",
     callout:{label:'19-step SOW wizard',text:'Every requirement captured — EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
