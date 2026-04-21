@@ -5707,7 +5707,6 @@ var STEPS = [
       {x:7,y:68,d:5400},
       {x:30,y:55,d:7000}
     ],
-    zoom:{x:20,y:50,scale:1.35,d:4500},
     minHold:1000
   },
   // ── 3: Schedule interview ──
@@ -5725,7 +5724,6 @@ var STEPS = [
       {x:35,y:55,d:4000},
       {x:35,y:63,d:6000}
     ],
-    zoom:{x:50,y:45,scale:1.4,d:2500},
     minHold:1000
   },
   // ── 4: CARD – AI ──
@@ -5752,7 +5750,6 @@ var STEPS = [
       {x:55,y:62,d:3200,click:true},
       {x:60,y:70,d:5500}
     ],
-    zoom:{x:55,y:55,scale:1.3,d:2200},
     minHold:2000
   },
   // ── 6: Ask AI freely ──
@@ -5768,7 +5765,6 @@ var STEPS = [
       {x:70,y:65,d:2000,click:true},
       {x:70,y:65,d:4000}
     ],
-    zoom:{x:65,y:55,scale:1.2,d:1800},
     minHold:3500
   },
   // ── 7: CARD – WhatsApp ──
