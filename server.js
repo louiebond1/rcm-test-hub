@@ -3868,10 +3868,12 @@ var steps = [
       {d:3500, a:{action:'openTaskDetail',taskId:'sched-interview'}},
       {d:8000, a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[0,1]}},
       {d:13000,a:{action:'openStuck',taskId:'sched-interview',stepIdx:1}},
-      {d:17000,a:{action:'askAIForStuck',taskId:'sched-interview',stepIdx:1}}
+      {d:17000,a:{action:'askAIForStuck',taskId:'sched-interview',stepIdx:1}},
+      {d:33000,a:{action:'typeAndAsk',query:'What permission level do I need to schedule on behalf of someone?'}},
+      {d:50000,a:{action:'closeAI'}}
     ],
-    minHold:35000,
-    voice:"Before the call she checks her recruiter is ready. Switches to recruiter view — their exact tasks, their exact steps. She clicks into Schedule Interview. Every step in order. Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One more click and that exact step goes straight to the AI, everything pre-loaded. Watch it answer.",
+    minHold:54000,
+    voice:"Before the call she checks her recruiter is ready. Switches to recruiter view — their exact tasks, their exact steps. She clicks into Schedule Interview. Every step in order. Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One click and that exact step goes straight to the AI, pre-loaded. Watch it answer. And watch what happens when she follows up.",
     callout:{label:'Role-based training',text:'Every step, every role — with built-in AI troubleshooting',dot:{x:50,y:50},bubble:{x:60,y:32}}
   },
   {
