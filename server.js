@@ -3919,13 +3919,7 @@ var steps = [
   },
   {
     type:'card', icon:'', title:'Ask anything.', chap:'Chapter II', headline:'Ask anything.<br><em>Get an answer.</em>', countdown:4, auto:[], callout:null,
-    voice:"The AI assistant. Any SmartRecruiters question, answered in seconds."
-  },
-  {
-    icon:'', title:'AI Assistant', url:'/', auto:[{d:800,a:{action:'openAI'}},{d:1900,a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}],
-    minHold:18000,
-    voice:"Halfway through the kickoff call, the client asks something she was not expecting. She types it straight into EX3. The answer streams back before she has finished explaining the question to the room. No ticket. No waiting. No one to chase.",
-    callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:2,y:4}}
+    voice:"And that AI you just saw — you can ask it literally anything. Not just the stuck steps. Any SmartRecruiters question, any point in the project, any time of day."
   },
   {
     icon:'', title:'Implementation Runbook', url:'/',
@@ -3934,8 +3928,9 @@ var steps = [
       {d:1400,a:{action:'openUnifiedFlow'}},
       {d:5500,a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}}
     ],
-    minHold:14000,
-    voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click — the full sequence generates. Post job, schedule interview, workflow automation, assessments. The entire delivery plan, structured and ready.",
+    manual:true,
+    manualHint:12000,
+    voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click and the full sequence generates — post job, schedule interview, workflow automation, assessments. The whole delivery plan, structured and ready. Click next when you can see it.",
     callout:{label:'One-go workflow',text:'Full implementation sequence \u2014 generated in seconds',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
