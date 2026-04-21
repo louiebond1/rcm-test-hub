@@ -3909,11 +3909,10 @@ var steps = [
   {
     icon:'', title:'Follow-Up — Context Memory', url:'/',
     auto:[
-      {d:1000,a:{action:'typeAndAsk',query:'What permission level do I need to schedule on behalf of someone?'}},
-      {d:18000,a:{action:'closeAI'}}
+      {d:1000,a:{action:'typeAndAsk',query:'What permission level do I need to schedule on behalf of someone?'}}
     ],
     manual:true,
-    manualHint:18000,
+    manualHint:25000,
     voice:"Now watch the follow-up. She asks a second question — no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.",
     callout:{label:'Context memory',text:'Follow-up questions \u2014 full conversation carried forward',dot:{x:78,y:36},bubble:{x:2,y:4}}
   },
