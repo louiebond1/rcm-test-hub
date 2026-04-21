@@ -3922,15 +3922,22 @@ var steps = [
     voice:"And that AI you just saw — you can ask it literally anything. Not just the stuck steps. Any SmartRecruiters question, any point in the project, any time of day."
   },
   {
+    icon:'', title:'Try It — Ask Anything', url:'/',
+    auto:[{d:800,a:{action:'openAI'}}],
+    manual:true,
+    manualHint:5000,
+    voice:"Go ahead — ask it anything you like. A SmartRecruiters question, something about the process, whatever comes to mind. Click next whenever you are done.",
+    callout:null
+  },
+  {
     icon:'', title:'Implementation Runbook', url:'/',
     auto:[
       {d:700, a:{action:'closeAI'}},
       {d:1400,a:{action:'openUnifiedFlow'}},
       {d:5500,a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}}
     ],
-    manual:true,
-    manualHint:12000,
-    voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click and the full sequence generates — post job, schedule interview, workflow automation, assessments. The whole delivery plan, structured and ready. Click next when you can see it.",
+    minHold:13000,
+    voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click and the full sequence generates — post job, schedule interview, workflow automation, assessments. The whole delivery plan, structured and ready.",
     callout:{label:'One-go workflow',text:'Full implementation sequence \u2014 generated in seconds',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
