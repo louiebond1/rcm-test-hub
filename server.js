@@ -5234,7 +5234,7 @@ window.enter_s3 = function(){
 };
 
 var AI_Q = 'How do I set up an offer letter template?';
-var AI_A = 'Go to Admin \u2192 Offer Management \u2192 Templates and click \u201cNew Template\u201d.\n\nUse merge tags like {candidate_name} and {job_title} for dynamic fields, then set your approval chain \u2014 who needs to approve before the offer is sent.\n\nOnce active, recruiters see a \u201cSend Offer\u201d button as soon as a candidate reaches the Offer stage.';
+var AI_A = 'Go to Admin \u2192 Offer Management \u2192 Templates and click \u201cNew Template\u201d.\\n\\nUse merge tags like {candidate_name} and {job_title} for dynamic fields, then set your approval chain \u2014 who needs to approve before the offer is sent.\\n\\nOnce active, recruiters see a \u201cSend Offer\u201d button as soon as a candidate reaches the Offer stage.';
 
 window.enter_s4 = function(){
   t(80, function(){ go('s4a'); });
@@ -5284,9 +5284,9 @@ window.enter_s4 = function(){
 
 var WA_CHAT = [
   {from:'me', voice:true, ts:'06:07', delay:500},
-  {from:'them', text:"The Send Offer button only appears once three things are in place:\n\n1\ufe0f\u20e3 Candidate is in the *Offer* stage\n2\ufe0f\u20e3 Job has an active offer letter template\n3\ufe0f\u20e3 You have the *Offer Manager* permission\n\nWhich would you like to check first?", ts:'06:07', delay:9000},
+  {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 Candidate is in the *Offer* stage\\n2\ufe0f\u20e3 Job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich would you like to check first?", ts:'06:07', delay:9000},
   {from:'me', text:'Probably permissions \u2014 how do I check?', ts:'06:08', delay:14000},
-  {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, check your assigned role.\n\nYou need either the *Offer Manager* role or a custom role with *Create Offer* permission.\n\nYour SR admin can add it in about 2 minutes.", ts:'06:08', delay:18500}
+  {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, check your assigned role.\\n\\nYou need either the *Offer Manager* role or a custom role with *Create Offer* permission.\\n\\nYour SR admin can add it in about 2 minutes.", ts:'06:08', delay:18500}
 ];
 var WH = [8,14,6,18,10,22,7,16,12,20,8,14,6,18,10,22,7,16,12,20,8,14,6,18,10];
 
