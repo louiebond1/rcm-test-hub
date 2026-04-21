@@ -3642,6 +3642,8 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 .nar-btn:hover{background:#171717;border-color:#2e2e2e}
 .nar-btn.next{background:#22c55e;color:#000;border-color:#22c55e}
 .nar-btn.next:hover{opacity:.92}
+@keyframes pulse-next{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}50%{box-shadow:0 0 0 8px rgba(34,197,94,0)}}
+.nar-btn.next.ready{animation:pulse-next 1.4s ease-in-out infinite;background:#16a34a}
 
 /* Voice note bubble */
 .wa-voice-note{display:flex;align-items:center;gap:8px;min-width:170px}
@@ -3862,30 +3864,57 @@ var steps = [
     callout:null
   },
   {
-    icon:'', title:'Role Training & Process Walkthrough', url:'/',
+    icon:'', title:'Four Roles, One Platform', url:'/',
     auto:[
-      {d:800,  a:{action:'setRole',role:'rec'}},
-      {d:3500, a:{action:'openTaskDetail',taskId:'sched-interview'}},
-      {d:8000, a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[0,1]}},
-      {d:13000,a:{action:'openStuck',taskId:'sched-interview',stepIdx:1}},
-      {d:17000,a:{action:'askAIForStuck',taskId:'sched-interview',stepIdx:1}},
-      {d:33000,a:{action:'typeAndAsk',query:'What permission level do I need to schedule on behalf of someone?'}},
-      {d:50000,a:{action:'closeAI'}}
+      {d:1200,a:{action:'setRole',role:'rec'}},
+      {d:4000,a:{action:'setRole',role:'hm'}},
+      {d:6500,a:{action:'setRole',role:'cand'}},
+      {d:9000,a:{action:'setRole',role:'adm'}}
     ],
-    minHold:54000,
-    voice:"Before the call she checks her recruiter is ready. Switches to recruiter view — their exact tasks, their exact steps. She clicks into Schedule Interview. Every step in order. Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One click and that exact step goes straight to the AI, pre-loaded. Watch it answer. And watch what happens when she follows up.",
-    callout:{label:'Role-based training',text:'Every step, every role — with built-in AI troubleshooting',dot:{x:50,y:50},bubble:{x:60,y:32}}
+    minHold:12000,
+    voice:"Before the call she sets her team up. Four roles on every SmartRecruiters project — recruiter, hiring manager, candidate, administrator. Each one gets their own view, their own tasks, their own guide. Watch the platform switch between them. Nobody shares a screen. Nobody gets lost.",
+    callout:{label:'Role-based views',text:'Recruiter \u00b7 Hiring Manager \u00b7 Candidate \u00b7 Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
-    icon:'', title:'All Four Roles', url:'/',
+    icon:'', title:'Recruiter View', url:'/',
     auto:[
-      {d:700, a:{action:'setRole',role:'hm'}},
-      {d:3500,a:{action:'setRole',role:'cand'}},
-      {d:6000,a:{action:'setRole',role:'adm'}}
+      {d:800,a:{action:'setRole',role:'rec'}}
     ],
-    minHold:8500,
-    voice:"Hiring manager. Candidate. Administrator. Every person on the project gets their own view, their own checklist, their own guide. One platform. Four lenses. Nobody is lost on day one.",
-    callout:{label:'4 roles covered',text:'Recruiter \u00b7 Hiring Manager \u00b7 Candidate \u00b7 Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
+    minHold:7000,
+    voice:"She clicks into the recruiter. Their tasks, their responsibilities, their process — nothing irrelevant, nothing missing. Every single thing a recruiter needs to run this implementation is right here.",
+    callout:{label:'Recruiter guide',text:'Job posting \u00b7 Pipelines \u00b7 Offer management',dot:{x:50,y:14},bubble:{x:57,y:4}}
+  },
+  {
+    icon:'', title:'Schedule Interview — Step by Step', url:'/',
+    auto:[
+      {d:800, a:{action:'openTaskDetail',taskId:'sched-interview'}},
+      {d:4500,a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[0]}}
+    ],
+    minHold:10000,
+    voice:"She clicks into Schedule Interview. Every step laid out in order — who does what, when, and how. The whole process visible before the client has even asked a question.",
+    callout:{label:'Process walkthrough',text:'Every step, every owner — no ambiguity',dot:{x:50,y:50},bubble:{x:60,y:32}}
+  },
+  {
+    icon:'', title:'Step 2 Has an Issue — Ask AI', url:'/',
+    auto:[
+      {d:800, a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[1]}},
+      {d:4000,a:{action:'openStuck',taskId:'sched-interview',stepIdx:1}},
+      {d:7500,a:{action:'askAIForStuck',taskId:'sched-interview',stepIdx:1}}
+    ],
+    manual:true,
+    manualHint:22000,
+    voice:"Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One click and that exact step goes to the AI — everything pre-loaded. Watch it answer. Click next when you are ready.",
+    callout:{label:'Built-in troubleshooting',text:'Flag any step \u2014 AI answers with full context',dot:{x:50,y:55},bubble:{x:60,y:40}}
+  },
+  {
+    icon:'', title:'Follow-Up — Context Memory', url:'/',
+    auto:[
+      {d:1000,a:{action:'typeAndAsk',query:'What permission level do I need to schedule on behalf of someone?'}},
+      {d:18000,a:{action:'closeAI'}}
+    ],
+    minHold:20000,
+    voice:"Now watch the follow-up. She asks a second question — no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.",
+    callout:{label:'Context memory',text:'Follow-up questions \u2014 full conversation carried forward',dot:{x:78,y:36},bubble:{x:38,y:24}}
   },
   {
     type:'card', icon:'', title:'Ask anything.', chap:'Chapter II', headline:'Ask anything.<br><em>Get an answer.</em>', countdown:4, auto:[], callout:null,
@@ -3896,12 +3925,6 @@ var steps = [
     minHold:18000,
     voice:"Halfway through the kickoff call, the client asks something she was not expecting. She types it straight into EX3. The answer streams back before she has finished explaining the question to the room. No ticket. No waiting. No one to chase.",
     callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
-  },
-  {
-    icon:'', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What changes for high-volume hiring?'}}],
-    minHold:14000,
-    voice:"She pushes further. Asks a follow-up. The AI carries the full conversation forward — no re-explaining, no starting over. It knows exactly what she was talking about. Like having a senior consultant in her ear the whole call.",
-    callout:{label:'Context memory',text:'Full conversation history \u2014 no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
   },
   {
     icon:'', title:'Implementation Runbook', url:'/',
@@ -4271,6 +4294,8 @@ function clearAuto(){
   autoTimers.forEach(function(t){ clearTimeout(t); }); autoTimers = [];
   if(advTimer){ clearTimeout(advTimer); advTimer = null; }
   stopAutoAdvance();
+  var btn = document.querySelector('.nar-btn.next');
+  if(btn) btn.classList.remove('ready');
 }
 
 function fireAuto(s){
@@ -4400,6 +4425,14 @@ function render(){
     if(cur >= steps.length-1) return;
     if(s.countdown){
       startAutoAdvance(s.countdown, function(){ go(1); });
+    } else if(s.manual){
+      // Wait for user to click Next Step — pulse the button after the AI has had time to answer
+      var hint = s.manualHint || 18000;
+      autoTimers.push(setTimeout(function(){
+        if(stepToken !== narrationStepToken) return;
+        var btn = document.querySelector('.nar-btn.next');
+        if(btn) btn.classList.add('ready');
+      }, hint));
     } else {
       var elapsed = Date.now() - stepStartTime;
       var wait = Math.max(1800, (s.minHold || 0) - elapsed);
