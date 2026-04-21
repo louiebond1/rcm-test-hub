@@ -4781,6 +4781,598 @@ renderThreadList(filteredThreads);
 </html>`);
 });
 
+// ── Demo2: Cinematic product experience ──
+app.get('/demo2', (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EX3 SmartRecruiters — Experience</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#060606;color:#fff;font-family:'Sora',sans-serif;cursor:none}
+*{cursor:none!important}
+
+/* Custom cursor */
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:#22c55e;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .08s ease,width .2s ease,height .2s ease,opacity .2s ease;mix-blend-mode:normal}
+#cursor-ring{position:fixed;width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(34,197,94,.4);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .18s ease,width .2s ease,height .2s ease,opacity .3s ease}
+#cursor.clicked{transform:translate(-50%,-50%) scale(.6)}
+#cursor-ring.clicked{width:52px;height:52px;opacity:.2}
+
+/* Scene system */
+.scene{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .55s cubic-bezier(.4,0,.2,1)}
+.scene.active{opacity:1;pointer-events:all}
+
+/* Flash overlay */
+#ovl{position:fixed;inset:0;background:#000;z-index:1000;opacity:0;pointer-events:none;transition:opacity .28s ease}
+#ovl.on{opacity:1}
+
+/* Progress line */
+#adv{position:fixed;bottom:0;left:0;height:2px;background:linear-gradient(90deg,#16a34a,#22c55e);z-index:500;width:0}
+
+/* Nav dots */
+#nav{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:600}
+.ndot{width:5px;height:5px;border-radius:3px;background:#1c1c1c;transition:all .4s ease;cursor:pointer!important}
+.ndot:hover{background:#333}
+.ndot.cur{background:#22c55e;width:20px}
+.ndot.done{background:#166534;width:8px}
+
+/* Click hint */
+#hint{position:fixed;bottom:52px;right:28px;font-size:9px;color:#1e1e1e;font-weight:800;letter-spacing:.14em;text-transform:uppercase;z-index:600;transition:opacity .6s;display:flex;align-items:center;gap:8px}
+#hint::before{content:'';width:18px;height:1px;background:#1e1e1e}
+
+/* Shared ambient glow */
+.glow{position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(34,197,94,.07) 0%,transparent 60%);pointer-events:none;animation:gp 6s ease-in-out infinite}
+@keyframes gp{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+
+/* Appear helpers */
+.ap{opacity:0;transform:translateY(22px);transition:opacity .55s ease,transform .55s ease}
+.ap.go{opacity:1;transform:translateY(0)}
+.ap2{opacity:0;transition:opacity .55s ease}
+.ap2.go{opacity:1}
+.aps{opacity:0;transform:scale(.92);transition:opacity .65s ease,transform .65s ease}
+.aps.go{opacity:1;transform:scale(1)}
+
+/* ── SCENE 0: SPLASH ── */
+#s0{background:#060606;flex-direction:column;text-align:center;overflow:hidden}
+.splash-logo{font-size:clamp(90px,16vw,200px);font-weight:900;letter-spacing:-.06em;color:#22c55e;line-height:1}
+.splash-brand{font-size:clamp(11px,1.4vw,16px);font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#1c1c1c;margin-top:16px}
+.splash-tag{font-size:clamp(15px,2vw,24px);color:#2a2a2a;margin-top:28px;font-weight:600;line-height:1.6;max-width:480px}
+.splash-tag em{color:#22c55e;font-style:normal}
+
+/* ── SCENE 1: STORY ── */
+#s1{background:#060606;flex-direction:column;align-items:flex-start;padding:0 10vw}
+.sline{font-size:clamp(30px,5.5vw,76px);font-weight:900;letter-spacing:-.05em;line-height:1.08;margin-bottom:8px;color:#fff}
+.sline em{color:#22c55e;font-style:normal}
+.sline.grey{color:#111}
+
+/* ── SCENE 2 & 3: SPLIT LAYOUT ── */
+.split{width:100%;height:100%;display:flex;align-items:center;gap:5vw;padding:0 6vw}
+.sl{flex:0 0 36%;display:flex;flex-direction:column;gap:14px}
+.sr{flex:1;min-width:0}
+.sc-label{font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#22c55e}
+.sc-h{font-size:clamp(24px,3.8vw,52px);font-weight:900;letter-spacing:-.05em;line-height:1.08}
+.sc-h em{color:#22c55e;font-style:normal}
+.sc-sub{font-size:clamp(12px,1.3vw,15px);color:#444;line-height:1.85}
+.role-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+.rtag{padding:5px 13px;border-radius:100px;border:1px solid #1a1a1a;font-size:10px;color:#2a2a2a;font-weight:700;transition:all .35s ease}
+.rtag.on{border-color:#22c55e;color:#22c55e;background:rgba(34,197,94,.06)}
+
+/* Device frame */
+.dev{border-radius:10px;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.04);background:#0e0e0e}
+.dev-bar{height:26px;background:#141414;display:flex;align-items:center;padding:0 11px;gap:5px;border-bottom:1px solid #0a0a0a}
+.dd{width:8px;height:8px;border-radius:50%}
+.dev-frame{height:360px;overflow:hidden}
+.dev-frame iframe{width:150%;height:150%;border:none;transform:scale(.667);transform-origin:top left;pointer-events:none}
+
+/* ── SCENE 4: AI ── */
+#s4{flex-direction:column;gap:24px;padding:0 8vw;text-align:center}
+.ai-shell{background:#0a0a0a;border:1px solid #141414;border-radius:14px;max-width:620px;width:100%;margin:0 auto;overflow:hidden;text-align:left}
+.ai-topbar{height:34px;background:#0e0e0e;display:flex;align-items:center;padding:0 13px;gap:7px;border-bottom:1px solid #111}
+.ai-topbar-label{flex:1;text-align:center;font-size:9px;color:#2a2a2a;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.ai-body{padding:16px 18px;min-height:200px;display:flex;flex-direction:column;gap:12px}
+.ai-row{opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+.ai-row.show{opacity:1;transform:translateY(0)}
+.ai-who{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.ai-who.you{color:#22c55e}
+.ai-who.bot{color:#818cf8}
+.ai-txt{font-size:13px;line-height:1.72;color:#999;white-space:pre-wrap}
+.ai-txt.you-txt{color:#555;font-size:12px}
+.ai-cur{display:inline-block;width:2px;height:13px;background:#22c55e;margin-left:2px;vertical-align:middle;animation:blink .85s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── SCENE 5: WHATSAPP ── */
+#s5{padding:0 6vw}
+.wa-phone{width:300px;flex-shrink:0;border-radius:18px;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.04);background:#e5ddd5;font-family:-apple-system,Helvetica,sans-serif}
+.wa-hdr{background:#075e54;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.wa-av{width:36px;height:36px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0}
+.wa-nm{font-size:13px;font-weight:700;color:#fff}
+.wa-st{font-size:10px;color:rgba(255,255,255,.65)}
+.wa-msgs{padding:10px;display:flex;flex-direction:column;gap:7px;min-height:280px;max-height:340px;overflow-y:auto}
+.wa-b{padding:7px 10px 18px;border-radius:8px;font-size:12px;line-height:1.55;position:relative;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;max-width:88%;word-break:break-word;white-space:pre-line}
+.wa-b.show{opacity:1;transform:translateY(0)}
+.wa-b.me{background:#dcf8c6;align-self:flex-end;border-top-right-radius:0;color:#111}
+.wa-b.them{background:#fff;align-self:flex-start;border-top-left-radius:0;color:#111}
+.wa-ts{position:absolute;bottom:3px;right:8px;font-size:9px;color:#999}
+.wa-typ{display:none;background:#fff;border-radius:8px;border-top-left-radius:0;padding:8px 12px;width:fit-content;align-items:center;gap:3px;margin:0 10px 6px}
+.wa-typ.show{display:flex}
+.wa-td{width:6px;height:6px;border-radius:50%;background:#bbb;animation:wab .9s infinite ease-in-out}
+.wa-td:nth-child(2){animation-delay:.2s}.wa-td:nth-child(3){animation-delay:.4s}
+@keyframes wab{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+.wa-vnote{display:flex;align-items:center;gap:8px;min-width:155px}
+.wa-vplay{width:28px;height:28px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0}
+.wa-wf{flex:1;display:flex;align-items:center;gap:2px;height:18px}
+.wa-wb{border-radius:2px;background:rgba(0,0,0,.22);width:3px}
+.wa-vd{font-size:10px;color:#999;margin-left:2px}
+
+/* ── SCENE 6: SOW ── */
+#s6{flex-direction:column;text-align:center;gap:14px}
+.sow-n{font-size:clamp(100px,18vw,240px);font-weight:900;letter-spacing:-.07em;color:#22c55e;line-height:1}
+.sow-w{font-size:clamp(22px,4.5vw,62px);font-weight:900;letter-spacing:-.05em;color:#fff}
+.sow-d{font-size:clamp(12px,1.4vw,17px);color:#2a2a2a;line-height:1.8;max-width:400px}
+
+/* ── SCENE 7: NUMBERS ── */
+#s7{flex-direction:column;gap:16px}
+.stats-head{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#22c55e;text-align:center}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;max-width:660px;width:100%}
+.stat-cell{background:#090909;padding:36px 30px;display:flex;flex-direction:column;gap:8px;border:1px solid #0e0e0e}
+.stat-cell:first-child{border-radius:14px 0 0 0}
+.stat-cell:nth-child(2){border-radius:0 14px 0 0}
+.stat-cell:nth-child(3){border-radius:0 0 0 14px}
+.stat-cell:last-child{border-radius:0 0 14px 0}
+.stat-n{font-size:clamp(46px,8vw,88px);font-weight:900;letter-spacing:-.05em;color:#22c55e;line-height:1;font-variant-numeric:tabular-nums}
+.stat-l{font-size:11px;color:#2a2a2a;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── SCENE 8: CTA ── */
+#s8{flex-direction:column;text-align:center;gap:22px}
+.cta-h{font-size:clamp(32px,6.5vw,96px);font-weight:900;letter-spacing:-.06em;line-height:1.04}
+.cta-h em{color:#22c55e;font-style:normal}
+.cta-s{font-size:clamp(13px,1.5vw,18px);color:#2a2a2a;line-height:1.85;max-width:460px}
+.cta-b{padding:18px 56px;background:#22c55e;color:#000;font-family:inherit;font-size:15px;font-weight:900;border:none;border-radius:14px;cursor:pointer!important;letter-spacing:-.01em;position:relative}
+.cta-b::before,.cta-b::after{content:'';position:absolute;inset:-10px;border-radius:22px;border:1.5px solid rgba(34,197,94,.25);animation:cta-pulse 2.4s ease-in-out infinite;pointer-events:none}
+.cta-b::after{inset:-20px;border-radius:30px;border-color:rgba(34,197,94,.1);animation-delay:.8s}
+@keyframes cta-pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}}
+.cta-b:hover{background:#16a34a}
+.cta-note{font-size:9px;color:#1a1a1a;letter-spacing:.12em;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="ovl"></div>
+<div id="adv"></div>
+<div id="nav"></div>
+<div id="hint">Click to continue</div>
+
+<!-- ── S0: SPLASH ── -->
+<div class="scene" id="s0">
+  <div class="glow" style="top:-100px;left:-100px"></div>
+  <div class="glow" style="bottom:-100px;right:-100px;animation-delay:3s"></div>
+  <div style="position:relative;text-align:center;display:flex;flex-direction:column;align-items:center">
+    <div class="splash-logo aps" id="s0a">EX3</div>
+    <div class="splash-brand ap2" id="s0b">SmartRecruiters</div>
+    <div class="splash-tag ap" id="s0c">Everything your team needs.<br><em>On day one.</em></div>
+  </div>
+</div>
+
+<!-- ── S1: STORY ── -->
+<div class="scene" id="s1">
+  <div style="padding:0 10vw;width:100%">
+    <div class="sline ap" id="sl0">New client.</div>
+    <div class="sline ap" id="sl1">Twelve thousand employees.</div>
+    <div class="sline ap" id="sl2">Sixty days to go-live.</div>
+    <div class="sline grey ap" id="sl3" style="margin-top:28px">One consultant.</div>
+    <div class="sline grey ap" id="sl4"><em>This is what she uses.</em></div>
+  </div>
+</div>
+
+<!-- ── S2: PLATFORM ── -->
+<div class="scene" id="s2">
+  <div class="split">
+    <div class="sl">
+      <div class="sc-label ap2" id="s2a">The platform guide</div>
+      <div class="sc-h ap" id="s2b">Four roles.<br><em>One platform.</em></div>
+      <div class="sc-sub ap" id="s2c">Every person on the project sees exactly what they need — and nothing they don't.</div>
+      <div class="role-tags ap2" id="s2d">
+        <div class="rtag" id="rt-rec">Recruiter</div>
+        <div class="rtag" id="rt-hm">Hiring Manager</div>
+        <div class="rtag" id="rt-cand">Candidate</div>
+        <div class="rtag" id="rt-adm">Admin</div>
+      </div>
+    </div>
+    <div class="sr">
+      <div class="dev ap" id="s2e">
+        <div class="dev-bar"><div class="dd" style="background:#ff5f56"></div><div class="dd" style="background:#ffbd2e"></div><div class="dd" style="background:#27c93f"></div></div>
+        <div class="dev-frame"><iframe id="s2if" src="/"></iframe></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S3: STEP BY STEP ── -->
+<div class="scene" id="s3">
+  <div class="split">
+    <div class="sl">
+      <div class="sc-label ap2" id="s3a">Step-by-step guide</div>
+      <div class="sc-h ap" id="s3b">Every step.<br><em>No ambiguity.</em></div>
+      <div class="sc-sub ap" id="s3c">Every process broken down to the individual action. Who does what, in what order. Before the client even asks the question.</div>
+    </div>
+    <div class="sr">
+      <div class="dev ap" id="s3e">
+        <div class="dev-bar"><div class="dd" style="background:#ff5f56"></div><div class="dd" style="background:#ffbd2e"></div><div class="dd" style="background:#27c93f"></div></div>
+        <div class="dev-frame"><iframe id="s3if" src="/"></iframe></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S4: AI ── -->
+<div class="scene" id="s4">
+  <div style="width:100%;max-width:640px;display:flex;flex-direction:column;gap:24px;padding:0 5vw">
+    <div style="text-align:center">
+      <div class="sc-label ap2" id="s4a" style="margin-bottom:10px">AI assistant</div>
+      <div class="sc-h ap" id="s4b" style="font-size:clamp(26px,4.5vw,60px);text-align:center">Ask anything.<br><em>Get an answer.</em></div>
+    </div>
+    <div class="ai-shell ap" id="s4c">
+      <div class="ai-topbar">
+        <div class="dd" style="background:#ff5f56"></div><div class="dd" style="background:#ffbd2e"></div><div class="dd" style="background:#27c93f"></div>
+        <div class="ai-topbar-label">EX3 AI Assistant</div>
+      </div>
+      <div class="ai-body" id="s4body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S5: WHATSAPP ── -->
+<div class="scene" id="s5">
+  <div class="split">
+    <div class="sl">
+      <div class="sc-label ap2" id="s5a">WhatsApp AI bot</div>
+      <div class="sc-h ap" id="s5b" style="font-size:clamp(26px,4.5vw,58px)"><em>6:07am.</em><br>Back of a cab.</div>
+      <div class="sc-sub ap" id="s5c">She records a voice note on WhatsApp. The answer lands before she gets out of the car.<br><br>No app. No login. Around the clock.</div>
+    </div>
+    <div style="flex-shrink:0">
+      <div class="wa-phone ap" id="s5d">
+        <div class="wa-hdr">
+          <div class="wa-av">EX3</div>
+          <div><div class="wa-nm">EX3 AI Assistant</div><div class="wa-st">WhatsApp · usually replies instantly</div></div>
+        </div>
+        <div class="wa-msgs" id="s5msgs"></div>
+        <div class="wa-typ" id="s5typ"><div class="wa-td"></div><div class="wa-td"></div><div class="wa-td"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S6: SOW ── -->
+<div class="scene" id="s6">
+  <div class="glow"></div>
+  <div style="position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div class="sc-label ap2" id="s6a" style="margin-bottom:6px">SOW builder</div>
+    <div class="sow-n aps" id="s6b">45</div>
+    <div class="sow-w ap" id="s6c">seconds.</div>
+    <div class="sow-d ap" id="s6d">A complete Statement of Work — structured, professional, client-ready. Generated and delivered without leaving the page.</div>
+  </div>
+</div>
+
+<!-- ── S7: NUMBERS ── -->
+<div class="scene" id="s7">
+  <div style="display:flex;flex-direction:column;gap:18px;align-items:center">
+    <div class="stats-head ap2" id="s7a">Three weeks in</div>
+    <div class="stats-grid ap" id="s7b">
+      <div class="stat-cell"><div class="stat-n" id="sn0">0</div><div class="stat-l">AI queries this week</div></div>
+      <div class="stat-cell"><div class="stat-n" id="sn1">0<span style="font-size:.42em">hrs</span></div><div class="stat-l">saved per consultant</div></div>
+      <div class="stat-cell"><div class="stat-n" id="sn2">0<span style="font-size:.42em">%</span></div><div class="stat-l">questions answered</div></div>
+      <div class="stat-cell"><div class="stat-n" id="sn3">0</div><div class="stat-l">active engagements</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S8: CTA ── -->
+<div class="scene" id="s8">
+  <div class="glow" style="top:-100px;left:-100px"></div>
+  <div class="glow" style="bottom:-100px;right:-100px;animation-delay:3s"></div>
+  <div style="position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px">
+    <div class="cta-h ap" id="s8a">Everything your team needs.<br><em>On day one.</em></div>
+    <div class="cta-s ap" id="s8b">Training guide, AI assistant, WhatsApp bot, consultant portal, and SOW builder — the complete SmartRecruiters implementation toolkit.</div>
+    <div style="position:relative;margin-top:8px" class="ap" id="s8c">
+      <button class="cta-b" onclick="window.location.href='mailto:hello@ex3.io'">Book a demo call</button>
+    </div>
+    <div class="cta-note ap2" id="s8d">No login required &nbsp;·&nbsp; Works on day one &nbsp;·&nbsp; Built for SmartRecruiters</div>
+  </div>
+</div>
+
+<script>
+// ── Cursor ──
+var cur$ = document.getElementById('cursor'), ring$ = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', function(e){
+  cur$.style.left = e.clientX + 'px'; cur$.style.top = e.clientY + 'px';
+  ring$.style.left = e.clientX + 'px'; ring$.style.top = e.clientY + 'px';
+});
+document.addEventListener('mousedown', function(){ cur$.classList.add('clicked'); ring$.classList.add('clicked'); });
+document.addEventListener('mouseup', function(){ cur$.classList.remove('clicked'); ring$.classList.remove('clicked'); });
+
+// ── Scene config ──
+var SCENES = [
+  {id:'s0', dur:4800},
+  {id:'s1', dur:7000},
+  {id:'s2', dur:13000},
+  {id:'s3', dur:10000},
+  {id:'s4', dur:14000},
+  {id:'s5', dur:18000},
+  {id:'s6', dur:7000},
+  {id:'s7', dur:10000},
+  {id:'s8', dur:0}
+];
+
+var curIdx = 0, advTimer = null;
+var s2t = [], s5t = [], s4t = [];
+
+// ── Nav ──
+function renderNav(){
+  document.getElementById('nav').innerHTML = SCENES.map(function(s,i){
+    var c = i < curIdx ? 'ndot done' : i === curIdx ? 'ndot cur' : 'ndot';
+    return '<div class="' + c + '" onclick="jumpTo(' + i + ')"></div>';
+  }).join('');
+}
+
+// ── Advance bar ──
+function startBar(ms){
+  var b = document.getElementById('adv');
+  b.style.transition = 'none'; b.style.width = '0';
+  b.offsetWidth; // reflow
+  b.style.transition = 'width ' + ms + 'ms linear';
+  b.style.width = '100%';
+}
+function stopBar(){
+  var b = document.getElementById('adv');
+  b.style.transition = 'none'; b.style.width = '0';
+}
+
+// ── Goto ──
+function killTimers(){
+  clearTimeout(advTimer); advTimer = null;
+  stopBar();
+  s2t.forEach(clearTimeout); s2t = [];
+  s4t.forEach(clearTimeout); s4t = [];
+  s5t.forEach(clearTimeout); s5t = [];
+}
+
+function jumpTo(idx){
+  killTimers();
+  document.getElementById(SCENES[curIdx].id).classList.remove('active');
+  curIdx = idx;
+  activateScene(curIdx);
+}
+
+function next(){
+  if(curIdx >= SCENES.length - 1) return;
+  var ovl = document.getElementById('ovl');
+  ovl.classList.add('on');
+  setTimeout(function(){
+    document.getElementById(SCENES[curIdx].id).classList.remove('active');
+    killTimers();
+    curIdx++;
+    activateScene(curIdx);
+    setTimeout(function(){ ovl.classList.remove('on'); }, 60);
+  }, 260);
+}
+
+function activateScene(idx){
+  renderNav();
+  var s = SCENES[idx];
+  var el = document.getElementById(s.id);
+  el.classList.add('active');
+  var fn = window['enter_' + s.id];
+  if(fn) setTimeout(fn, 80);
+  if(s.dur > 0){
+    startBar(s.dur);
+    advTimer = setTimeout(next, s.dur);
+  }
+}
+
+// ── Click / keyboard ──
+document.addEventListener('click', function(e){
+  if(e.target.classList.contains('cta-b')) return;
+  if(e.target.classList.contains('ndot')) return;
+  next();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'ArrowRight' || e.key === ' ') next();
+  if(e.key === 'ArrowLeft' && curIdx > 0) jumpTo(curIdx - 1);
+});
+
+// ── Helper ──
+function go(id){ var e = document.getElementById(id); if(e){ e.classList.add('go'); } }
+function t(ms, fn, arr){ var id = setTimeout(fn, ms); if(arr) arr.push(id); return id; }
+
+// ── Scene enters ──
+
+window.enter_s0 = function(){
+  t(100, function(){ go('s0a'); });
+  t(500, function(){ go('s0b'); });
+  t(1100, function(){ go('s0c'); });
+};
+
+window.enter_s1 = function(){
+  ['sl0','sl1','sl2','sl3','sl4'].forEach(function(id, i){
+    t(150 + i * 750, function(){ go(id); });
+  });
+};
+
+window.enter_s2 = function(){
+  t(80,  function(){ go('s2a'); });
+  t(160, function(){ go('s2b'); });
+  t(340, function(){ go('s2c'); });
+  t(520, function(){ go('s2d'); go('s2e'); });
+
+  var roles = ['rec','hm','cand','adm'];
+  var roleMap = {rec:'rt-rec',hm:'rt-hm',cand:'rt-cand',adm:'rt-adm'};
+  function setRole(r){
+    roles.forEach(function(x){ document.getElementById(roleMap[x]).classList.remove('on'); });
+    document.getElementById(roleMap[r]).classList.add('on');
+    try { document.getElementById('s2if').contentWindow.postMessage({action:'setRole',role:r},'*'); } catch(e){}
+  }
+  roles.forEach(function(r, i){
+    t(1200 + i * 2800, function(){ setRole(r); }, s2t);
+  });
+};
+
+window.enter_s3 = function(){
+  t(80,  function(){ go('s3a'); });
+  t(160, function(){ go('s3b'); });
+  t(340, function(){ go('s3c'); });
+  t(520, function(){ go('s3e'); });
+  t(900, function(){
+    try { document.getElementById('s3if').contentWindow.postMessage({action:'setRole',role:'rec'},'*'); } catch(e){}
+  });
+  t(2200, function(){
+    try { document.getElementById('s3if').contentWindow.postMessage({action:'openTaskDetail',taskId:'post-job'},'*'); } catch(e){}
+  });
+};
+
+var AI_Q = 'How do I set up an offer letter template?';
+var AI_A = 'Go to Admin \u2192 Offer Management \u2192 Templates and click \u201cNew Template\u201d.\n\nUse merge tags like {candidate_name} and {job_title} for dynamic fields, then set your approval chain \u2014 who needs to approve before the offer is sent.\n\nOnce active, recruiters see a \u201cSend Offer\u201d button as soon as a candidate reaches the Offer stage.';
+
+window.enter_s4 = function(){
+  t(80, function(){ go('s4a'); });
+  t(160, function(){ go('s4b'); });
+  t(420, function(){ go('s4c'); });
+
+  var body = document.getElementById('s4body');
+  body.innerHTML = '';
+
+  var qRow = document.createElement('div');
+  qRow.className = 'ai-row';
+  qRow.innerHTML = '<div class="ai-who you">You</div><div class="ai-txt you-txt" id="qtxt"></div>';
+  body.appendChild(qRow);
+
+  t(700, function(){
+    qRow.classList.add('show');
+    var qtxt = document.getElementById('qtxt');
+    var i = 0;
+    var iv = setInterval(function(){
+      qtxt.textContent = AI_Q.slice(0, ++i);
+      if(i >= AI_Q.length) clearInterval(iv);
+    }, 38);
+    s4t.push(iv);
+  }, s4t);
+
+  t(700 + AI_Q.length * 38 + 800, function(){
+    var aRow = document.createElement('div');
+    aRow.className = 'ai-row';
+    aRow.innerHTML = '<div class="ai-who bot">EX3 AI</div><div class="ai-txt" id="atxt"><span class="ai-cur"></span></div>';
+    body.appendChild(aRow);
+    aRow.classList.add('show');
+
+    t(1000, function(){
+      var atxt = document.getElementById('atxt');
+      atxt.innerHTML = '';
+      var j = 0;
+      var iv2 = setInterval(function(){
+        j += 4;
+        atxt.textContent = AI_A.slice(0, j);
+        body.scrollTop = body.scrollHeight;
+        if(j >= AI_A.length){ atxt.textContent = AI_A; clearInterval(iv2); }
+      }, 22);
+      s4t.push(iv2);
+    }, s4t);
+  }, s4t);
+};
+
+var WA_CHAT = [
+  {from:'me', voice:true, ts:'06:07', delay:500},
+  {from:'them', text:"The Send Offer button only appears once three things are in place:\n\n1\ufe0f\u20e3 Candidate is in the *Offer* stage\n2\ufe0f\u20e3 Job has an active offer letter template\n3\ufe0f\u20e3 You have the *Offer Manager* permission\n\nWhich would you like to check first?", ts:'06:07', delay:9000},
+  {from:'me', text:'Probably permissions \u2014 how do I check?', ts:'06:08', delay:14000},
+  {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, check your assigned role.\n\nYou need either the *Offer Manager* role or a custom role with *Create Offer* permission.\n\nYour SR admin can add it in about 2 minutes.", ts:'06:08', delay:18500}
+];
+var WH = [8,14,6,18,10,22,7,16,12,20,8,14,6,18,10,22,7,16,12,20,8,14,6,18,10];
+
+window.enter_s5 = function(){
+  t(80,  function(){ go('s5a'); });
+  t(160, function(){ go('s5b'); });
+  t(340, function(){ go('s5c'); });
+  t(480, function(){ go('s5d'); });
+
+  var msgs = document.getElementById('s5msgs');
+  msgs.innerHTML = '';
+  var typ = document.getElementById('s5typ');
+  typ.classList.remove('show');
+
+  WA_CHAT.forEach(function(m, i){
+    t(m.delay, function(){
+      if(m.voice){
+        var b = document.createElement('div');
+        b.className = 'wa-b me';
+        b.innerHTML = '<div class="wa-vnote"><div class="wa-vplay">\u25b6</div><div class="wa-wf">' +
+          WH.map(function(h){ return '<div class="wa-wb" style="height:' + h + 'px"></div>'; }).join('') +
+          '</div><span class="wa-vd">0:12</span></div><div class="wa-ts">' + m.ts + '</div>';
+        msgs.appendChild(b);
+        t(40, function(){ b.classList.add('show'); });
+        t(600, function(){ typ.classList.add('show'); });
+      } else {
+        typ.classList.remove('show');
+        t(200, function(){
+          var b = document.createElement('div');
+          b.className = 'wa-b ' + m.from;
+          var html = m.text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+          b.innerHTML = html + '<div class="wa-ts">' + m.ts + '</div>';
+          msgs.appendChild(b);
+          msgs.scrollTop = msgs.scrollHeight;
+          t(40, function(){ b.classList.add('show'); });
+          if(i < WA_CHAT.length - 1 && WA_CHAT[i+1].from === 'them'){
+            t(500, function(){ typ.classList.add('show'); });
+          }
+        });
+      }
+    }, s5t);
+  });
+};
+
+window.enter_s6 = function(){
+  t(80,  function(){ go('s6a'); });
+  t(200, function(){ go('s6b'); });
+  t(700, function(){ go('s6c'); });
+  t(1100,function(){ go('s6d'); });
+};
+
+window.enter_s7 = function(){
+  t(80, function(){ go('s7a'); });
+  t(250, function(){
+    go('s7b');
+    var targets = [247, 4.2, 94, 12];
+    var suffixes = ['','hrs','%',''];
+    targets.forEach(function(tgt, i){
+      var start = Date.now(), dur = 2200;
+      var el = document.getElementById('sn' + i);
+      var iv = setInterval(function(){
+        var p = Math.min(1, (Date.now()-start)/dur);
+        var ease = 1 - Math.pow(1-p, 3);
+        var v = tgt * ease;
+        var disp = tgt % 1 !== 0 ? v.toFixed(1) : Math.round(v);
+        el.innerHTML = disp + (suffixes[i] ? '<span style="font-size:.42em">' + suffixes[i] + '</span>' : '');
+        if(p >= 1) clearInterval(iv);
+      }, 28);
+    });
+  });
+};
+
+window.enter_s8 = function(){
+  t(100, function(){ go('s8a'); });
+  t(350, function(){ go('s8b'); });
+  t(600, function(){ go('s8c'); });
+  t(850, function(){ go('s8d'); });
+};
+
+// ── Start ──
+activateScene(0);
+</script>
+</body>
+</html>`);
+});
+
 app.listen(PORT, () => {
   if (!process.env.ASSISTANT_ID) {
     console.warn('⚠  ASSISTANT_ID not set — run "node setup.js" first to upload your documents.');
