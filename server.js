@@ -5373,6 +5373,1038 @@ activateScene(0);
 </html>`);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// /demo3  — Advanced guided product tour with cursor, zoom, spotlight & voice
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/demo3', (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EX3 SmartRecruiters — Platform Tour</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#050505;color:#fff;font-family:\'Sora\',sans-serif}
+
+/* ── Layout ── */
+#layout{display:flex;height:100vh;overflow:hidden}
+
+/* ── Chapter nav ── */
+#chnav{width:220px;flex-shrink:0;background:#050505;border-right:1px solid #0d0d0d;display:flex;flex-direction:column;padding:24px 0;z-index:100;position:relative}
+#chnav-logo{padding:0 22px 28px;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#22c55e}
+#chnav-logo span{color:#333}
+.chap{padding:11px 22px;cursor:pointer;transition:background .2s;border-left:2px solid transparent}
+.chap:hover{background:rgba(255,255,255,.02)}
+.chap.active{border-left-color:#22c55e;background:rgba(34,197,94,.04)}
+.chap-num{font-size:8px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#1c1c1c;margin-bottom:3px;transition:color .3s}
+.chap.active .chap-num{color:#166534}
+.chap-title{font-size:12px;font-weight:700;color:#1c1c1c;transition:color .3s;line-height:1.3}
+.chap.active .chap-title{color:#e5e5e5}
+.chap-steps{display:flex;gap:4px;margin-top:7px}
+.cs{width:14px;height:2px;border-radius:2px;background:#111;transition:all .3s}
+.cs.done{background:#166534}
+.cs.cur{background:#22c55e;width:22px}
+
+#chnav-bottom{margin-top:auto;padding:0 22px 8px}
+.vol-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;background:transparent;border:1px solid #111;color:#2a2a2a;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;width:100%}
+.vol-btn:hover{border-color:#1a1a1a;color:#333}
+.vol-btn.muted{border-color:#1f2d1f;color:#22c55e}
+
+/* ── Main area ── */
+#main{flex:1;min-width:0;display:flex;flex-direction:column;background:#050505;position:relative}
+
+/* ── Browser chrome ── */
+#browser-outer{flex:1;min-height:0;padding:14px 14px 0;display:flex;flex-direction:column}
+#browser{flex:1;min-height:0;border-radius:10px 10px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.05);position:relative}
+#bbar{height:36px;flex-shrink:0;background:#111;display:flex;align-items:center;padding:0 14px;gap:10px;border-bottom:1px solid #0a0a0a}
+.bdd{width:9px;height:9px;border-radius:50%}
+#burl{flex:1;margin:0 12px;height:20px;background:#0a0a0a;border-radius:5px;display:flex;align-items:center;padding:0 10px;font-size:10px;color:#2a2a2a;font-weight:600;letter-spacing:.02em;overflow:hidden;white-space:nowrap}
+#burl-ico{width:8px;height:8px;border-radius:50%;background:#166534;margin-right:6px;flex-shrink:0}
+
+/* ── Frame area ── */
+#frame-area{flex:1;min-height:0;position:relative;overflow:hidden;background:#fff}
+#live-frame{position:absolute;inset:0;width:100%;height:100%;border:none;transition:transform .9s cubic-bezier(.4,0,.2,1)}
+
+/* ── Spotlight overlay (above iframe, below cursor) ── */
+#spotlight{position:absolute;inset:0;pointer-events:none;z-index:20;opacity:0;transition:opacity .6s ease}
+
+/* ── Fake cursor ── */
+#fc-wrap{position:absolute;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+#fc{position:absolute;width:0;height:0;transition:left .7s cubic-bezier(.4,0,.2,1),top .7s cubic-bezier(.4,0,.2,1)}
+#fc-arrow{position:absolute;top:0;left:0;pointer-events:none}
+#fc-ring{position:absolute;width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(34,197,94,.5);top:-16px;left:-16px;pointer-events:none;transform:scale(1);transition:transform .2s ease,opacity .2s ease}
+#fc.click-anim #fc-ring{transform:scale(1.8);opacity:0}
+#fc-click-ripple{position:absolute;width:20px;height:20px;border-radius:50%;background:rgba(34,197,94,.25);top:-10px;left:-10px;pointer-events:none;transform:scale(0);opacity:0}
+#fc.click-anim #fc-click-ripple{animation:ripple-out .4s ease-out forwards}
+@keyframes ripple-out{0%{transform:scale(0);opacity:.8}100%{transform:scale(2.5);opacity:0}}
+
+/* ── Card scenes (fullscreen takeovers) ── */
+#card-overlay{position:fixed;inset:0;background:#050505;z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .5s ease}
+#card-overlay.active{opacity:1;pointer-events:all}
+#card-inner{text-align:center;position:relative}
+.card-chap{font-size:9px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#22c55e;margin-bottom:20px;opacity:0;transform:translateY(12px);transition:all .5s .1s ease}
+.card-hl{font-size:clamp(40px,7vw,96px);font-weight:900;letter-spacing:-.06em;line-height:1.04;opacity:0;transform:translateY(22px);transition:all .6s .25s ease}
+.card-hl em{color:#22c55e;font-style:normal}
+.card-sub{font-size:clamp(13px,1.5vw,18px);color:#2a2a2a;line-height:1.8;max-width:480px;margin:20px auto 0;opacity:0;transition:all .5s .55s ease}
+#card-overlay.go .card-chap,.card-overlay.go .card-hl,.card-overlay.go .card-sub{opacity:1;transform:translateY(0)}
+#card-overlay.go .card-hl{opacity:1;transform:translateY(0)}
+#card-overlay.go .card-chap{opacity:1;transform:translateY(0)}
+#card-overlay.go .card-sub{opacity:1}
+.card-glow{position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(34,197,94,.06) 0%,transparent 65%);pointer-events:none;animation:gp 5s ease-in-out infinite}
+@keyframes gp{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+#card-progress{position:absolute;bottom:0;left:0;height:2px;background:linear-gradient(90deg,#16a34a,#22c55e);transition:width 0s linear}
+
+/* ── Narration bar ── */
+#nar{position:absolute;bottom:0;left:220px;right:0;z-index:400;pointer-events:none}
+#nar-inner{background:linear-gradient(to top,rgba(5,5,5,.98) 0%,rgba(5,5,5,.85) 60%,transparent 100%);padding:18px 24px 16px;display:flex;flex-direction:column;gap:8px}
+#nar-words{font-size:13px;line-height:1.75;color:#3a3a3a;min-height:46px;max-width:860px}
+#nar-words .w{transition:color .15s,opacity .15s}
+#nar-words .w.lit{color:#c4c4c4}
+#nar-words .w.done{color:#444}
+#nar-controls{display:flex;align-items:center;gap:12px;pointer-events:all}
+#nar-pb{flex:1;height:2px;background:#111;border-radius:2px;overflow:hidden}
+#nar-pb-fill{height:100%;background:linear-gradient(90deg,#166534,#22c55e);width:0;transition:width .15s linear;border-radius:2px}
+.nar-btn{background:transparent;border:1px solid #151515;color:#2a2a2a;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .2s}
+.nar-btn:hover{border-color:#222;color:#444}
+.nar-btn.next-ready{border-color:#22c55e;color:#22c55e;animation:pulse-next 1.8s ease-in-out infinite}
+@keyframes pulse-next{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+#bars{display:flex;align-items:center;gap:2px;height:16px;flex-shrink:0}
+#bars .b{width:2px;border-radius:2px;background:#1a1a1a;height:100%;transition:height .2s}
+#bars.speaking .b:nth-child(1){animation:bh 1.1s .0s ease-in-out infinite}
+#bars.speaking .b:nth-child(2){animation:bh 1.1s .15s ease-in-out infinite}
+#bars.speaking .b:nth-child(3){animation:bh 1.1s .3s ease-in-out infinite}
+#bars.speaking .b:nth-child(4){animation:bh 1.1s .45s ease-in-out infinite}
+@keyframes bh{0%,100%{height:3px;background:#1a1a1a}50%{height:14px;background:#22c55e}}
+
+/* ── Start screen ── */
+#start-screen{position:fixed;inset:0;z-index:999;background:#050505;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:opacity .6s ease;overflow:hidden}
+#start-screen.fade{opacity:0;pointer-events:none}
+#start-screen::before{content:\'\';position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(34,197,94,.07) 0%,transparent 65%);animation:ss-glow 5s ease-in-out infinite;pointer-events:none}
+@keyframes ss-glow{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.2);opacity:1}}
+.ss-eye{font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#22c55e;margin-bottom:36px;position:relative}
+.ss-h{font-size:clamp(38px,5.5vw,72px);font-weight:900;letter-spacing:-.05em;text-align:center;line-height:1.04;max-width:700px;position:relative}
+.ss-h em{color:#22c55e;font-style:normal}
+.ss-sub{margin-top:20px;font-size:14px;color:#444;text-align:center;max-width:440px;line-height:1.8;position:relative}
+.ss-cta{margin-top:44px;padding:16px 52px;background:#22c55e;color:#000;font-family:inherit;font-size:13px;font-weight:900;letter-spacing:.01em;border:none;border-radius:12px;cursor:pointer;position:relative;transition:transform .15s,opacity .15s}
+.ss-cta:hover{transform:translateY(-2px);opacity:.92}
+.ss-note{margin-top:14px;font-size:10px;color:#1c1c1c;position:relative}
+
+/* ── Flash ── */
+#flash{position:fixed;inset:0;background:#000;z-index:1000;opacity:0;pointer-events:none;transition:opacity .25s ease}
+#flash.on{opacity:1}
+
+/* ── WhatsApp panel (replaces iframe) ── */
+#wa-panel{position:absolute;inset:0;background:#e5ddd5;display:none;flex-direction:column;z-index:10}
+#wa-panel.show{display:flex}
+.wa-hdr{background:#075e54;padding:13px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.wa-av{width:38px;height:38px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0}
+.wa-nm{font-size:14px;font-weight:700;color:#fff}
+.wa-st{font-size:10px;color:rgba(255,255,255,.65)}
+.wa-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;font-family:-apple-system,Helvetica,sans-serif}
+.wa-b{padding:8px 11px 20px;border-radius:8px;font-size:13px;line-height:1.55;position:relative;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;max-width:82%;word-break:break-word;white-space:pre-line}
+.wa-b.show{opacity:1;transform:translateY(0)}
+.wa-b.me{background:#dcf8c6;align-self:flex-end;border-top-right-radius:0;color:#111}
+.wa-b.them{background:#fff;align-self:flex-start;border-top-left-radius:0;color:#111}
+.wa-ts{position:absolute;bottom:4px;right:9px;font-size:9px;color:#999;font-family:-apple-system,Helvetica,sans-serif}
+.wa-typ{display:none;background:#fff;border-radius:8px;border-top-left-radius:0;padding:9px 13px;width:fit-content;align-items:center;gap:4px;margin:0 12px 6px}
+.wa-typ.show{display:flex}
+.wa-td{width:6px;height:6px;border-radius:50%;background:#bbb;animation:wab .9s infinite ease-in-out}
+.wa-td:nth-child(2){animation-delay:.2s}.wa-td:nth-child(3){animation-delay:.4s}
+@keyframes wab{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+.wa-vnote{display:flex;align-items:center;gap:8px;min-width:160px}
+.wa-vplay{width:28px;height:28px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0}
+.wa-wf{flex:1;display:flex;align-items:center;gap:2px;height:18px}
+.wa-wb{border-radius:2px;background:rgba(0,0,0,.2);width:3px}
+.wa-vd{font-size:10px;color:#999;margin-left:2px;font-family:-apple-system,Helvetica,sans-serif}
+
+/* ── Analytics panel (replaces iframe) ── */
+#an-panel{position:absolute;inset:0;background:#080808;display:none;flex-direction:column;z-index:10;padding:28px}
+#an-panel.show{display:flex}
+.an-hd{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#22c55e;margin-bottom:20px}
+.an-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.an-kpi{background:#0d0d0d;border:1px solid #111;border-radius:10px;padding:20px 18px}
+.an-kn{font-size:clamp(32px,4vw,52px);font-weight:900;letter-spacing:-.04em;color:#22c55e;font-variant-numeric:tabular-nums}
+.an-kl{font-size:10px;color:#2a2a2a;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:6px}
+.an-chart-row{display:flex;gap:12px;flex:1;min-height:0}
+.an-bar-chart{flex:1;background:#0d0d0d;border:1px solid #111;border-radius:10px;padding:20px;display:flex;flex-direction:column}
+.an-chart-title{font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#2a2a2a;margin-bottom:16px}
+.an-bars{flex:1;display:flex;align-items:flex-end;gap:8px}
+.an-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.an-bar-fill{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(to top,#166534,#22c55e);transition:height 1.2s cubic-bezier(.4,0,.2,1);height:0}
+.an-bar-lbl{font-size:8px;color:#222;font-weight:700}
+.an-top{width:280px;background:#0d0d0d;border:1px solid #111;border-radius:10px;padding:20px}
+.an-top-title{font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#2a2a2a;margin-bottom:14px}
+.an-q-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #0d0d0d;opacity:0;transform:translateX(-8px);transition:all .4s ease}
+.an-q-row.show{opacity:1;transform:translateX(0)}
+.an-q-txt{flex:1;font-size:11px;color:#333;line-height:1.4}
+.an-q-pct{font-size:11px;font-weight:800;color:#22c55e;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="start-screen" onclick="beginDemo()">
+  <div class="ss-eye">EX3 SmartRecruiters</div>
+  <h1 class="ss-h">The platform your team<br><em>actually uses.</em></h1>
+  <p class="ss-sub">Training guide · AI assistant · WhatsApp bot · Consultant portal · Analytics</p>
+  <button class="ss-cta">Start Tour</button>
+  <div class="ss-note">Voice narration &middot; 4 chapters &middot; ~3 minutes</div>
+</div>
+
+<div id="flash"></div>
+
+<!-- ── Card overlay for chapter transitions ── -->
+<div id="card-overlay">
+  <div class="card-glow" style="top:-80px;left:-80px"></div>
+  <div class="card-glow" style="bottom:-80px;right:-80px;animation-delay:2.5s"></div>
+  <div id="card-inner">
+    <div class="card-chap" id="card-chap"></div>
+    <div class="card-hl" id="card-hl"></div>
+    <div class="card-sub" id="card-sub"></div>
+  </div>
+  <div id="card-progress"></div>
+</div>
+
+<div id="layout">
+
+  <!-- ── Chapter nav ── -->
+  <div id="chnav">
+    <div id="chnav-logo">EX3 <span>/ SR Guide</span></div>
+    <div id="chap-list"></div>
+    <div id="chnav-bottom">
+      <button class="vol-btn" id="vol-btn" onclick="toggleMute()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        <span id="vol-txt">Voice On</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Main ── -->
+  <div id="main">
+    <div id="browser-outer">
+      <div id="browser">
+        <div id="bbar">
+          <div class="bdd" style="background:#ff5f56"></div>
+          <div class="bdd" style="background:#ffbd2e"></div>
+          <div class="bdd" style="background:#27c93f"></div>
+          <div id="burl"><div id="burl-ico"></div><span id="burl-txt">ex3-guide.railway.app</span></div>
+        </div>
+        <div id="frame-area">
+          <iframe id="live-frame" src="/"></iframe>
+
+          <!-- WhatsApp panel -->
+          <div id="wa-panel">
+            <div class="wa-hdr">
+              <div class="wa-av">EX3</div>
+              <div><div class="wa-nm">EX3 AI Assistant</div><div class="wa-st">WhatsApp · usually replies instantly</div></div>
+            </div>
+            <div class="wa-msgs" id="wa-msgs"></div>
+            <div class="wa-typ" id="wa-typ"><div class="wa-td"></div><div class="wa-td"></div><div class="wa-td"></div></div>
+          </div>
+
+          <!-- Analytics panel -->
+          <div id="an-panel">
+            <div class="an-hd">Analytics &amp; Insights</div>
+            <div class="an-kpis">
+              <div class="an-kpi"><div class="an-kn" id="an-k1">0</div><div class="an-kl">AI queries this week</div></div>
+              <div class="an-kpi"><div class="an-kn" id="an-k2">0<span style="font-size:.45em">hrs</span></div><div class="an-kl">saved per consultant</div></div>
+              <div class="an-kpi"><div class="an-kn" id="an-k3">0<span style="font-size:.45em">%</span></div><div class="an-kl">questions answered</div></div>
+              <div class="an-kpi"><div class="an-kn" id="an-k4">0</div><div class="an-kl">active engagements</div></div>
+            </div>
+            <div class="an-chart-row">
+              <div class="an-bar-chart">
+                <div class="an-chart-title">Queries by day</div>
+                <div class="an-bars" id="an-bars"></div>
+              </div>
+              <div class="an-top">
+                <div class="an-top-title">Top questions</div>
+                <div id="an-qs"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spotlight overlay -->
+          <div id="spotlight"></div>
+
+          <!-- Fake cursor -->
+          <div id="fc-wrap">
+            <div id="fc">
+              <div id="fc-ring"></div>
+              <div id="fc-click-ripple"></div>
+              <svg id="fc-arrow" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <path d="M4 2L18 10.5L11.5 12L8.5 19L4 2Z" fill="white" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+        </div><!-- /frame-area -->
+      </div><!-- /browser -->
+    </div><!-- /browser-outer -->
+
+    <!-- ── Narration bar ── -->
+    <div id="nar">
+      <div id="nar-inner">
+        <div id="nar-words"></div>
+        <div id="nar-controls">
+          <div id="bars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+          <div id="nar-pb"><div id="nar-pb-fill"></div></div>
+          <button class="nar-btn" onclick="prevStep()">&#8592; Prev</button>
+          <button class="nar-btn" onclick="replayAudio()">&#8635; Replay</button>
+          <button class="nar-btn" id="next-btn" onclick="nextStep()">Next &#8594;</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// STEPS DATA
+// ═══════════════════════════════════════════════════════════════════
+var CHAPTERS = [
+  {label:\'Chapter I\', title:\'The Platform\', steps:[0,1,2,3]},
+  {label:\'Chapter II\', title:\'AI Assistant\', steps:[4,5,6]},
+  {label:\'Chapter III\', title:\'Everywhere\', steps:[7,8]},
+  {label:\'Chapter IV\', title:\'Results\', steps:[9,10,11]}
+];
+
+var STEPS = [
+  // ── 0: CARD – intro ──
+  {
+    type:\'card\',
+    chap:\'EX3 SmartRecruiters\',
+    hl:\'The platform<br>your team <em>actually uses.</em>\',
+    sub:\'Training guide · AI assistant · WhatsApp bot · Consultant portal\',
+    dur:4200
+  },
+  // ── 1: Platform overview ──
+  {
+    url:\'/\',
+    auto:[
+      {d:300,a:{action:\'setRole\',role:\'rec\'}}
+    ],
+    voice:\'This is the EX3 SmartRecruiters platform guide. Every person on a SmartRecruiters project gets exactly what they need. Recruiters, hiring managers, candidates, and admins — each with their own view, their own tasks, nothing extra.\',
+    cursor:[
+      {x:4,y:23,d:1400},
+      {x:13,y:23,d:2800},
+      {x:4,y:29,d:4200},
+      {x:13,y:29,d:5600},
+      {x:40,y:47,d:7000,click:true},
+      {x:60,y:55,d:9000}
+    ],
+    minHold:1200
+  },
+  // ── 2: Recruiter view ──
+  {
+    url:\'/\',
+    role:\'rec\',
+    voice:\"Take the recruiter. Every task they'll ever perform on this engagement is here. Post jobs, manage the pipeline, schedule interviews, send offers, coordinate agencies. Searchable. Step by step. Before the client even needs to ask.\",
+    cursor:[
+      {x:7,y:44,d:1200},
+      {x:7,y:52,d:2600},
+      {x:7,y:60,d:4000},
+      {x:7,y:68,d:5400},
+      {x:30,y:55,d:7000}
+    ],
+    zoom:{x:20,y:50,scale:1.35,d:4500},
+    minHold:1000
+  },
+  // ── 3: Schedule interview ──
+  {
+    url:\'/\',
+    role:\'rec\',
+    voice:\'Click any task and it opens to individual steps — who does what, in what sequence, and exactly how to do it. Every interview, every offer, every system action. Documented before the client goes live.\',
+    auto:[
+      {d:1000,a:{action:\'openTaskDetail\',taskId:\'sched-interview\'}},
+      {d:2800,a:{action:\'expandTaskSteps\',taskId:\'sched-interview\',indices:[0,1,2]}}
+    ],
+    cursor:[
+      {x:7,y:47,d:800,click:true},
+      {x:35,y:42,d:2200},
+      {x:35,y:55,d:4000},
+      {x:35,y:63,d:6000}
+    ],
+    zoom:{x:50,y:45,scale:1.4,d:2500},
+    minHold:1000
+  },
+  // ── 4: CARD – AI ──
+  {
+    type:\'card\',
+    chap:\'Chapter II\',
+    hl:\"Stuck?<br><em>There's an answer.</em>\",
+    sub:\'Every step. Every question. Answered instantly.\',
+    dur:3800
+  },
+  // ── 5: Stuck panel + AI ──
+  {
+    url:\'/\',
+    role:\'rec\',
+    voice:\"Every step has a help button. When someone's stuck — mid-interview, mid-approval, mid-offer — they tap it. The AI has full context. It knows which step they're on, which task, which role. The answer is immediate.\",
+    auto:[
+      {d:800,a:{action:\'openTaskDetail\',taskId:\'sched-interview\'}},
+      {d:2000,a:{action:\'openStuck\',taskId:\'sched-interview\',stepIdx:1}},
+      {d:3500,a:{action:\'askAIForStuck\',taskId:\'sched-interview\',stepIdx:1}}
+    ],
+    cursor:[
+      {x:7,y:47,d:600,click:true},
+      {x:50,y:52,d:1800},
+      {x:55,y:62,d:3200,click:true},
+      {x:60,y:70,d:5500}
+    ],
+    zoom:{x:55,y:55,scale:1.3,d:2200},
+    minHold:2000
+  },
+  // ── 6: Ask AI freely ──
+  {
+    url:\'/\',
+    voice:\'Or just ask anything directly. The AI has read every SmartRecruiters document and every EX3 playbook. It holds context across questions — ask a follow-up and it remembers what came before. This is the same model, everywhere in the platform.\',
+    auto:[
+      {d:600,a:{action:\'openAI\'}},
+      {d:2200,a:{action:\'typeAndAsk\',query:\'How do I set up an offer approval chain?\'}}
+    ],
+    cursor:[
+      {x:96,y:13,d:500,click:true},
+      {x:70,y:65,d:2000,click:true},
+      {x:70,y:65,d:4000}
+    ],
+    zoom:{x:65,y:55,scale:1.2,d:1800},
+    minHold:3500
+  },
+  // ── 7: CARD – WhatsApp ──
+  {
+    type:\'card\',
+    chap:\'Chapter III\',
+    hl:\'Same AI.<br><em>On WhatsApp.</em>\',
+    sub:\'No app. No login. Around the clock.\',
+    dur:3600
+  },
+  // ── 8: WhatsApp ──
+  {
+    waChat:true,
+    voice:\'Six-oh-seven AM. Back of a cab. She records a voice note on WhatsApp. The answer lands before she gets out of the car. No app to download, no login, no waiting. The same AI that powers the guide is available on the phone she already has.\',
+    waMessages:[
+      {from:\'me\',voice:true,ts:\'06:07\',d:600},
+      {from:\'them\',text:\"The Send Offer button appears when three conditions are met:\\n\\n1\\u20e3 Candidate is in the Offer stage\\n2\\u20e3 Job has an active offer template\\n3\\u20e3 You have the Offer Manager permission\\n\\nWhich would you like me to check first?\",ts:\'06:07\',d:8000},
+      {from:\'me\',text:\'Probably permissions — how do I check?\',ts:\'06:08\',d:14000},
+      {from:\'them\',text:\"Go to Admin > User Management, find your name, and check your assigned role.\\n\\nYou need the Offer Manager role or a custom role with Create Offer permission.\\n\\nYour SR admin can add it in about two minutes.\",ts:\'06:08\',d:19000}
+    ],
+    minHold:2000
+  },
+  // ── 9: Consultant portal ──
+  {
+    url:\'/consultant\',
+    voice:\"For the consultants running the engagement, there's a dedicated portal. EXcelerate methodology, project phases, team assignments. And a SOW builder that generates a complete, structured Statement of Work — headings, tables, deliverables — without leaving the browser.\",
+    auto:[
+      {d:1200,a:{action:\'openPhase\',phase:0}},
+      {d:3000,a:{action:\'openPhase\',phase:1}},
+      {d:5000,a:{action:\'scrollToExport\'}}
+    ],
+    cursor:[
+      {x:20,y:35,d:1000},
+      {x:20,y:48,d:2800},
+      {x:50,y:55,d:5000}
+    ],
+    minHold:1500
+  },
+  // ── 10: Analytics ──
+  {
+    analytics:true,
+    voice:\'Three weeks into a live engagement. Two hundred and forty seven AI queries answered this week. Four hours saved per consultant. Ninety four percent of questions resolved without escalation. Twelve active engagements running right now.\',
+    minHold:3000
+  },
+  // ── 11: CARD – CTA ──
+  {
+    type:\'card\',
+    chap:\'Chapter IV\',
+    hl:\'Everything your team needs.<br><em>On day one.</em>\',
+    sub:\'Training guide · AI assistant · WhatsApp bot · SOW builder · Analytics\',
+    cta:true,
+    dur:0
+  }
+];
+
+// WhatsApp waveform heights
+var WH = [8,14,6,18,10,22,7,16,12,20,8,14,6,18,10,22,7,16,12,20,8,14,6,18,10];
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+var cur = 0;
+var stepToken = 0;
+var muted = false;
+var autoTimers = [];
+var currentAudio = null;
+var waTimers = [];
+var fc = document.getElementById(\'fc\');
+var fcVisible = false;
+var cursorX = 50, cursorY = 50;
+var cursorMoveRaf = null;
+
+// ═══════════════════════════════════════════════════════════════════
+// CHAPTER NAV
+// ═══════════════════════════════════════════════════════════════════
+function renderChapNav(){
+  var html = \'\';
+  CHAPTERS.forEach(function(ch, ci){
+    var isActive = ch.steps.indexOf(cur) !== -1;
+    html += \'<div class="chap\' + (isActive ? \' active\' : \'\') + \'"\'
+          + \' onclick="jumpToChap(\' + ci + \')">\';
+    html += \'<div class="chap-num">\'+ ch.label +\'</div>\';
+    html += \'<div class="chap-title">\'+ ch.title +\'</div>\';
+    html += \'<div class="chap-steps">\';
+    ch.steps.forEach(function(si){
+      var cls = si < cur ? \'cs done\' : si === cur ? \'cs cur\' : \'cs\';
+      html += \'<div class="\' + cls + \'"></div>\';
+    });
+    html += \'</div></div>\';
+  });
+  document.getElementById(\'chap-list\').innerHTML = html;
+}
+
+function jumpToChap(ci){
+  var firstStep = CHAPTERS[ci].steps[0];
+  goToStep(firstStep);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CURSOR
+// ═══════════════════════════════════════════════════════════════════
+function showCursor(){
+  if(!fcVisible){ fc.style.opacity=\'1\'; fcVisible=true; }
+}
+function hideCursor(){
+  fc.style.opacity=\'0\'; fcVisible=false;
+}
+function setCursorPos(x,y){
+  fc.style.left = x + \'%\';
+  fc.style.top  = y + \'%\';
+  cursorX = x; cursorY = y;
+}
+function easeInOut(t){ return t<.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+function animateCursorTo(tx,ty,dur,onDone,token){
+  if(cursorMoveRaf){ cancelAnimationFrame(cursorMoveRaf); cursorMoveRaf=null; }
+  var fx=cursorX, fy=cursorY, start=null;
+  // Disable CSS transition during JS animation
+  fc.style.transition=\'none\';
+  function tick(ts){
+    if(stepToken!==token) return;
+    if(!start) start=ts;
+    var p=Math.min((ts-start)/dur,1);
+    var e=easeInOut(p);
+    setCursorPos(fx+(tx-fx)*e, fy+(ty-fy)*e);
+    if(p<1){ cursorMoveRaf=requestAnimationFrame(tick); }
+    else {
+      if(onDone) onDone();
+    }
+  }
+  cursorMoveRaf=requestAnimationFrame(tick);
+}
+
+function clickCursor(){
+  fc.classList.remove(\'click-anim\');
+  void fc.offsetWidth;
+  fc.classList.add(\'click-anim\');
+  setTimeout(function(){ fc.classList.remove(\'click-anim\'); },420);
+}
+
+function runCursorPath(path, token){
+  if(!path||!path.length) return;
+  showCursor();
+  var prev = {x:50,y:50};
+  path.forEach(function(pt){
+    var delay = pt.d || 0;
+    var dur = Math.max(400, delay - (prev.d||0) - 50);
+    autoTimers.push(setTimeout(function(){
+      if(stepToken!==token) return;
+      animateCursorTo(pt.x, pt.y, Math.max(350, dur), function(){
+        if(pt.click && stepToken===token) clickCursor();
+      }, token);
+    }, delay));
+    prev = pt;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ZOOM
+// ═══════════════════════════════════════════════════════════════════
+var lf = document.getElementById(\'live-frame\');
+function zoomFrame(x,y,scale,delayMs,token){
+  autoTimers.push(setTimeout(function(){
+    if(stepToken!==token) return;
+    lf.style.transition=\'transform .85s cubic-bezier(.4,0,.2,1)\';
+    lf.style.transformOrigin = x+\'% \'+y+\'%\';
+    lf.style.transform=\'scale(\'+scale+\')\';
+  },delayMs||0));
+}
+function resetZoom(token){
+  autoTimers.push(setTimeout(function(){
+    if(stepToken!==token) return;
+    lf.style.transition=\'transform .7s cubic-bezier(.4,0,.2,1)\';
+    lf.style.transform=\'scale(1)\';
+    lf.style.transformOrigin=\'50% 50%\';
+  },0));
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SPOTLIGHT
+// ═══════════════════════════════════════════════════════════════════
+var spl = document.getElementById(\'spotlight\');
+function setSpotlight(x,y,r,token,delay){
+  autoTimers.push(setTimeout(function(){
+    if(stepToken!==token) return;
+    spl.style.background=\'radial-gradient(circle \'+r+\'px at \'+x+\'% \'+y+\'%, transparent \'+Math.max(0,r-20)+\'px, rgba(0,0,0,.6) \'+r+\'px)\';
+    spl.style.opacity=\'1\';
+  },delay||0));
+}
+function clearSpotlight(){
+  spl.style.opacity=\'0\';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NARRATION WORDS
+// ═══════════════════════════════════════════════════════════════════
+function renderWords(text, charPos){
+  var words = text.split(\' \');
+  var html=\'\', pos=0;
+  words.forEach(function(w,i){
+    var cls = pos+w.length < charPos ? \'w done\' : pos <= charPos ? \'w lit\' : \'w\';
+    html += \'<span class="\'+cls+\'">\'+w+\'</span> \';
+    pos += w.length+1;
+  });
+  document.getElementById(\'nar-words\').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TTS / SPEAK  (Web Audio API — bypasses HTMLAudioElement quirks)
+// ═══════════════════════════════════════════════════════════════════
+var _actx=null;
+var _sourceNode=null;
+var _wordTimer=null;
+
+function _getActx(){
+  if(!_actx) _actx=new(window.AudioContext||window.webkitAudioContext)();
+  return _actx;
+}
+
+function stopAudio(){
+  if(_sourceNode){ try{ _sourceNode.stop(); }catch(e){} _sourceNode=null; }
+  if(_wordTimer){ clearInterval(_wordTimer); _wordTimer=null; }
+  currentAudio=null;
+  document.getElementById(\'bars\').classList.remove(\'speaking\');
+  document.getElementById(\'nar-pb-fill\').style.width=\'0\';
+}
+
+function speak(text, onDone, token){
+  stopAudio();
+  renderWords(text,-1);
+  document.getElementById(\'nar-pb-fill\').style.width=\'0\';
+
+  if(muted){
+    var est=Math.max(6000,text.split(\' \').length*420);
+    autoTimers.push(setTimeout(function(){
+      if(token!==stepToken) return;
+      renderWords(text,text.length+1);
+      if(onDone) onDone();
+    },est));
+    return;
+  }
+
+  document.getElementById(\'bars\').classList.add(\'speaking\');
+  var completed=false;
+
+  function finish(){
+    if(completed) return;
+    completed=true;
+    stopAudio();
+    renderWords(text,text.length+1);
+    document.getElementById(\'nar-pb-fill\').style.width=\'100%\';
+    setTimeout(function(){ if(token===stepToken && onDone) onDone(); },300);
+  }
+
+  var ctx=_getActx();
+  // Resume AudioContext if suspended (requires prior user gesture)
+  (ctx.state===\'suspended\' ? ctx.resume() : Promise.resolve())
+    .then(function(){
+      return fetch(\'/api/tts?text=\'+encodeURIComponent(text));
+    })
+    .then(function(r){ return r.arrayBuffer(); })
+    .then(function(buf){ return ctx.decodeAudioData(buf); })
+    .then(function(decoded){
+      if(token!==stepToken) return;
+      var src=ctx.createBufferSource();
+      src.buffer=decoded;
+      src.connect(ctx.destination);
+      _sourceNode=src;
+      currentAudio={paused:false}; // sentinel for stopAudio check
+      var startAt=ctx.currentTime;
+      var dur=decoded.duration;
+      _wordTimer=setInterval(function(){
+        if(token!==stepToken){ clearInterval(_wordTimer); _wordTimer=null; return; }
+        var pct=Math.min(1,(ctx.currentTime-startAt)/dur);
+        renderWords(text,Math.floor(pct*text.length));
+        document.getElementById(\'nar-pb-fill\').style.width=Math.min(99,Math.round(pct*100))+\'%\';
+      },120);
+      src.onended=function(){ if(token===stepToken) finish(); };
+      src.start(0);
+    })
+    .catch(function(){ if(token===stepToken) finish(); });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// postMessage to iframe
+// ═══════════════════════════════════════════════════════════════════
+function postToFrame(msg){
+  try{ document.getElementById(\'live-frame\').contentWindow.postMessage(Object.assign({type:\'EX3_DEMO\'},msg),\'*\'); }catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// WHATSAPP
+// ═══════════════════════════════════════════════════════════════════
+function clearWaTimers(){ waTimers.forEach(clearTimeout); waTimers=[]; }
+function showWa(messages, token){
+  document.getElementById(\'wa-panel\').classList.add(\'show\');
+  document.getElementById(\'live-frame\').style.display=\'none\';
+  var msgs=document.getElementById(\'wa-msgs\');
+  var typ=document.getElementById(\'wa-typ\');
+  msgs.innerHTML=\'\'; typ.classList.remove(\'show\');
+
+  messages.forEach(function(m){
+    waTimers.push(setTimeout(function(){
+      if(stepToken!==token) return;
+      if(m.voice){
+        var b=document.createElement(\'div\');
+        b.className=\'wa-b me\';
+        b.innerHTML=\'<div class="wa-vnote"><div class="wa-vplay">&#9654;</div><div class="wa-wf">\'+
+          WH.map(function(h){ return \'<div class="wa-wb" style="height:\'+h+\'px"></div>\'; }).join(\'\') +
+          \'</div><span class="wa-vd">0:12</span></div><div class="wa-ts">\'+m.ts+\'</div>\';
+        msgs.appendChild(b);
+        setTimeout(function(){ b.classList.add(\'show\'); },40);
+        setTimeout(function(){ typ.classList.add(\'show\'); },600);
+      } else {
+        typ.classList.remove(\'show\');
+        setTimeout(function(){
+          var b=document.createElement(\'div\');
+          b.className=\'wa-b \'+m.from;
+          var html=m.text.replace(/\\\\*(.*?)\\\\*/g,\'<strong>$1</strong>\');
+          b.innerHTML=html+\'<div class="wa-ts">\'+m.ts+\'</div>\';
+          msgs.appendChild(b);
+          msgs.scrollTop=msgs.scrollHeight;
+          setTimeout(function(){ b.classList.add(\'show\'); },40);
+        },200);
+      }
+    },m.d||0));
+  });
+}
+function hideWa(){
+  document.getElementById(\'wa-panel\').classList.remove(\'show\');
+  document.getElementById(\'live-frame\').style.display=\'\';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════════════════════════════
+var anInited=false;
+function showAnalytics(token){
+  document.getElementById(\'an-panel\').classList.add(\'show\');
+  document.getElementById(\'live-frame\').style.display=\'none\';
+  if(anInited) return;
+  anInited=true;
+
+  // KPI counters
+  var targets=[{id:\'an-k1\',val:247,dec:0},{id:\'an-k2\',val:4.2,dec:1,suf:\'hrs\'},{id:\'an-k3\',val:94,dec:0,suf:\'%\'},{id:\'an-k4\',val:12,dec:0}];
+  targets.forEach(function(t){
+    var el=document.getElementById(t.id);
+    var start=Date.now(),dur=1800;
+    var iv=setInterval(function(){
+      var p=Math.min(1,(Date.now()-start)/dur);
+      var e=1-Math.pow(1-p,3);
+      var v=t.val*e;
+      var disp=t.dec>0?v.toFixed(t.dec):Math.round(v);
+      el.innerHTML=disp+(t.suf?\'<span style="font-size:.45em">\'+t.suf+\'</span>\':
+      \'\');
+      if(p>=1) clearInterval(iv);
+    },28);
+  });
+
+  // Bar chart
+  var days=[\'Mon\',\'Tue\',\'Wed\',\'Thu\',\'Fri\',\'Sat\',\'Sun\'];
+  var vals=[31,44,38,52,61,18,23];
+  var max=Math.max.apply(null,vals);
+  var bc=document.getElementById(\'an-bars\');
+  bc.innerHTML=days.map(function(d,i){
+    return \'<div class="an-bar-col"><div class="an-bar-fill" id="ab\'+i+\'"></div><div class="an-bar-lbl">\'+d+\'</div></div>\';
+  }).join(\'\');
+  setTimeout(function(){
+    vals.forEach(function(v,i){
+      var el=document.getElementById(\'ab\'+i);
+      if(el) el.style.height=Math.round(v/max*100)+\'%\';
+    });
+  },200);
+
+  // Top questions
+  var qs=[
+    [\'How do I move a candidate?\',\'18%\'],
+    [\'How do I send an offer?\',\'14%\'],
+    [\'How do I set up approval?\',\'11%\'],
+    [\'Can candidates self-schedule?\',\'9%\'],
+    [\'How do I post to LinkedIn?\',\'8%\']
+  ];
+  var qc=document.getElementById(\'an-qs\');
+  qc.innerHTML=qs.map(function(q){
+    return \'<div class="an-q-row"><div class="an-q-txt">\'+q[0]+\'</div><div class="an-q-pct">\'+q[1]+\'</div></div>\';
+  }).join(\'\');
+  setTimeout(function(){
+    qc.querySelectorAll(\'.an-q-row\').forEach(function(r,i){
+      setTimeout(function(){ r.classList.add(\'show\'); },i*180+400);
+    });
+  },500);
+}
+function hideAnalytics(){
+  document.getElementById(\'an-panel\').classList.remove(\'show\');
+  document.getElementById(\'live-frame\').style.display=\'\';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CARD OVERLAY
+// ═══════════════════════════════════════════════════════════════════
+function showCard(step, onDone, token){
+  var el=document.getElementById(\'card-overlay\');
+  document.getElementById(\'card-chap\').innerHTML=step.chap||\'\';
+  document.getElementById(\'card-hl\').innerHTML=step.hl||\'\';
+  document.getElementById(\'card-sub\').innerHTML=step.sub||\'\';
+
+  // reset
+  el.classList.remove(\'active\',\'go\');
+  var prog=document.getElementById(\'card-progress\');
+  prog.style.transition=\'none\'; prog.style.width=\'0\';
+
+  el.classList.add(\'active\');
+  void el.offsetWidth;
+  el.classList.add(\'go\');
+
+  if(step.dur>0){
+    prog.style.transition=\'none\'; prog.style.width=\'0\';
+    setTimeout(function(){
+      prog.style.transition=\'width \'+step.dur+\'ms linear\';
+      prog.style.width=\'100%\';
+    },60);
+    autoTimers.push(setTimeout(function(){
+      if(token!==stepToken) return;
+      el.classList.remove(\'active\',\'go\');
+      if(onDone) onDone();
+    },step.dur));
+  } else {
+    // Manual / CTA card — show Next button
+    document.getElementById(\'next-btn\').classList.add(\'next-ready\');
+  }
+
+  // CTA button
+  if(step.cta){
+    if(!document.getElementById(\'cta-btn\')){
+      var btn=document.createElement(\'button\');
+      btn.id=\'cta-btn\';
+      btn.textContent=\'Book a demo call\';
+      btn.style.cssText=\'margin-top:28px;padding:16px 48px;background:#22c55e;color:#000;font-family:inherit;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;letter-spacing:-.01em\';
+      btn.onclick=function(){ window.open(\'mailto:hello@ex3.io\',\'_blank\'); };
+      document.getElementById(\'card-inner\').appendChild(btn);
+    }
+  }
+}
+function hideCard(){
+  var el=document.getElementById(\'card-overlay\');
+  el.classList.remove(\'active\',\'go\');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CLEANUP
+// ═══════════════════════════════════════════════════════════════════
+function cleanupStep(){
+  autoTimers.forEach(clearTimeout); autoTimers=[];
+  clearWaTimers();
+  stopAudio();
+  clearSpotlight();
+  resetZoom(stepToken+1); // use future token to force reset
+  hideCursor();
+  hideWa();
+  hideAnalytics();
+  document.getElementById(\'next-btn\').classList.remove(\'next-ready\');
+  if(cursorMoveRaf){ cancelAnimationFrame(cursorMoveRaf); cursorMoveRaf=null; }
+  // reset iframe src only if needed
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER STEP
+// ═══════════════════════════════════════════════════════════════════
+function goToStep(idx){
+  cleanupStep();
+  stepToken = ++stepToken;
+  var token = stepToken;
+  cur = Math.max(0, Math.min(idx, STEPS.length-1));
+  renderChapNav();
+
+  var s = STEPS[cur];
+
+  // Flash transition (not on cards auto-advancing)
+  var fl=document.getElementById(\'flash\');
+  fl.classList.add(\'on\');
+  setTimeout(function(){
+    fl.classList.remove(\'on\');
+  },260);
+
+  setTimeout(function(){
+    if(token!==stepToken) return;
+    _renderStep(s, token);
+  },130);
+}
+
+function _renderStep(s, token){
+  // ── Card step ──
+  if(s.type===\'card\'){
+    hideCard();
+    showCard(s, function(){
+      if(token!==stepToken) return;
+      goToStep(cur+1);
+    }, token);
+    return;
+  }
+
+  // ── Live step ──
+  hideCard();
+
+  // Handle iframe URL
+  if(s.url){
+    var lf=document.getElementById(\'live-frame\');
+    if(lf.src.replace(location.origin,\'\')!==s.url){
+      lf.src=s.url;
+    }
+    lf.style.display=\'\';
+  }
+
+  // Set role if specified
+  if(s.role){
+    setTimeout(function(){
+      if(token!==stepToken) return;
+      postToFrame({action:\'setRole\',role:s.role});
+    },600);
+  }
+
+  // WhatsApp
+  if(s.waChat){
+    showWa(s.waMessages||[], token);
+  }
+
+  // Analytics
+  if(s.analytics){
+    showAnalytics(token);
+  }
+
+  // Update URL bar
+  if(s.url){
+    document.getElementById(\'burl-txt\').textContent = \'ex3-guide.railway.app\' + (s.url===\'/?\' ? \'\' : s.url);
+  }
+
+  // postMessage auto actions
+  if(s.auto){
+    s.auto.forEach(function(a){
+      autoTimers.push(setTimeout(function(){
+        if(token!==stepToken) return;
+        postToFrame(a.a);
+      },a.d));
+    });
+  }
+
+  // Cursor path
+  if(s.cursor){
+    autoTimers.push(setTimeout(function(){
+      if(token!==stepToken) return;
+      runCursorPath(s.cursor, token);
+    },400));
+  }
+
+  // Zoom
+  if(s.zoom){
+    resetZoom(token);
+    zoomFrame(s.zoom.x, s.zoom.y, s.zoom.scale, s.zoom.d||2000, token);
+  }
+
+  // Voice narration
+  if(s.voice){
+    speak(s.voice, function(){
+      if(token!==stepToken) return;
+      // After narration: hold then advance
+      var hold = s.minHold||0;
+      if(s.manual){
+        document.getElementById(\'next-btn\').classList.add(\'next-ready\');
+      } else {
+        autoTimers.push(setTimeout(function(){
+          if(token!==stepToken) return;
+          goToStep(cur+1);
+        },hold));
+      }
+    }, token);
+  } else if(!s.waChat && !s.analytics) {
+    document.getElementById(\'next-btn\').classList.add(\'next-ready\');
+  } else {
+    // WA / analytics steps: advance after minHold
+    var hold=s.minHold||0;
+    autoTimers.push(setTimeout(function(){
+      if(token!==stepToken) return;
+      goToStep(cur+1);
+    },hold + (s.voice?\'\' : 24000)));
+    // For WA steps estimate ~24s for the chat to play out then advance
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════
+function nextStep(){ goToStep(cur+1); }
+function prevStep(){ goToStep(Math.max(0,cur-1)); }
+function replayAudio(){
+  var s=STEPS[cur];
+  if(s.voice) speak(s.voice,null,stepToken);
+}
+function toggleMute(){
+  muted=!muted;
+  var btn=document.getElementById(\'vol-btn\');
+  var txt=document.getElementById(\'vol-txt\');
+  btn.classList.toggle(\'muted\',muted);
+  txt.textContent=muted?\'Voice Off\':\'Voice On\';
+  if(muted) stopAudio();
+}
+
+document.addEventListener(\'keydown\',function(e){
+  if(e.key===\'ArrowRight\'||e.key===\' \') nextStep();
+  if(e.key===\'ArrowLeft\') prevStep();
+  if(e.key===\'m\'||e.key===\'M\') toggleMute();
+  if(e.key===\'r\'||e.key===\'R\') replayAudio();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// WHATSAPP STEP: fix advance timing
+// ═══════════════════════════════════════════════════════════════════
+// Override _renderStep WA advance — WA messages end around 21s, hold 3s more
+var _origRender = _renderStep;
+// The WA step auto-advance is handled inline above with 24000ms
+
+// ═══════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════
+function beginDemo(){
+  _getActx().resume(); // unlock AudioContext during user gesture
+  var ss=document.getElementById(\'start-screen\');
+  ss.classList.add(\'fade\');
+  setTimeout(function(){ ss.style.display=\'none\'; goToStep(0); },600);
+}
+// Preload iframe silently so it\'s warm when demo starts
+document.getElementById(\'live-frame\').src=\'/\';
+</script>
+</body>
+</html>`);
+});
+
 app.listen(PORT, () => {
   if (!process.env.ASSISTANT_ID) {
     console.warn('⚠  ASSISTANT_ID not set — run "node setup.js" first to upload your documents.');

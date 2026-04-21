@@ -6719,7 +6719,7 @@ function syncMobRolePill(){
 window.addEventListener('message', function(e){
   if(!e.data || e.data.type !== 'EX3_DEMO') return;
   var d = e.data;
-  if(d.action === 'setRole') setRoleAndGo(d.role);
+  if(d.action === 'setRole') { skipOnboarding(); setRoleAndGo(d.role); }
   if(d.action === 'closeAI'){
     var closePanel = document.getElementById('assistantPanel');
     if(closePanel && closePanel.classList.contains('open')) toggleAssistant();
