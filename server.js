@@ -4381,11 +4381,16 @@ function render(){
     }
   } else {
     document.getElementById('liveFrame').style.display = 'none';
-    document.getElementById('ph').style.display = 'none';
     clearWaChat();
     if(s.analyticsPanel){
+      document.getElementById('ph').style.display = 'none';
       setTimeout(function(){ showAnalytics(); }, 80);
     } else if(s.waChat){
+      document.getElementById('ph').style.display = 'flex';
+      document.getElementById('ph-icon').textContent = '';
+      document.getElementById('ph-title').textContent = '';
+      document.getElementById('ph-body').textContent = '';
+      document.getElementById('ph-cta').style.display = 'none';
       if(s.recordingScene && recScene){
         recScene.classList.add('active');
         autoTimers.push(setTimeout(function(){
@@ -4403,6 +4408,7 @@ function render(){
         startWaChat(s.waChat);
       }
     } else {
+      document.getElementById('ph').style.display = 'flex';
       var ph = s.ph || {};
       document.getElementById('ph-icon').textContent = ph.icon || s.icon;
       document.getElementById('ph-title').textContent = ph.title || s.title;
