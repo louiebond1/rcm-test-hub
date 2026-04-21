@@ -3904,7 +3904,7 @@ var steps = [
     manual:true,
     manualHint:22000,
     voice:"Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One click and that exact step goes to the AI — everything pre-loaded. Watch it answer. Click next when you are ready.",
-    callout:{label:'Built-in troubleshooting',text:'Flag any step \u2014 AI answers with full context',dot:{x:50,y:55},bubble:{x:60,y:40}}
+    callout:{label:'Built-in troubleshooting',text:'Flag any step \u2014 AI answers with full context',dot:{x:80,y:20},bubble:{x:50,y:4}}
   },
   {
     icon:'', title:'Follow-Up — Context Memory', url:'/',
@@ -3912,7 +3912,8 @@ var steps = [
       {d:1000,a:{action:'typeAndAsk',query:'What permission level do I need to schedule on behalf of someone?'}},
       {d:18000,a:{action:'closeAI'}}
     ],
-    minHold:20000,
+    manual:true,
+    manualHint:18000,
     voice:"Now watch the follow-up. She asks a second question — no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.",
     callout:{label:'Context memory',text:'Follow-up questions \u2014 full conversation carried forward',dot:{x:78,y:36},bubble:{x:38,y:24}}
   },
@@ -3938,8 +3939,10 @@ var steps = [
     callout:{label:'One-go workflow',text:'Full implementation sequence \u2014 generated in seconds',dot:{x:50,y:50},bubble:{x:60,y:32}}
   },
   {
-    type:'card', icon:'', title:'Same AI. On WhatsApp.', chap:'Chapter III', headline:'Same AI.<br><em>On WhatsApp.</em>', countdown:4, auto:[], callout:null,
-    voice:"No app. No login. Just WhatsApp."
+    type:'card', icon:'', title:'Same AI. On WhatsApp.', chap:'Chapter III', headline:'Same AI.<br><em>On WhatsApp.</em>', auto:[], callout:null,
+    voice:"No app. No login. Just WhatsApp.",
+    postVoice:"Quick one. I\\'m five minutes from the client site. Their hiring manager just messaged — the Send Offer button isn\\'t showing up. I need to know what\\'s blocking it before I walk in. Thanks.",
+    postVoiceStressed:true
   },
   {
     icon:'', title:'WhatsApp AI Bot',
@@ -3949,7 +3952,7 @@ var steps = [
     calloutDelay:26000,
     minHold:32000,
     waChat:[
-      {from:'me', type:'voice', delay:500, ts:'06:07', voiceText:"Quick one. I\\'m five minutes from the client site. Their hiring manager just messaged — the Send Offer button isn\\'t showing up. I need to know what\\'s blocking it before I walk in. Thanks."},
+      {from:'me', type:'voice', delay:500, ts:'06:07'},
       {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\\n2\ufe0f\u20e3 The job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich one would you like to check first?", delay:14000, ts:'06:07'},
       {from:'me', text:"Probably permissions \u2014 how do I check that?", delay:18500, ts:'06:08'},
       {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:21000, ts:'06:08'}
@@ -4423,6 +4426,15 @@ function render(){
     if(stepToken !== narrationStepToken) return;
     if(paused) return;
     if(cur >= steps.length-1) return;
+    if(s.postVoice){
+      var pvDone = false;
+      function advAfterPV(){ if(pvDone) return; pvDone=true; if(stepToken!==narrationStepToken||paused) return; go(1); }
+      var pvAud = new Audio('/api/tts?text='+encodeURIComponent(s.postVoice)+(s.postVoiceStressed?'&stressed=1':''));
+      pvAud.play().catch(function(){});
+      pvAud.onended = advAfterPV;
+      autoTimers.push(setTimeout(advAfterPV, 18000));
+      return;
+    }
     if(s.countdown){
       startAutoAdvance(s.countdown, function(){ go(1); });
     } else if(s.manual){
