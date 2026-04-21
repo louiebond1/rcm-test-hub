@@ -3872,7 +3872,7 @@ var steps = [
       {d:9000,a:{action:'setRole',role:'adm'}}
     ],
     minHold:12000,
-    voice:"Before the call she sets her team up. Four roles on every SmartRecruiters project — recruiter, hiring manager, candidate, administrator. Each one gets their own view, their own tasks, their own guide. Watch the platform switch between them. Nobody shares a screen. Nobody gets lost.",
+    voice:"So before the call, Sarah's getting her team set up. On any SmartRecruiters project you have four types of people involved — the recruiter, the hiring manager, the candidate, and the admin. Each one of them logs in and sees a completely different version of this platform. You can watch it switching between them now.",
     callout:{label:'Role-based views',text:'Recruiter \u00b7 Hiring Manager \u00b7 Candidate \u00b7 Admin',dot:{x:50,y:14},bubble:{x:2,y:4}}
   },
   {
@@ -3881,7 +3881,7 @@ var steps = [
       {d:800,a:{action:'setRole',role:'rec'}}
     ],
     minHold:7000,
-    voice:"She clicks into the recruiter. Their tasks, their responsibilities, their process — nothing irrelevant, nothing missing. Every single thing a recruiter needs to run this implementation is right here.",
+    voice:"She clicks into the recruiter side. What you're looking at is just their stuff — the tasks that are relevant to them, their process, laid out in a way that makes sense for their role. It's a clean, focused view built around what a recruiter actually does day to day.",
     callout:{label:'Recruiter guide',text:'Job posting \u00b7 Pipelines \u00b7 Offer management',dot:{x:50,y:14},bubble:{x:2,y:4}}
   },
   {
@@ -3891,7 +3891,7 @@ var steps = [
       {d:4500,a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[0]}}
     ],
     minHold:10000,
-    voice:"She clicks into Schedule Interview. Every step laid out in order — who does what, when, and how. The whole process visible before the client has even asked a question.",
+    voice:"She opens Schedule Interview. You can see all the steps here — who does each one, what's involved, what order they go in. Before the client has even asked her a question about this, she's already got the full picture in front of her.",
     callout:{label:'Process walkthrough',text:'Every step, every owner — no ambiguity',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
