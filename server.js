@@ -3873,7 +3873,7 @@ var steps = [
     ],
     minHold:12000,
     voice:"Before the call she sets her team up. Four roles on every SmartRecruiters project — recruiter, hiring manager, candidate, administrator. Each one gets their own view, their own tasks, their own guide. Watch the platform switch between them. Nobody shares a screen. Nobody gets lost.",
-    callout:{label:'Role-based views',text:'Recruiter \u00b7 Hiring Manager \u00b7 Candidate \u00b7 Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
+    callout:{label:'Role-based views',text:'Recruiter \u00b7 Hiring Manager \u00b7 Candidate \u00b7 Admin',dot:{x:50,y:14},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Recruiter View', url:'/',
@@ -3882,7 +3882,7 @@ var steps = [
     ],
     minHold:7000,
     voice:"She clicks into the recruiter. Their tasks, their responsibilities, their process — nothing irrelevant, nothing missing. Every single thing a recruiter needs to run this implementation is right here.",
-    callout:{label:'Recruiter guide',text:'Job posting \u00b7 Pipelines \u00b7 Offer management',dot:{x:50,y:14},bubble:{x:57,y:4}}
+    callout:{label:'Recruiter guide',text:'Job posting \u00b7 Pipelines \u00b7 Offer management',dot:{x:50,y:14},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Schedule Interview — Step by Step', url:'/',
@@ -3892,7 +3892,7 @@ var steps = [
     ],
     minHold:10000,
     voice:"She clicks into Schedule Interview. Every step laid out in order — who does what, when, and how. The whole process visible before the client has even asked a question.",
-    callout:{label:'Process walkthrough',text:'Every step, every owner — no ambiguity',dot:{x:50,y:50},bubble:{x:60,y:32}}
+    callout:{label:'Process walkthrough',text:'Every step, every owner — no ambiguity',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Step 2 Has an Issue — Ask AI', url:'/',
@@ -3904,7 +3904,7 @@ var steps = [
     manual:true,
     manualHint:22000,
     voice:"Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One click and that exact step goes to the AI — everything pre-loaded. Watch it answer. Click next when you are ready.",
-    callout:{label:'Built-in troubleshooting',text:'Flag any step \u2014 AI answers with full context',dot:{x:80,y:20},bubble:{x:50,y:4}}
+    callout:{label:'Built-in troubleshooting',text:'Flag any step \u2014 AI answers with full context',dot:{x:80,y:20},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Follow-Up — Context Memory', url:'/',
@@ -3915,7 +3915,7 @@ var steps = [
     manual:true,
     manualHint:18000,
     voice:"Now watch the follow-up. She asks a second question — no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.",
-    callout:{label:'Context memory',text:'Follow-up questions \u2014 full conversation carried forward',dot:{x:78,y:36},bubble:{x:38,y:24}}
+    callout:{label:'Context memory',text:'Follow-up questions \u2014 full conversation carried forward',dot:{x:78,y:36},bubble:{x:2,y:4}}
   },
   {
     type:'card', icon:'', title:'Ask anything.', chap:'Chapter II', headline:'Ask anything.<br><em>Get an answer.</em>', countdown:4, auto:[], callout:null,
@@ -3925,7 +3925,7 @@ var steps = [
     icon:'', title:'AI Assistant', url:'/', auto:[{d:800,a:{action:'openAI'}},{d:1900,a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}],
     minHold:18000,
     voice:"Halfway through the kickoff call, the client asks something she was not expecting. She types it straight into EX3. The answer streams back before she has finished explaining the question to the room. No ticket. No waiting. No one to chase.",
-    callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
+    callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Implementation Runbook', url:'/',
@@ -3936,7 +3936,7 @@ var steps = [
     ],
     minHold:14000,
     voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click — the full sequence generates. Post job, schedule interview, workflow automation, assessments. The entire delivery plan, structured and ready.",
-    callout:{label:'One-go workflow',text:'Full implementation sequence \u2014 generated in seconds',dot:{x:50,y:50},bubble:{x:60,y:32}}
+    callout:{label:'One-go workflow',text:'Full implementation sequence \u2014 generated in seconds',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
     type:'card', icon:'', title:'Same AI. On WhatsApp.', chap:'Chapter III', headline:'Same AI.<br><em>On WhatsApp.</em>', auto:[], callout:null,
@@ -3959,14 +3959,14 @@ var steps = [
     ],
     auto:[],
     voice:"Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged — the Send Offer button is gone. She does not type. She records a voice note on WhatsApp, presses send, and watches the answer land before she even gets out of the car. Same AI. No app. No login. Around the clock.",
-    callout:{label:'WhatsApp AI bot',text:'Voice notes supported \u2014 no app, no login',dot:{x:50,y:50},bubble:{x:55,y:32}}
+    callout:{label:'WhatsApp AI bot',text:'Voice notes supported \u2014 no app, no login',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Consultant Portal', url:'/consultant',
     auto:[{d:800,a:{action:'showPhases'}},{d:1700,a:{action:'openPhase',index:0}},{d:3500,a:{action:'openPhase',index:1}},{d:5300,a:{action:'openPhase',index:2}},{d:7100,a:{action:'openPhase',index:3}}],
     minHold:9500,
     voice:"Back at her desk, Sarah is running the engagement through the consultant portal. The EXcelerate methodology — four phases, each one fully structured. Examine, Adopt, Validate, Launch. Checklists, RACI, deliverables, timelines. Everything her delivery team needs to run a clean deployment.",
-    callout:{label:'EXcelerate methodology',text:'Examine \u00b7 Adopt \u00b7 Validate \u00b7 Launch',dot:{x:50,y:42},bubble:{x:60,y:28}}
+    callout:{label:'EXcelerate methodology',text:'Examine \u00b7 Adopt \u00b7 Validate \u00b7 Launch',dot:{x:50,y:42},bubble:{x:2,y:4}}
   },
   {
     type:'card', icon:'', title:'A complete SOW. In 45 seconds.', chap:'Chapter IV', headline:'A complete SOW.<br><em>In 45 seconds.</em>', countdown:4, auto:[], callout:null,
@@ -3975,18 +3975,18 @@ var steps = [
   {
     icon:'', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], countdown:10,
     voice:"She opens the SOW builder. Nineteen questions — org size, geography, integrations, approval workflows, compliance, training approach, go-live date. Every single one answered. At the end, a complete Statement of Work structured around every EXcelerate phase.",
-    callout:{label:'19-step SOW wizard',text:'Every requirement captured \u2014 EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
+    callout:{label:'19-step SOW wizard',text:'Every requirement captured \u2014 EXcelerate format output',dot:{x:50,y:32},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'AI SOW Rewrite', url:'/consultant/sow-builder', auto:[{d:1000,a:{action:'triggerAIRewrite'}}],
     minHold:7000,
     voice:"One click. The AI rewrites the whole thing into polished, client-ready consulting language — streamed live, word by word. Boardroom-ready. Done before the afternoon stand-up.",
-    callout:{label:'AI rewrite',text:'Client-ready language, generated instantly',dot:{x:50,y:54},bubble:{x:60,y:40}}
+    callout:{label:'AI rewrite',text:'Client-ready language, generated instantly',dot:{x:50,y:54},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Export & Email', url:'/consultant/sow-builder', auto:[{d:800,a:{action:'scrollToExport'}}],
     voice:"She exports it as a structured Word document — proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page.",
-    callout:{label:'One-click delivery',text:'Structured Word doc or direct email to client',dot:{x:50,y:78},bubble:{x:60,y:64}}
+    callout:{label:'One-click delivery',text:'Structured Word doc or direct email to client',dot:{x:50,y:78},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Analytics & Insights',
@@ -3995,7 +3995,7 @@ var steps = [
     auto:[],
     minHold:13000,
     voice:"Three weeks in. The data tells the story. Two hundred and forty seven AI queries this week. Four point two hours saved per consultant. Twelve active engagements running clean. The platform does not just support the work — it measures it.",
-    callout:{label:'Live analytics',text:'Queries, time saved, engagement health \u2014 all tracked',dot:{x:50,y:50},bubble:{x:60,y:32}}
+    callout:{label:'Live analytics',text:'Queries, time saved, engagement health \u2014 all tracked',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:"That\\'s EX3", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
@@ -4379,16 +4379,11 @@ function render(){
     }
   } else {
     document.getElementById('liveFrame').style.display = 'none';
+    document.getElementById('ph').style.display = 'none';
     clearWaChat();
     if(s.analyticsPanel){
-      document.getElementById('ph').style.display = 'none';
       setTimeout(function(){ showAnalytics(); }, 80);
     } else if(s.waChat){
-      document.getElementById('ph').style.display = 'none';
-      document.getElementById('ph-icon').textContent = '';
-      document.getElementById('ph-title').textContent = '';
-      document.getElementById('ph-body').textContent = '';
-      document.getElementById('ph-cta').style.display = 'none';
       if(s.recordingScene && recScene){
         recScene.classList.add('active');
         autoTimers.push(setTimeout(function(){
