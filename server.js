@@ -3727,7 +3727,7 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
   <h1 class="ss-head">Everything your team needs.<br><em>On day one.</em></h1>
   <p class="ss-sub">Training, AI assistant, WhatsApp bot, consultant portal, and SOW builder — the complete SmartRecruiters implementation toolkit.</p>
   <div class="ss-stats">
-    <div class="ss-stat"><span class="ss-stat-n" id="stat-features">19</span><span class="ss-stat-l">Features</span></div>
+    <div class="ss-stat"><span class="ss-stat-n" id="stat-features">50+</span><span class="ss-stat-l">Features</span></div>
     <div class="ss-stat"><span class="ss-stat-n" id="stat-roles">4</span><span class="ss-stat-l">Roles</span></div>
     <div class="ss-stat"><span class="ss-stat-n" id="stat-time">4</span><span class="ss-stat-l">Minutes</span></div>
   </div>
@@ -4551,15 +4551,15 @@ function beginDemo(){
 
 // ── Count-up stats on load ──
 (function(){
-  var targets = [{id:'stat-features',val:19},{id:'stat-roles',val:4},{id:'stat-time',val:4}];
+  var targets = [{id:'stat-features',val:50,suffix:'+'},{id:'stat-roles',val:4},{id:'stat-time',val:4}];
   targets.forEach(function(t,idx){
     setTimeout(function(){
       var el = document.getElementById(t.id); if(!el) return;
       var count=0, step=1, dur=700, interval=Math.round(dur/t.val);
       var iv = setInterval(function(){
         count += step;
-        el.textContent = count;
-        if(count >= t.val){ el.textContent = t.val; clearInterval(iv); }
+        el.textContent = count + (t.suffix||'');
+        if(count >= t.val){ el.textContent = t.val + (t.suffix||''); clearInterval(iv); }
       }, interval);
     }, idx*120);
   });
