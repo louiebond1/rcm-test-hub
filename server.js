@@ -3691,6 +3691,30 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 .rec-wbar:nth-child(8){animation:rw8 .65s ease-in-out infinite .07s}
 .rec-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#333;margin-top:18px;opacity:0;transition:opacity .5s ease .48s}
 #wa-recording-scene.active .rec-label{opacity:1}
+#analytics-shell{display:none;width:100%;height:100%;flex-direction:column;background:#0d0f18;color:#e8eaf0;font-family:'Inter',system-ui,sans-serif;padding:20px 22px;box-sizing:border-box;overflow-y:auto;gap:14px}
+#analytics-shell.active{display:flex}
+.an-header{}
+.an-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.an-period{font-size:11px;color:#6b7280;margin-top:3px}
+.an-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.an-kpi{background:#161925;border-radius:10px;padding:14px 14px 12px;border:1px solid #1e2235}
+.an-knum{font-size:26px;font-weight:800;color:#818cf8;line-height:1;font-variant-numeric:tabular-nums}
+.an-knum-suffix{font-size:16px;font-weight:700}
+.an-klabel{font-size:10px;color:#6b7280;margin-top:5px;line-height:1.3}
+.an-chart-section{background:#161925;border-radius:10px;padding:16px;border:1px solid #1e2235}
+.an-chart-label{font-size:11px;color:#6b7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em}
+.an-bars{display:flex;gap:6px;align-items:flex-end;height:72px}
+.an-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%}
+.an-bar{width:100%;background:linear-gradient(180deg,#818cf8,#6366f1);border-radius:3px 3px 0 0;height:0;transition:height .9s cubic-bezier(.34,1.56,.64,1)}
+.an-bar.grow{height:var(--h)}
+.an-bday{font-size:9px;color:#4b5563}
+.an-top-qs{background:#161925;border-radius:10px;padding:16px;border:1px solid #1e2235;flex:1}
+.an-qs-label{font-size:11px;color:#6b7280;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.an-q-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.an-q-fill{height:28px;background:#818cf8;opacity:.13;border-radius:4px;position:absolute;left:0;top:0;width:0;transition:width .7s ease}
+.an-q-wrap{position:relative;flex:1;border-radius:4px;overflow:hidden}
+.an-q-text{font-size:11px;color:#cbd5e1;padding:7px 8px;position:relative}
+.an-q-count{font-size:12px;font-weight:700;color:#818cf8;min-width:26px;text-align:right}
 </style>
 </head>
 <body>
@@ -3746,6 +3770,38 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
             <div class="wa-dot-t"></div><div class="wa-dot-t"></div><div class="wa-dot-t"></div>
           </div>
         </div>
+      </div>
+    </div>
+    <div id="analytics-shell">
+      <div class="an-header">
+        <div class="an-title">EX3 Analytics</div>
+        <div class="an-period">Week 14 &middot; Apr 7&ndash;13 &middot; GlobalFirst Bank</div>
+      </div>
+      <div class="an-kpis">
+        <div class="an-kpi"><div class="an-knum" id="an-k1">0</div><div class="an-klabel">AI queries this week</div></div>
+        <div class="an-kpi"><div class="an-knum" id="an-k2">0<span class="an-knum-suffix"> hrs</span></div><div class="an-klabel">saved per consultant</div></div>
+        <div class="an-kpi"><div class="an-knum" id="an-k3">0<span class="an-knum-suffix">%</span></div><div class="an-klabel">questions answered</div></div>
+        <div class="an-kpi"><div class="an-knum" id="an-k4">0</div><div class="an-klabel">active engagements</div></div>
+      </div>
+      <div class="an-chart-section">
+        <div class="an-chart-label">Daily AI queries &mdash; Week 14</div>
+        <div class="an-bars" id="an-bars">
+          <div class="an-bar-col"><div class="an-bar" style="--h:62%"></div><div class="an-bday">Mon</div></div>
+          <div class="an-bar-col"><div class="an-bar" style="--h:78%"></div><div class="an-bday">Tue</div></div>
+          <div class="an-bar-col"><div class="an-bar" style="--h:55%"></div><div class="an-bday">Wed</div></div>
+          <div class="an-bar-col"><div class="an-bar" style="--h:88%"></div><div class="an-bday">Thu</div></div>
+          <div class="an-bar-col"><div class="an-bar" style="--h:71%"></div><div class="an-bday">Fri</div></div>
+          <div class="an-bar-col"><div class="an-bar" style="--h:23%"></div><div class="an-bday">Sat</div></div>
+          <div class="an-bar-col"><div class="an-bar" style="--h:18%"></div><div class="an-bday">Sun</div></div>
+        </div>
+      </div>
+      <div class="an-top-qs">
+        <div class="an-qs-label">Top questions this week</div>
+        <div class="an-q-row"><div class="an-q-wrap"><div class="an-q-fill" style="--w:92%"></div><div class="an-q-text">How do I set up an offer letter template?</div></div><div class="an-q-count">38</div></div>
+        <div class="an-q-row"><div class="an-q-wrap"><div class="an-q-fill" style="--w:74%"></div><div class="an-q-text">Send Offer button not appearing</div></div><div class="an-q-count">29</div></div>
+        <div class="an-q-row"><div class="an-q-wrap"><div class="an-q-fill" style="--w:61%"></div><div class="an-q-text">How do I add workflow automation?</div></div><div class="an-q-count">24</div></div>
+        <div class="an-q-row"><div class="an-q-wrap"><div class="an-q-fill" style="--w:46%"></div><div class="an-q-text">Candidate screening filter setup</div></div><div class="an-q-count">18</div></div>
+        <div class="an-q-row"><div class="an-q-wrap"><div class="an-q-fill" style="--w:33%"></div><div class="an-q-text">GDPR compliance checklist</div></div><div class="an-q-count">13</div></div>
       </div>
     </div>
     <div class="card-panel" id="card-panel">
@@ -3806,22 +3862,28 @@ var steps = [
     callout:null
   },
   {
-    icon:'', title:'Role-Based Training', url:'/', auto:[{d:800,a:{action:'setRole',role:'rec'}}],
-    minHold:5000,
-    voice:"Before the call she checks her team is set up. The recruiter opens their guide. Every task laid out for their specific role — job posting, candidate pipelines, offer management. Nothing they do not need. Nothing missing.",
-    callout:{label:'Role-based training',text:'Every recruiter task, step by step',dot:{x:50,y:14},bubble:{x:57,y:4}}
+    icon:'', title:'Role Training & Process Walkthrough', url:'/',
+    auto:[
+      {d:800,  a:{action:'setRole',role:'rec'}},
+      {d:3500, a:{action:'openTaskDetail',taskId:'sched-interview'}},
+      {d:8000, a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[0,1]}},
+      {d:13000,a:{action:'openStuck',taskId:'sched-interview',stepIdx:1}},
+      {d:17000,a:{action:'askAIForStuck',taskId:'sched-interview',stepIdx:1}}
+    ],
+    minHold:35000,
+    voice:"Before the call she checks her recruiter is ready. Switches to recruiter view — their exact tasks, their exact steps. She clicks into Schedule Interview. Every step in order. Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One more click and that exact step goes straight to the AI, everything pre-loaded. Watch it answer.",
+    callout:{label:'Role-based training',text:'Every step, every role — with built-in AI troubleshooting',dot:{x:50,y:50},bubble:{x:60,y:32}}
   },
   {
-    icon:'', title:'Hiring Manager View', url:'/', auto:[{d:700,a:{action:'setRole',role:'hm'}}],
-    minHold:5000,
-    voice:"The hiring manager opens the same platform and gets a completely different experience. Application review, interview feedback, offer approvals. The platform already knows who they are and what they need.",
-    callout:{label:'Hiring Manager view',text:'Tailored content, zero irrelevant clutter',dot:{x:50,y:14},bubble:{x:57,y:4}}
-  },
-  {
-    icon:'', title:'All Four Roles', url:'/', auto:[{d:700,a:{action:'setRole',role:'cand'}},{d:5500,a:{action:'setRole',role:'adm'}}],
-    minHold:9000,
-    voice:"Candidates get a guided journey through their application. System admins get a full configuration walkthrough. Four different people, four different experiences — every single person on this project covered from day one.",
-    callout:{label:'4 roles covered',text:'Candidate · Recruiter · Hiring Manager · Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
+    icon:'', title:'All Four Roles', url:'/',
+    auto:[
+      {d:700, a:{action:'setRole',role:'hm'}},
+      {d:3500,a:{action:'setRole',role:'cand'}},
+      {d:6000,a:{action:'setRole',role:'adm'}}
+    ],
+    minHold:8500,
+    voice:"Hiring manager. Candidate. Administrator. Every person on the project gets their own view, their own checklist, their own guide. One platform. Four lenses. Nobody is lost on day one.",
+    callout:{label:'4 roles covered',text:'Recruiter \u00b7 Hiring Manager \u00b7 Candidate \u00b7 Admin',dot:{x:50,y:14},bubble:{x:57,y:4}}
   },
   {
     type:'card', icon:'', title:'Ask anything.', chap:'Chapter II', headline:'Ask anything.<br><em>Get an answer.</em>', countdown:4, auto:[], callout:null,
@@ -3830,29 +3892,25 @@ var steps = [
   {
     icon:'', title:'AI Assistant', url:'/', auto:[{d:800,a:{action:'openAI'}},{d:1900,a:{action:'typeAndAsk',query:'How do I set up a hiring process in SmartRecruiters?'}}],
     minHold:18000,
-    voice:"Halfway through the kickoff call, the client asks something she was not expecting about hiring process setup. She types it straight into EX3. The answer comes back before she has even finished explaining the question to the room. No ticket. No waiting. No one to chase.",
+    voice:"Halfway through the kickoff call, the client asks something she was not expecting. She types it straight into EX3. The answer streams back before she has finished explaining the question to the room. No ticket. No waiting. No one to chase.",
     callout:{label:'Instant AI answers',text:'Any SmartRecruiters question, answered instantly',dot:{x:88,y:86},bubble:{x:52,y:72}}
   },
   {
     icon:'', title:'Conversation Memory', url:'/', auto:[{d:600,a:{action:'openAI'}},{d:3000,a:{action:'typeAndAsk',query:'What changes for high-volume hiring?'}}],
     minHold:14000,
-    voice:"She pushes further. Asks a follow-up about high volume hiring. The AI carries the full conversation forward, no re-explaining, no starting over. It knows exactly what she was talking about. Like having a senior consultant in her ear the whole call.",
-    callout:{label:'Context memory',text:'Full conversation history — no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
+    voice:"She pushes further. Asks a follow-up. The AI carries the full conversation forward — no re-explaining, no starting over. It knows exactly what she was talking about. Like having a senior consultant in her ear the whole call.",
+    callout:{label:'Context memory',text:'Full conversation history \u2014 no repeating yourself',dot:{x:60,y:55},bubble:{x:38,y:42}}
   },
   {
-    icon:'', title:'Build, Troubleshoot & Fix', url:'/',
+    icon:'', title:'Implementation Runbook', url:'/',
     auto:[
-      {d:700,  a:{action:'closeAI'}},
-      {d:1400, a:{action:'openUnifiedFlow'}},
-      {d:7000, a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}},
-      {d:14500,a:{action:'openTaskDetail',taskId:'add-workflow'}},
-      {d:18500,a:{action:'expandTaskSteps',taskId:'add-workflow',indices:[0,1]}},
-      {d:23500,a:{action:'openStuck',taskId:'add-workflow',stepIdx:1}},
-      {d:28000,a:{action:'askAIForStuck',taskId:'add-workflow',stepIdx:1}}
+      {d:700, a:{action:'closeAI'}},
+      {d:1400,a:{action:'openUnifiedFlow'}},
+      {d:5500,a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}}
     ],
-    minHold:55000,
-    voice:"After the call she starts building the implementation runbook. Picks the exact processes the client needs — posting the job, scheduling interviews, workflow automation, assessments. One click, the full sequence generates. She opens Workflow Automation, expands the steps. Step two is not landing. She flags it. EX3 surfaces the likely causes right away. One more click and that exact step goes straight to the AI with everything already loaded. Watch it answer.",
-    callout:{label:'End-to-end workflow',text:'Build, troubleshoot, and escalate — without leaving EX3',dot:{x:52,y:50},bubble:{x:60,y:28}}
+    minHold:14000,
+    voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click — the full sequence generates. Post job, schedule interview, workflow automation, assessments. The entire delivery plan, structured and ready.",
+    callout:{label:'One-go workflow',text:'Full implementation sequence \u2014 generated in seconds',dot:{x:50,y:50},bubble:{x:60,y:32}}
   },
   {
     type:'card', icon:'', title:'Same AI. On WhatsApp.', chap:'Chapter III', headline:'Same AI.<br><em>On WhatsApp.</em>', countdown:4, auto:[], callout:null,
@@ -3863,24 +3921,24 @@ var steps = [
     url:null,
     ph:{icon:'',title:'',body:'',link:null},
     recordingScene:true,
-    calloutDelay:7500,
-    minHold:16000,
+    calloutDelay:26000,
+    minHold:32000,
     waChat:[
-      {from:'me', type:'voice', delay:600, ts:'06:07', voiceText:"Quick one. I\\'m five minutes from the client site. Their hiring manager just messaged me — the Send Offer button isn\\'t showing up on their end. I need to know what\\'s blocking it before I walk in. Thanks."},
-      {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\\n2\ufe0f\u20e3 The job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich one would you like to check first?", delay:4000, ts:'06:07'},
-      {from:'me',  text:"Probably permissions \u2014 how do I check that?", delay:8500, ts:'06:08'},
-      {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:11000, ts:'06:08'}
+      {from:'me', type:'voice', delay:500, ts:'06:07', voiceText:"Quick one. I\\'m five minutes from the client site. Their hiring manager just messaged — the Send Offer button isn\\'t showing up. I need to know what\\'s blocking it before I walk in. Thanks."},
+      {from:'them', text:"The Send Offer button only appears once three things are in place:\\n\\n1\ufe0f\u20e3 The candidate is in the *Offer* stage\\n2\ufe0f\u20e3 The job has an active offer letter template\\n3\ufe0f\u20e3 You have the *Offer Manager* permission\\n\\nWhich one would you like to check first?", delay:14000, ts:'06:07'},
+      {from:'me', text:"Probably permissions \u2014 how do I check that?", delay:18500, ts:'06:08'},
+      {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:21000, ts:'06:08'}
     ],
     auto:[],
-    voice:"Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged — the Send Offer button is gone. She does not type. She records a voice note on WhatsApp, presses send, and watches the answer come back before she even gets out of the car. Same AI. No app. No login. Around the clock.",
-    callout:{label:'WhatsApp AI bot',text:'Voice notes supported — no app, no login',dot:{x:50,y:50},bubble:{x:55,y:32}}
+    voice:"Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged — the Send Offer button is gone. She does not type. She records a voice note on WhatsApp, presses send, and watches the answer land before she even gets out of the car. Same AI. No app. No login. Around the clock.",
+    callout:{label:'WhatsApp AI bot',text:'Voice notes supported \u2014 no app, no login',dot:{x:50,y:50},bubble:{x:55,y:32}}
   },
   {
     icon:'', title:'Consultant Portal', url:'/consultant',
     auto:[{d:800,a:{action:'showPhases'}},{d:1700,a:{action:'openPhase',index:0}},{d:3500,a:{action:'openPhase',index:1}},{d:5300,a:{action:'openPhase',index:2}},{d:7100,a:{action:'openPhase',index:3}}],
     minHold:9500,
-    voice:"Back at her desk, Sarah is running the engagement through the consultant portal. The EXcelerate methodology — four phases, each one fully structured. Examine, Adopt, Validate, Launch. Checklists, RACI, deliverables, timelines. Everything her delivery team needs to run a clean deployment, all in one place.",
-    callout:{label:'EXcelerate methodology',text:'Examine · Adopt · Validate · Launch',dot:{x:50,y:42},bubble:{x:60,y:28}}
+    voice:"Back at her desk, Sarah is running the engagement through the consultant portal. The EXcelerate methodology — four phases, each one fully structured. Examine, Adopt, Validate, Launch. Checklists, RACI, deliverables, timelines. Everything her delivery team needs to run a clean deployment.",
+    callout:{label:'EXcelerate methodology',text:'Examine \u00b7 Adopt \u00b7 Validate \u00b7 Launch',dot:{x:50,y:42},bubble:{x:60,y:28}}
   },
   {
     type:'card', icon:'', title:'A complete SOW. In 45 seconds.', chap:'Chapter IV', headline:'A complete SOW.<br><em>In 45 seconds.</em>', countdown:4, auto:[], callout:null,
@@ -3888,31 +3946,32 @@ var steps = [
   },
   {
     icon:'', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], countdown:10,
-    voice:"She opens the SOW builder. Nineteen questions — org size, geography, integrations, approval workflows, compliance, training approach, go-live date. It walks through every single one. At the end, a complete Statement of Work, structured around every EXcelerate phase.",
-    callout:{label:'19-step SOW wizard',text:'Every requirement captured — EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
+    voice:"She opens the SOW builder. Nineteen questions — org size, geography, integrations, approval workflows, compliance, training approach, go-live date. Every single one answered. At the end, a complete Statement of Work structured around every EXcelerate phase.",
+    callout:{label:'19-step SOW wizard',text:'Every requirement captured \u2014 EXcelerate format output',dot:{x:50,y:32},bubble:{x:60,y:18}}
   },
   {
     icon:'', title:'AI SOW Rewrite', url:'/consultant/sow-builder', auto:[{d:1000,a:{action:'triggerAIRewrite'}}],
     minHold:7000,
-    voice:"One click. The AI rewrites the whole thing into polished, client-ready consulting language — streamed live, word by word. Professional. Boardroom-ready. Done before the afternoon stand-up.",
+    voice:"One click. The AI rewrites the whole thing into polished, client-ready consulting language — streamed live, word by word. Boardroom-ready. Done before the afternoon stand-up.",
     callout:{label:'AI rewrite',text:'Client-ready language, generated instantly',dot:{x:50,y:54},bubble:{x:60,y:40}}
   },
   {
     icon:'', title:'Export & Email', url:'/consultant/sow-builder', auto:[{d:800,a:{action:'scrollToExport'}}],
-    voice:"She exports it as a structured Word document — proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page. The client has what they need to sign.",
+    voice:"She exports it as a structured Word document — proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page.",
     callout:{label:'One-click delivery',text:'Structured Word doc or direct email to client',dot:{x:50,y:78},bubble:{x:60,y:64}}
   },
   {
-    icon:'', title:'Conversation History',
+    icon:'', title:'Analytics & Insights',
     url:null,
-    ph:{icon:'',title:'Conversation History',body:'Every web chat and WhatsApp session — stored, searchable, replayable.',link:{label:'Open Conversation History \u2197',url:'/conversations'}},
+    analyticsPanel:true,
     auto:[],
-    voice:"Three weeks in, a second consultant joins the project. Every conversation Sarah has had — web and WhatsApp — is stored, searchable, replayable. They can see everything. Nothing lost. Nothing missed. The project continues without a single briefing call.",
-    callout:null
+    minHold:13000,
+    voice:"Three weeks in. The data tells the story. Two hundred and forty seven AI queries this week. Four point two hours saved per consultant. Twelve active engagements running clean. The platform does not just support the work — it measures it.",
+    callout:{label:'Live analytics',text:'Queries, time saved, engagement health \u2014 all tracked',dot:{x:50,y:50},bubble:{x:60,y:32}}
   },
   {
-    icon:'', title:"That's EX3", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
-    voice:"The kickoff went well. The SOW is signed. The team is live. Sarah has sixty days to deliver — and everything she needs is right here. Role training for every person. An AI that answers anything. WhatsApp, voice notes, no login. A workflow builder that troubleshoots itself. A Statement of Work in forty-five seconds. That is EX3.",
+    icon:'', title:"That\\'s EX3", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
+    voice:"The kickoff went well. The SOW is signed. The team is live. Sarah has sixty days to deliver — and everything she needs is right here. Role training for every person. An AI that answers anything. WhatsApp, voice notes, no login. A complete SOW in forty-five seconds. That is EX3.",
     callout:null
   }
 ];
@@ -4104,6 +4163,40 @@ function postToFrame(msg){
   try{ document.getElementById('liveFrame').contentWindow.postMessage(Object.assign({type:'EX3_DEMO'},msg),'*'); }catch(e){}
 }
 
+function clearAnalytics(){
+  var el = document.getElementById('analytics-shell');
+  if(el) el.classList.remove('active');
+}
+function showAnalytics(){
+  var el = document.getElementById('analytics-shell');
+  if(!el) return;
+  el.classList.add('active');
+  // Animate counters
+  var targets = [{id:'an-k1',val:247,dec:0},{id:'an-k2',val:4.2,dec:1},{id:'an-k3',val:94,dec:0},{id:'an-k4',val:12,dec:0}];
+  targets.forEach(function(t){
+    var el2 = document.getElementById(t.id);
+    if(!el2) return;
+    var suffix = el2.querySelector('.an-knum-suffix') ? el2.querySelector('.an-knum-suffix').outerHTML : '';
+    var start = Date.now(), dur = 1400;
+    function tick(){
+      var p = Math.min((Date.now()-start)/dur, 1);
+      var ease = 1-Math.pow(1-p,3);
+      var v = t.val * ease;
+      el2.innerHTML = (t.dec ? v.toFixed(t.dec) : Math.round(v)) + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+  // Animate bars
+  setTimeout(function(){
+    document.querySelectorAll('#analytics-shell .an-bar').forEach(function(b){ b.classList.add('grow'); });
+  }, 200);
+  // Animate question fills
+  setTimeout(function(){
+    document.querySelectorAll('#analytics-shell .an-q-fill').forEach(function(f){ f.style.width = f.style.getPropertyValue('--w') || '50%'; });
+  }, 600);
+}
+
 var waTimers = [], waVoiceAudio = null;
 function clearWaChat(){
   waTimers.forEach(clearTimeout); waTimers = [];
@@ -4228,6 +4321,7 @@ function render(){
   var recScene = document.getElementById('wa-recording-scene');
   if(cardPanel) cardPanel.classList.remove('active');
   if(recScene){ recScene.classList.remove('active'); recScene.style.opacity = ''; }
+  clearAnalytics();
 
   if(s.type === 'card'){
     document.getElementById('liveFrame').style.display = 'none';
@@ -4255,9 +4349,12 @@ function render(){
     }
   } else {
     document.getElementById('liveFrame').style.display = 'none';
-    document.getElementById('ph').style.display = 'flex';
     clearWaChat();
-    if(s.waChat){
+    if(s.analyticsPanel){
+      document.getElementById('ph').style.display = 'none';
+      setTimeout(function(){ showAnalytics(); }, 80);
+    } else if(s.waChat){
+      document.getElementById('ph').style.display = 'none';
       document.getElementById('ph-icon').textContent = '';
       document.getElementById('ph-title').textContent = '';
       document.getElementById('ph-body').textContent = '';
