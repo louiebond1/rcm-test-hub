@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SuccessFactors RCM — AI Test Hub</title>
+<title>SuccessFactors RCM — Test Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -612,11 +612,7 @@ a { text-decoration: none; color: inherit; }
 <nav class="sidebar">
   <div class="sb-brand">
     <div class="sb-logo">SuccessFactors RCM</div>
-    <div class="sb-subtitle">AI-Powered Test Hub</div>
-    <div class="sb-ai-badge">
-      <span class="sb-ai-dot"></span>
-      AI Enhanced
-    </div>
+    <div class="sb-subtitle">UAT & Test Management</div>
   </div>
 
   <div class="sb-section">
@@ -652,10 +648,10 @@ a { text-decoration: none; color: inherit; }
   </div>
 
   <div class="sb-section sb-ai-tools">
-    <div class="sb-section-label">AI Tools</div>
+    <div class="sb-section-label">Tools</div>
     <div class="sb-link" data-view="generator" onclick="showView('generator',this)">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      AI Test Generator
+      Test Generator
     </div>
     <div class="sb-link" data-view="bugs" onclick="showView('bugs',this)">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 6l4-4 4 4"/><path d="M12 2v10.3"/><path d="M4.93 10.93A10 10 0 1021 12"/></svg>
@@ -663,7 +659,7 @@ a { text-decoration: none; color: inherit; }
     </div>
     <div class="sb-link" onclick="openAI()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      Ask AI Assistant
+      Ask a Question
     </div>
   </div>
 
@@ -686,8 +682,8 @@ a { text-decoration: none; color: inherit; }
         Export
       </button>
       <button class="btn btn-ai btn-sm" onclick="openAI()">
-        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Ask AI
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Ask a Question
       </button>
     </div>
   </header>
@@ -790,13 +786,13 @@ a { text-decoration: none; color: inherit; }
     <!-- ── GENERATOR VIEW ── -->
     <div id="view-generator" class="view">
       <div class="page-hdr">
-        <h1>AI Test Case Generator</h1>
-        <p>Describe a scenario or requirement — AI generates structured test steps ready to paste into your script</p>
+        <h1>Test Case Generator</h1>
+        <p>Describe a scenario or requirement and get structured test steps ready to paste into your script</p>
       </div>
 
       <div class="gen-card">
         <h3>Generate from Requirement</h3>
-        <p>Describe what you need to test in plain English. AI will produce numbered steps with Action, Test Data, and Expected Result columns.</p>
+        <p>Describe what you need to test in plain English. It will produce numbered steps with Action, Test Data, and Expected Result columns.</p>
         <div class="gen-label">Scenario description</div>
         <textarea class="gen-input" id="gen-input" placeholder="e.g. Test that a Hiring Manager can view a candidate profile but cannot move the candidate to a different status..."></textarea>
         <div class="gen-row">
@@ -840,13 +836,13 @@ a { text-decoration: none; color: inherit; }
     <!-- ── BUG ANALYZER VIEW ── -->
     <div id="view-bugs" class="view">
       <div class="page-hdr">
-        <h1>AI Bug Analyzer</h1>
-        <p>Paste a bug description — AI identifies the root cause, which test step should have caught it, and what coverage is missing</p>
+        <h1>Bug Analyzer</h1>
+        <p>Paste a bug description to identify the root cause, which test step should have caught it, and what coverage is missing</p>
       </div>
 
       <div class="bug-card">
         <h3>Analyze a Bug</h3>
-        <p>Describe the defect you found during testing. AI will pinpoint the likely cause, reference the relevant test step, and suggest additional test coverage to prevent regression.</p>
+        <p>Describe the defect you found during testing. It will pinpoint the likely cause, reference the relevant test step, and suggest additional test coverage to prevent regression.</p>
         <div class="gen-label" style="margin-top:16px">Bug description</div>
         <textarea class="gen-input" id="bug-input" style="min-height:120px" placeholder="e.g. When the Recruiter clicks Approve on the requisition, the status does not update and the candidate pipeline shows 'Error loading' instead of the approved state. Happens consistently in Firefox."></textarea>
         <div style="margin-top:16px;display:flex;gap:12px;align-items:flex-end;">
@@ -884,9 +880,11 @@ a { text-decoration: none; color: inherit; }
 <!-- ── AI PANEL ── -->
 <div class="ai-panel" id="ai-panel">
   <div class="ai-panel-hdr">
-    <div class="ai-panel-icon">✦</div>
+    <div class="ai-panel-icon">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </div>
     <div class="ai-panel-title">
-      <h3>AI Test Assistant</h3>
+      <h3>RCM Test Assistant</h3>
       <p>SuccessFactors RCM expert · Ask anything</p>
     </div>
     <button class="ai-close" onclick="closeAI()">
@@ -897,7 +895,7 @@ a { text-decoration: none; color: inherit; }
     <div class="msg ai">
       <div class="msg-avatar">✦</div>
       <div class="msg-bubble">
-        Hi! I'm your RCM Test AI. I know the full end-to-end test script for SAP SuccessFactors Recruiting.<br><br>
+        Hi — I cover the full end-to-end test script for SAP SuccessFactors Recruiting.<br><br>
         Ask me to explain a test step, generate new test cases, or help you debug a failing test.
         <div class="followups">
           <button class="fq-btn" onclick="askAI('What are the most common failure points in the RCM end-to-end test?')">Most common failure points in RCM testing?</button>
@@ -921,8 +919,8 @@ a { text-decoration: none; color: inherit; }
 
 <!-- ── FAB ── -->
 <button class="ai-fab" onclick="openAI()" id="ai-fab">
-  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-  Ask AI
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  Ask
 </button>
 
 <script>
