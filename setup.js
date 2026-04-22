@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const OpenAI = require('openai');
 const fs = require('fs');
 const path = require('path');
@@ -18,7 +18,7 @@ async function setup() {
   }
 
   console.log(`Found ${files.length} document(s) to upload:\n`);
-  files.forEach(f => console.log('  •', f));
+  files.forEach(f => console.log('  â€¢', f));
   console.log('');
 
   // Upload files
@@ -31,13 +31,13 @@ async function setup() {
       purpose: 'assistants',
     });
     fileIds.push(uploaded.id);
-    console.log('done ✓');
+    console.log('done âœ“');
   }
 
   // Create vector store
   console.log('\nCreating vector store...');
   const vectorStore = await openai.vectorStores.create({
-    name: 'EX3 SmartRecruiters Knowledge Base',
+    name: 'EX3 SAP SuccessFactors Recruiting Knowledge Base',
     file_ids: fileIds,
   });
   console.log(`Vector store created: ${vectorStore.id}`);
@@ -50,22 +50,32 @@ async function setup() {
     store = await openai.vectorStores.retrieve(vectorStore.id);
     process.stdout.write(`\r  ${store.file_counts.completed}/${files.length} processed...`);
   }
-  console.log(`\r  All ${files.length} files processed ✓\n`);
+  console.log(`\r  All ${files.length} files processed âœ“\n`);
 
   // Create assistant
   console.log('Creating assistant...');
   const assistant = await openai.beta.assistants.create({
-    name: 'EX3 SmartRecruiters Guide',
-    instructions: `You are EX3, a helpful AI assistant embedded in the EX3 SmartRecruiters Enablement Guide — an internal training tool for Recruiters, Hiring Managers, Candidates, and Administrators.
+    name: ‘EX3 RCM AI Test Analyst’,
+    instructions: `You are an expert SAP SuccessFactors RCM (Recruiting Management) test analyst embedded in the EX3 AI Test Hub. You specialise in end-to-end test scripts for SuccessFactors Recruiting implementations.
 
-You have access to detailed SmartRecruiters documentation. Use it to answer questions accurately and specifically.
+You have access to detailed SAP SuccessFactors Recruiting documentation. Use it to answer test-related questions accurately and specifically.
+
+Your primary expertise:
+- Analysing and explaining RCM test steps (system login, position creation, requisition management, job posting, candidate application, interview scheduling, offer management, hiring/onboarding)
+- Identifying root causes of test failures in SAP SuccessFactors Recruiting
+- Generating new test cases and edge case scenarios
+- Finding coverage gaps in test scripts
+- Explaining expected vs actual behaviour for any RCM process
+- Advising on test data setup and proxy/impersonation for multi-role testing
+- Suggesting fixes for configuration issues found during testing
 
 Rules:
-- Keep answers concise: 2–5 sentences unless the question genuinely needs more detail
-- Always include the navigation path in SmartRecruiters where relevant (e.g. "Settings → Configuration → Hiring Process")
-- Be practical — tell the user exactly what to click or where to go
-- If the documents contain a step-by-step guide for the task, summarise the key steps and mention the guide exists in the tool
-- If a question is not about SmartRecruiters, politely decline and redirect to SmartRecruiters topics`,
+- Keep answers focused and actionable: 3-6 sentences unless generating test steps
+- Always include exact SAP SuccessFactors navigation paths (e.g. Module Picker > Recruiting > Job Requisitions)
+- When generating test steps, use this format: Step N | Action | Input/Test Data | Expected Result
+- Reference specific scenario IDs (e.g. RCM-RC-104) when relevant
+- If asked to generate test cases, produce at least 5 numbered steps
+- If a question is not about SAP SuccessFactors testing or RCM, politely redirect`,
     model: 'gpt-4o-mini',
     tools: [{ type: 'file_search' }],
     tool_resources: {
@@ -82,7 +92,7 @@ Rules:
   envContent += `\nASSISTANT_ID=${assistant.id}\nVECTOR_STORE_ID=${vectorStore.id}\n`;
   fs.writeFileSync(envPath, envContent);
 
-  console.log('\n✓ Setup complete! IDs saved to .env');
+  console.log('\nâœ“ Setup complete! IDs saved to .env');
   console.log('\nYou can now start the server:');
   console.log('  node server.js\n');
 }
@@ -91,3 +101,4 @@ setup().catch(err => {
   console.error('\nSetup failed:', err.message);
   process.exit(1);
 });
+
