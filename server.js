@@ -226,8 +226,8 @@ app.post('/api/ask', async (req, res) => {
     const messages = await openai.beta.threads.messages.list(thread.id);
     const raw = messages.data[0]?.content[0]?.text?.value || '';
 
-    // Strip citation markers like ã€4:0â€ sourceã€‘
-    const cleaned = raw.replace(/ã€[^ã€‘]*ã€‘/g, '').trim();
+    // Strip citation markers like [4:1u{2020}source]
+    const cleaned = raw.replace(/\u3010[^\u3011]*\u3011/g, '').trim();
 
     if (!cleaned) throw new Error('No answer returned.');
 
@@ -326,7 +326,7 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
 
       const messages = await openai.beta.threads.messages.list(thread.id);
       let answer = messages.data[0]?.content[0]?.text?.value || '';
-      answer = answer.replace(/ã€[^ã€‘]*ã€‘/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
+      answer = answer.replace(/\u3010[^\u3011]*\u3011/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
       if (answer.length > 1580) answer = answer.slice(0, 1577) + 'â€¦';
 
       await twilioClient.messages.create({
@@ -431,7 +431,7 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
 
     const messages = await openai.beta.threads.messages.list(thread.id);
     answer = messages.data[0]?.content[0]?.text?.value || '';
-    answer = answer.replace(/ã€[^ã€‘]*ã€‘/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
+    answer = answer.replace(/\u3010[^\u3011]*\u3011/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
 
     if (answer.length > 1580) answer = answer.slice(0, 1577) + 'â€¦';
 
