@@ -1728,6 +1728,52 @@ function exportStatus() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = `rcm-test-status-${new Date().toISOString().slice(0,10)}.csv`; a.click();
 }
+// ═══════════════════════════════════════════════════
+//  RECORDINGS
+// ═══════════════════════════════════════════════════
+const RECORDINGS = {
+  'RCM-RC-101': '/tests/recordings/tests-sf-create-position-R-292cb-ition-Copy-from-Louie-Bond-/video.webm'
+};
+
+(function() {
+  // Inject modal into page
+  const mo = document.createElement('div');
+  mo.id = 'recMo';
+  mo.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;';
+  mo.innerHTML = '<div style="position:relative;background:#000;border-radius:12px;overflow:hidden;max-width:90vw;"><button onclick="document.getElementById(\'recMo\').style.display=\'none\';document.getElementById(\'recVid\').pause();" style="position:absolute;top:10px;right:14px;background:none;border:none;color:#fff;font-size:26px;cursor:pointer;z-index:1;">&times;</button><video id="recVid" controls style="display:block;max-width:90vw;max-height:85vh;"></video></div>';
+  mo.onclick = function(e) { if(e.target===mo){mo.style.display='none';document.getElementById('recVid').pause();} };
+  document.body.appendChild(mo);
+
+  // Add Recording button to each scenario card that has a recording
+  function injectButtons() {
+    Object.keys(RECORDINGS).forEach(function(scId) {
+      const card = document.getElementById('scenario-' + scId);
+      if (!card) return;
+      if (card.querySelector('.rec-btn')) return;
+      const btn = document.createElement('button');
+      btn.className = 'rec-btn';
+      btn.innerHTML = '&#9654; Recording';
+      btn.style.cssText = 'margin-left:8px;padding:4px 12px;border-radius:6px;background:#1e3a7a;color:#fff;font-size:12px;font-weight:600;cursor:pointer;border:none;flex-shrink:0;';
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        document.getElementById('recVid').src = RECORDINGS[scId];
+        document.getElementById('recMo').style.display = 'flex';
+        document.getElementById('recVid').play();
+      };
+      const meta = card.querySelector('.scenario-meta');
+      if (meta) meta.appendChild(btn);
+      else card.querySelector('.scenario-hdr').appendChild(btn);
+    });
+  }
+
+  // Run after DOM is ready and also after any dynamic rendering
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectButtons);
+  } else {
+    injectButtons();
+  }
+  setTimeout(injectButtons, 2000);
+})();
 </script>
 </body>
 </html>
