@@ -13,17 +13,27 @@ const LOG_FILE = path.join(LOGS_DIR, 'whatsapp.jsonl');
 const WEB_LOG_FILE = path.join(LOGS_DIR, 'web.jsonl');
 const THREADS_FILE = path.join(LOGS_DIR, 'threads.json');
 
-function getUserThread(phone) {
+function getUserData(phone) {
   if (!fs.existsSync(THREADS_FILE)) return null;
   const threads = JSON.parse(fs.readFileSync(THREADS_FILE, 'utf8'));
   return threads[phone] || null;
 }
 
-function saveUserThread(phone, threadId) {
+function getUserThread(phone) {
+  const d = getUserData(phone);
+  if (!d) return null;
+  return typeof d === 'string' ? d : d.threadId;
+}
+
+function saveUserThread(phone, threadId, system) {
   const threads = fs.existsSync(THREADS_FILE)
     ? JSON.parse(fs.readFileSync(THREADS_FILE, 'utf8'))
     : {};
-  threads[phone] = threadId;
+  const prev = threads[phone] || {};
+  threads[phone] = {
+    threadId,
+    system: system || (typeof prev === 'object' ? prev.system : null),
+  };
   fs.writeFileSync(THREADS_FILE, JSON.stringify(threads, null, 2));
 }
 
@@ -346,10 +356,43 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     return;
   }
 
+  const MENU = 'Hi! Which system do you need help with?\n\n1 - SmartRecruiters\n2 - SAP SuccessFactors RCM\n\nJust reply with 1 or 2.';
+  const ASSISTANT_RCM = process.env.ASSISTANT_ID;
+  const ASSISTANT_SR  = process.env.ASSISTANT_ID_SR;
+
+  const userData = getUserData(from);
+  const existingSystem = (userData && typeof userData === 'object') ? userData.system : null;
+
+  // Reset/menu command
+  if (/^(reset|menu|change|switch|back)$/i.test(userMsg)) {
+    const allThreads = fs.existsSync(THREADS_FILE) ? JSON.parse(fs.readFileSync(THREADS_FILE, 'utf8')) : {};
+    delete allThreads[from];
+    fs.writeFileSync(THREADS_FILE, JSON.stringify(allThreads, null, 2));
+    twiml.message(MENU);
+    return res.type('text/xml').send(twiml.toString());
+  }
+
+  // User picking from menu
+  if (userMsg === '1' || userMsg === '2') {
+    const chosen = userMsg === '1' ? 'sr' : 'rcm';
+    const label = chosen === 'sr' ? 'SmartRecruiters' : 'SAP SuccessFactors RCM';
+    const newThread = await openai.beta.threads.create();
+    saveUserThread(from, newThread.id, chosen);
+    twiml.message('Got it - switching to ' + label + '. Go ahead and ask your question.');
+    return res.type('text/xml').send(twiml.toString());
+  }
+
   const isGreeting = /^(hi|hey|hello|hiya|howdy|good (morning|afternoon|evening)|sup|yo|helo|hii+)[\s!?.]*$/i.test(userMsg);
 
-  if (!userMsg || isGreeting) {
-    twiml.message('Hi! ðŸ‘‹ Ask me anything about EX3 and SAP SuccessFactors Recruiting â€” I\'m here to help.');
+  // No system selected yet - show menu
+  if (!existingSystem || isGreeting || !userMsg) {
+    twiml.message(MENU);
+    return res.type('text/xml').send(twiml.toString());
+  }
+
+  const assistantId = existingSystem === 'sr' ? ASSISTANT_SR : ASSISTANT_RCM;
+  if (!assistantId) {
+    twiml.message('Assistant not configured for that system. Please contact support.');
     return res.type('text/xml').send(twiml.toString());
   }
 
@@ -363,13 +406,11 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
   let success = false;
 
   try {
-    if (!process.env.ASSISTANT_ID) throw new Error('Assistant not configured.');
-
     const existingThreadId = getUserThread(from);
     const thread = existingThreadId
       ? { id: existingThreadId }
       : await openai.beta.threads.create();
-    saveUserThread(from, thread.id);
+    saveUserThread(from, thread.id, existingSystem);
 
     await openai.beta.threads.messages.create(thread.id, {
       role: 'user',
@@ -377,7 +418,7 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     });
 
     let run = await openai.beta.threads.runs.create(thread.id, {
-      assistant_id: process.env.ASSISTANT_ID,
+      assistant_id: assistantId,
     });
 
     while (run.status === 'in_progress' || run.status === 'queued') {
@@ -3486,6 +3527,29 @@ function buildUATPage() {
 '    }\n' +
 '  }catch(e){resp.innerHTML="Sorry, EX3 could not connect. Please try again.";}\n' +
 '}\n' +
+'\nvar RECORDINGS={\n' +
+'"RCM-RC-101":"/tests/recordings/tests-sf-create-position-R-292cb-ition-Copy-from-Louie-Bond-/video.webm"\n' +
+'};\n' +
+'(function(){\n' +
+'  var style=document.createElement("style");\n' +
+'  style.textContent=".rec-btn{background:#1A3A7A!important;color:#fff!important;border-color:#1A3A7A!important;}.rec-btn:hover{opacity:.85!important;} #recMo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;} #recMo.show{display:flex;} #recMoBox{background:#000;border-radius:12px;overflow:hidden;max-width:90vw;max-height:90vh;position:relative;} #recMoClose{position:absolute;top:10px;right:14px;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;z-index:1;}";\n' +
+'  document.head.appendChild(style);\n' +
+'  var mo=document.createElement("div");mo.id="recMo";\n' +
+'  mo.innerHTML=\'<div id="recMoBox"><button id="recMoClose" onclick="document.getElementById(\\\'recMo\\\').classList.remove(\\\'show\\\');document.getElementById(\\\'recVid\\\').pause();">&times;</button><video id="recVid" controls style="display:block;max-width:90vw;max-height:85vh;"></video></div>\';\n' +
+'  mo.onclick=function(e){if(e.target===mo){mo.classList.remove("show");document.getElementById("recVid").pause();}};\n' +
+'  document.body.appendChild(mo);\n' +
+'  Object.keys(RECORDINGS).forEach(function(scId){\n' +
+'    var card=document.getElementById("c-"+scId);\n' +
+'    if(!card)return;\n' +
+'    var nav=card.querySelector(".sc-nav-btns");\n' +
+'    if(!nav)return;\n' +
+'    var btn=document.createElement("button");\n' +
+'    btn.className="nav-btn rec-btn";\n' +
+'    btn.innerHTML="&#9654; Recording";\n' +
+'    btn.onclick=function(e){e.stopPropagation();document.getElementById("recVid").src=RECORDINGS[scId];document.getElementById("recMo").classList.add("show");document.getElementById("recVid").play();};\n' +
+'    nav.insertBefore(btn,nav.firstChild);\n' +
+'  });\n' +
+'})();\n' +
 '\n<\/script>\n<\/body>\n<\/html>');
 }
 
