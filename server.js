@@ -238,7 +238,7 @@ app.post('/api/ask', async (req, res) => {
     if (followupMatch) {
       followUps = followupMatch[1]
         .split('|')
-        .map(q => q.replace(/^\[|\]$/g, '').trim())
+        .map(q => q.trim().replace(/^\[|\]$/g, '').trim())
         .filter(Boolean)
         .slice(0, 3);
       answer = cleaned.replace(/FOLLOWUPS:.*$/m, '').trim();
