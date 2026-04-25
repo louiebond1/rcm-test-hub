@@ -12,6 +12,7 @@ if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR);
 const LOG_FILE = path.join(LOGS_DIR, 'whatsapp.jsonl');
 const WEB_LOG_FILE = path.join(LOGS_DIR, 'web.jsonl');
 const THREADS_FILE = path.join(LOGS_DIR, 'threads.json');
+const FEEDBACK_FILE = path.join(LOGS_DIR, 'feedback.jsonl');
 
 function getUserData(phone) {
   if (!fs.existsSync(THREADS_FILE)) return null;
@@ -272,6 +273,67 @@ app.post('/api/ask', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Feedback endpoint
+app.post('/api/feedback', express.json(), (req, res) => {
+  const { question, answer, rating, threadId } = req.body;
+  if (!rating || !question) return res.status(400).json({ error: 'Missing fields' });
+  const entry = { ts: new Date().toISOString(), threadId: threadId || null, question, answer, rating };
+  fs.appendFileSync(FEEDBACK_FILE, JSON.stringify(entry) + '\n');
+  res.json({ ok: true });
+});
+
+// Feedback review page
+app.all('/analytics/feedback', requirePassword);
+app.get('/analytics/feedback', (req, res) => {
+  const lines = fs.existsSync(FEEDBACK_FILE) ? fs.readFileSync(FEEDBACK_FILE, 'utf8').trim().split('\n').filter(Boolean) : [];
+  const all = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  const showAll = req.query.filter === 'all';
+  const entries = showAll ? all : all.filter(e => e.rating === 'down');
+  const downCount = all.filter(e => e.rating === 'down').length;
+  const upCount = all.filter(e => e.rating === 'up').length;
+  const rows = entries.slice().reverse().map(e => `
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:10px 8px;font-size:12px;color:#888;white-space:nowrap">${e.ts.replace('T',' ').slice(0,19)}</td>
+      <td style="padding:10px 8px;font-size:13px">${escHtml(e.question)}</td>
+      <td style="padding:10px 8px;font-size:13px;color:#444">${escHtml(e.answer || '').slice(0,300)}${(e.answer||'').length>300?'…':''}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:18px">${e.rating==='up'?'👍':'👎'}</td>
+    </tr>`).join('');
+  res.send(`<!DOCTYPE html><html><head><title>AI Feedback</title>
+  <style>body{font-family:system-ui,sans-serif;margin:0;background:#f8f9fa}
+  .header{background:#1e293b;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:24px}
+  .header a{color:#94a3b8;text-decoration:none;font-size:14px}
+  .header a:hover{color:#fff}
+  .stats{display:flex;gap:16px;padding:20px 24px}
+  .stat{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 24px;text-align:center}
+  .stat-num{font-size:28px;font-weight:700}
+  .stat-lbl{font-size:12px;color:#64748b;margin-top:4px}
+  .up .stat-num{color:#16a34a} .down .stat-num{color:#dc2626}
+  .filter{padding:0 24px 12px;display:flex;gap:8px}
+  .filter a{padding:6px 14px;border-radius:6px;font-size:13px;text-decoration:none;border:1px solid #e2e8f0;color:#334155}
+  .filter a.active{background:#1e293b;color:#fff;border-color:#1e293b}
+  table{width:calc(100% - 48px);margin:0 24px 40px;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  th{background:#f1f5f9;padding:10px 8px;text-align:left;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  tr:hover{background:#f8fafc}</style></head><body>
+  <div class="header">
+    <span style="font-weight:700;font-size:16px">AI Feedback</span>
+    <a href="/analytics">WhatsApp Analytics</a>
+    <a href="/analytics/web">Web Chat</a>
+    <a href="/analytics/feedback" style="color:#fff;border-bottom:2px solid #6366f1">Feedback</a>
+  </div>
+  <div class="stats">
+    <div class="stat up"><div class="stat-num">${upCount}</div><div class="stat-lbl">👍 Helpful</div></div>
+    <div class="stat down"><div class="stat-num">${downCount}</div><div class="stat-lbl">👎 Needs Review</div></div>
+    <div class="stat"><div class="stat-num">${all.length}</div><div class="stat-lbl">Total Ratings</div></div>
+  </div>
+  <div class="filter">
+    <a href="/analytics/feedback" class="${!showAll?'active':''}">👎 Needs Review (${downCount})</a>
+    <a href="/analytics/feedback?filter=all" class="${showAll?'active':''}">All Ratings (${all.length})</a>
+  </div>
+  ${entries.length===0?`<p style="padding:24px;color:#64748b">No ${showAll?'':'flagged '}responses yet.</p>`:`
+  <table><thead><tr><th>Time</th><th>Question</th><th>Answer</th><th>Rating</th></tr></thead><tbody>${rows}</tbody></table>`}
+  </body></html>`);
 });
 
 // WhatsApp webhook â€” Twilio sends POST with body.Body = user message
@@ -4808,6 +4870,7 @@ app.get('/conversations', (req, res) => {
   <div class="topbar-nav">
     <a href="/analytics">WhatsApp Analytics</a>
     <a href="/analytics/web">Web Analytics</a>
+    <a href="/analytics/feedback">AI Feedback</a>
   </div>
 </div>
 <div class="layout">

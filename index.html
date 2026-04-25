@@ -496,6 +496,10 @@ a { text-decoration: none; color: inherit; }
 }
 .fq-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
 
+.fb-row { margin-top: 10px; display: flex; gap: 6px; }
+.fb-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: 14px; cursor: pointer; opacity: 0.6; transition: all .15s; }
+.fb-btn:hover { opacity: 1; border-color: #94a3b8; background: var(--surface-2); }
+
 .ai-input-row {
   padding: 14px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
 }
@@ -1192,6 +1196,7 @@ const ROLE_CLASS = {
 let statuses = JSON.parse(localStorage.getItem('rcm_statuses') || '{}');
 let aiThreadId = null;
 let aiLoading = false;
+let _lastQuestion = '';
 let currentFilter = 'all';
 let allExpanded = false;
 
@@ -1565,6 +1570,7 @@ async function sendMessage() {
   input.value = '';
   input.style.height = 'auto';
 
+  _lastQuestion = q;
   appendMessage('user', q);
   const thinkId = appendThinking();
   aiLoading = true;
@@ -1599,10 +1605,31 @@ function appendMessage(role, text, followUps) {
       `<button class="fq-btn" onclick="askAI('${q.replace(/'/g,"\\'")}')">${q}</button>`
     ).join('')}</div>`;
   }
-  div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-bubble">${formatAIText(text)}${fqHtml}</div>`;
+  let feedbackHtml = '';
+  if (role === 'ai') {
+    const msgId = 'fb-' + Date.now();
+    feedbackHtml = `<div class="fb-row" id="${msgId}">
+      <button class="fb-btn" onclick="sendFeedback('up','${msgId}',${JSON.stringify(text).replace(/'/g,"&#39;")})">👍</button>
+      <button class="fb-btn" onclick="sendFeedback('down','${msgId}',${JSON.stringify(text).replace(/'/g,"&#39;")})">👎</button>
+    </div>`;
+  }
+  div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-bubble">${formatAIText(text)}${fqHtml}${feedbackHtml}</div>`;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
   return div;
+}
+
+function sendFeedback(rating, msgId, answer) {
+  const el = document.getElementById(msgId);
+  if (!el) return;
+  fetch('/api/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question: _lastQuestion || '', answer, rating, threadId: aiThreadId })
+  });
+  el.innerHTML = rating === 'up'
+    ? '<span style="font-size:12px;color:#16a34a">✓ Thanks for the feedback</span>'
+    : '<span style="font-size:12px;color:#dc2626">✓ Flagged for review</span>';
 }
 
 function appendThinking() {
