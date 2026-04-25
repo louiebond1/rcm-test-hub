@@ -98,7 +98,7 @@ function requirePassword(req, res, next) {
   res.send(`<!DOCTYPE html>
 <html>
 <head>
-  <title>Analytics â€” Login</title>
+  <title>Analytics &mdash; Login</title>
   <style>
     body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f9f9f9; }
     .box { background: white; padding: 2rem 2.5rem; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.1); text-align: center; }
@@ -208,7 +208,7 @@ app.get('/api/tts', async (req, res) => {
         });
         if (!elRes.ok) {
           const errBody = await elRes.text().catch(()=>'');
-          console.error('ElevenLabs ' + elRes.status + ':', errBody.slice(0,200), 'â€” falling back to OpenAI');
+          console.error('ElevenLabs ' + elRes.status + ':', errBody.slice(0,200), '&mdash; falling back to OpenAI');
           const mp3 = await openai.audio.speech.create({ model: 'tts-1', voice: stressed ? 'echo' : 'nova', input: text, speed: stressed ? 1.05 : 0.92 });
           ttsCache[cacheKey] = Buffer.from(await mp3.arrayBuffer());
         } else {
@@ -252,7 +252,7 @@ app.post('/api/ask', async (req, res) => {
     // Add the user's question, appending a follow-up request
     const messageContent = `${question.trim()}
 
-(After your answer, on a new line write exactly: FOLLOWUPS: [question 1] | [question 2] | [question 3] â€” 3 short follow-up questions the user might ask next.)`;
+(After your answer, on a new line write exactly: FOLLOWUPS: [question 1] | [question 2] | [question 3] &mdash; 3 short follow-up questions the user might ask next.)`;
 
     await openai.beta.threads.messages.create(thread.id, {
       role: 'user',
@@ -273,7 +273,7 @@ app.post('/api/ask', async (req, res) => {
 
     if (run.status !== 'completed') {
       console.error('Run failed details:', JSON.stringify(run.last_error));
-      throw new Error(`Unexpected run status: ${run.status}${run.last_error ? ' â€” ' + run.last_error.message : ''}`);
+      throw new Error(`Unexpected run status: ${run.status}${run.last_error ? ' &mdash; ' + run.last_error.message : ''}`);
     }
 
     // Get the assistant's reply
@@ -389,7 +389,7 @@ app.get('/analytics/feedback', (req, res) => {
   </body></html>`);
 });
 
-// WhatsApp webhook â€” Twilio sends POST with body.Body = user message
+// WhatsApp webhook &mdash; Twilio sends POST with body.Body = user message
 app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) => {
   const userMsg = (req.body.Body || '').trim();
   const from = req.body.From || '';
@@ -442,7 +442,7 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
       const messages = await openai.beta.threads.messages.list(thread.id);
       let answer = messages.data[0]?.content[0]?.text?.value || '';
       answer = answer.replace(/\u3010[^\u3011]*\u3011/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
-      if (answer.length > 1580) answer = answer.slice(0, 1577) + 'â€¦';
+      if (answer.length > 1580) answer = answer.slice(0, 1577) + '&hellip;';
 
       await twilioClient.messages.create({
         from: 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER,
@@ -548,7 +548,7 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     answer = messages.data[0]?.content[0]?.text?.value || '';
     answer = answer.replace(/\u3010[^\u3011]*\u3011/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
 
-    if (answer.length > 1580) answer = answer.slice(0, 1577) + 'â€¦';
+    if (answer.length > 1580) answer = answer.slice(0, 1577) + '&hellip;';
 
     success = true;
     const uncertain = isUncertain(answer);
@@ -623,7 +623,7 @@ app.get('/analytics', (req, res) => {
       <td>${l.ts.replace('T', ' ').slice(0, 19)}</td>
       <td><a href="/analytics?q=${encodeURIComponent(num)}" style="color:#4a90e2;text-decoration:none">${num}</a></td>
       <td>${escHtml(l.question)}</td>
-      <td class="preview" onclick="showAnswer(this)" data-full="${escHtml(l.answer || 'â€”')}">${escHtml(l.answer || 'â€”').slice(0, 120)}${(l.answer || '').length > 120 ? 'â€¦ <span style="color:#4a90e2;font-size:.8rem">(click to expand)</span>' : ''}</td>
+      <td class="preview" onclick="showAnswer(this)" data-full="${escHtml(l.answer || '&mdash;')}">${escHtml(l.answer || '&mdash;').slice(0, 120)}${(l.answer || '').length > 120 ? '&hellip; <span style="color:#4a90e2;font-size:.8rem">(click to expand)</span>' : ''}</td>
       <td>${status}</td>
       <td>${(l.ms / 1000).toFixed(1)}s</td>
     </tr>`;
@@ -636,7 +636,7 @@ app.get('/analytics', (req, res) => {
     `<option value="${escHtml(n)}" ${search && n.includes(search) ? 'selected' : ''}>${escHtml(n)}</option>`
   ).join('');
 
-  const searchLabel = search ? `â€” filtered to <strong>${logs[0]?.from.replace('whatsapp:','') || search}</strong> <a href="/analytics" style="font-size:.85rem;color:#4a90e2">clear</a>` : '';
+  const searchLabel = search ? `&mdash; filtered to <strong>${logs[0]?.from.replace('whatsapp:','') || search}</strong> <a href="/analytics" style="font-size:.85rem;color:#4a90e2">clear</a>` : '';
 
   res.send(`<!DOCTYPE html>
 <html>
@@ -677,7 +677,7 @@ app.get('/analytics', (req, res) => {
   <form class="search-bar" method="get" action="/analytics">
     <input name="q" placeholder="Search by phone number..." value="${escHtml(req.query.q || '')}" style="width:240px" />
     <select onchange="this.form.q.value=this.value;this.form.submit()">
-      <option value="">â€” or pick a number â€”</option>
+      <option value="">&mdash; or pick a number &mdash;</option>
       ${numberOptions}
     </select>
     <button type="submit">Search</button>
@@ -1211,25 +1211,25 @@ app.get('/consultant', (req, res) => {
       <div class="hero">
         <span class="badge badge-gray">Consultant Portal</span>
         <h1>SAP SuccessFactors Recruiting Implementation Guide</h1>
-        <p>Everything you need to deliver a successful SAP SuccessFactors Recruiting implementation â€” from kickoff to go-live.</p>
+        <p>Everything you need to deliver a successful SAP SuccessFactors Recruiting implementation &mdash; from kickoff to go-live.</p>
       </div>
       <div class="cards">
-        <div class="card"><div class="num">8â€“12</div><h3>Typical Weeks</h3><p>For a standard mid-size organisation</p></div>
+        <div class="card"><div class="num">8&ndash;12</div><h3>Typical Weeks</h3><p>For a standard mid-size organisation</p></div>
         <div class="card"><div class="num">6</div><h3>Phases</h3><p>Discovery, Config, Build, UAT, Training, Go-Live</p></div>
         <div class="card"><div class="num">4</div><h3>Key Stakeholders</h3><p>HR, IT, Recruiters, Hiring Managers</p></div>
         <div class="card"><div class="num">3</div><h3>Training Sessions</h3><p>Admin, Recruiter, Hiring Manager</p></div>
       </div>
-      <div class="tip"><strong>First time?</strong> Start with the Phase Guide â€” it walks you through exactly what to do and when. The SOW Template has pre-written scope wording you can use directly with clients.</div>
+      <div class="tip"><strong>First time?</strong> Start with the Phase Guide &mdash; it walks you through exactly what to do and when. The SOW Template has pre-written scope wording you can use directly with clients.</div>
       <h2 class="section-title">Typical Implementation Timeline</h2>
-      <p class="section-sub">Use this as a guide â€” timelines vary based on client complexity, integrations, and decision speed.</p>
+      <p class="section-sub">Use this as a guide &mdash; timelines vary based on client complexity, integrations, and decision speed.</p>
       <table>
         <tr><th>Phase</th><th>Weeks</th><th>Key Output</th></tr>
-        <tr><td>1. Discovery & Kickoff</td><td>1â€“2</td><td>Project plan, stakeholder map, requirements doc</td></tr>
-        <tr><td>2. System Configuration</td><td>2â€“4</td><td>Platform configured, users set up, hiring processes built</td></tr>
-        <tr><td>3. Build & Integrate</td><td>3â€“5</td><td>Integrations live, job boards connected, career page branded</td></tr>
-        <tr><td>4. UAT (Testing)</td><td>5â€“7</td><td>Client signed off, bugs resolved</td></tr>
-        <tr><td>5. Training</td><td>6â€“8</td><td>All users trained, materials delivered</td></tr>
-        <tr><td>6. Go-Live & Hypercare</td><td>8â€“12</td><td>Live in production, 2â€“4 week support window</td></tr>
+        <tr><td>1. Discovery & Kickoff</td><td>1&ndash;2</td><td>Project plan, stakeholder map, requirements doc</td></tr>
+        <tr><td>2. System Configuration</td><td>2&ndash;4</td><td>Platform configured, users set up, hiring processes built</td></tr>
+        <tr><td>3. Build & Integrate</td><td>3&ndash;5</td><td>Integrations live, job boards connected, career page branded</td></tr>
+        <tr><td>4. UAT (Testing)</td><td>5&ndash;7</td><td>Client signed off, bugs resolved</td></tr>
+        <tr><td>5. Training</td><td>6&ndash;8</td><td>All users trained, materials delivered</td></tr>
+        <tr><td>6. Go-Live & Hypercare</td><td>8&ndash;12</td><td>Live in production, 2&ndash;4 week support window</td></tr>
       </table>
     </div>
 
@@ -1238,18 +1238,18 @@ app.get('/consultant', (req, res) => {
       <div class="hero">
         <span class="badge badge-blue">Phase Guide</span>
         <h1>Implementation Phases</h1>
-        <p>A detailed breakdown of every phase â€” what to do, who's involved, and what to deliver.</p>
+        <p>A detailed breakdown of every phase &mdash; what to do, who's involved, and what to deliver.</p>
       </div>
 
       <div class="phase">
         <div class="phase-header" onclick="togglePhase(this)">
           <div class="phase-num">1</div>
           <div class="phase-title">Discovery & Kickoff</div>
-          <div class="phase-weeks">Weeks 1â€“2</div>
+          <div class="phase-weeks">Weeks 1&ndash;2</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
         <div class="phase-body">
-          <p style="font-size:13px;color:#555;margin-top:12px">The goal of discovery is to understand the client's current recruitment process, pain points, and what they need SAP SuccessFactors Recruiting to do. Never skip this â€” it prevents costly rework later.</p>
+          <p style="font-size:13px;color:#555;margin-top:12px">The goal of discovery is to understand the client's current recruitment process, pain points, and what they need SAP SuccessFactors Recruiting to do. Never skip this &mdash; it prevents costly rework later.</p>
           <ul class="checklist">
             <li>Host kickoff call with all key stakeholders (HR Director, IT, Lead Recruiter)</li>
             <li>Map the client's current hiring process end-to-end</li>
@@ -1269,11 +1269,11 @@ app.get('/consultant', (req, res) => {
         <div class="phase-header" onclick="togglePhase(this)">
           <div class="phase-num">2</div>
           <div class="phase-title">System Configuration</div>
-          <div class="phase-weeks">Weeks 2â€“4</div>
+          <div class="phase-weeks">Weeks 2&ndash;4</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
         <div class="phase-body">
-          <p style="font-size:13px;color:#555;margin-top:12px">This is where you build the platform. Work from the inside out â€” company settings first, then users, then hiring processes, then templates.</p>
+          <p style="font-size:13px;color:#555;margin-top:12px">This is where you build the platform. Work from the inside out &mdash; company settings first, then users, then hiring processes, then templates.</p>
           <ul class="checklist">
             <li>Configure company settings (name, logo, timezone, language)</li>
             <li>Set up user roles (Admin, Recruiter, Hiring Manager, Limited)</li>
@@ -1294,17 +1294,17 @@ app.get('/consultant', (req, res) => {
         <div class="phase-header" onclick="togglePhase(this)">
           <div class="phase-num">3</div>
           <div class="phase-title">Build & Integrate</div>
-          <div class="phase-weeks">Weeks 3â€“5</div>
+          <div class="phase-weeks">Weeks 3&ndash;5</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
         <div class="phase-body">
-          <p style="font-size:13px;color:#555;margin-top:12px">Connect SAP SuccessFactors Recruiting to the client's existing systems. Involve the client's IT team here â€” you'll need their credentials and access.</p>
+          <p style="font-size:13px;color:#555;margin-top:12px">Connect SAP SuccessFactors Recruiting to the client's existing systems. Involve the client's IT team here &mdash; you'll need their credentials and access.</p>
           <ul class="checklist">
             <li>Brand and configure the careers page</li>
             <li>Connect job boards (Indeed, LinkedIn, Glassdoor, etc.)</li>
             <li>Set up HRIS integration if required (Workday, SAP, BambooHR)</li>
             <li>Configure background screening integration if required</li>
-            <li>Set up SSO (Single Sign-On) if required â€” needs IT</li>
+            <li>Set up SSO (Single Sign-On) if required &mdash; needs IT</li>
             <li>Test all integrations end-to-end</li>
             <li>Configure job posting approval workflows</li>
             <li>Set up Winston AI features if in scope</li>
@@ -1315,8 +1315,8 @@ app.get('/consultant', (req, res) => {
       <div class="phase">
         <div class="phase-header" onclick="togglePhase(this)">
           <div class="phase-num">4</div>
-          <div class="phase-title">UAT â€” User Acceptance Testing</div>
-          <div class="phase-weeks">Weeks 5â€“7</div>
+          <div class="phase-title">UAT &mdash; User Acceptance Testing</div>
+          <div class="phase-weeks">Weeks 5&ndash;7</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
         <div class="phase-body">
@@ -1341,11 +1341,11 @@ app.get('/consultant', (req, res) => {
         <div class="phase-header" onclick="togglePhase(this)">
           <div class="phase-num">5</div>
           <div class="phase-title">Training</div>
-          <div class="phase-weeks">Weeks 6â€“8</div>
+          <div class="phase-weeks">Weeks 6&ndash;8</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
         <div class="phase-body">
-          <p style="font-size:13px;color:#555;margin-top:12px">Run separate training sessions per role â€” don't mix admins and hiring managers in the same session. Keep it practical, hands-on, and recorded where possible.</p>
+          <p style="font-size:13px;color:#555;margin-top:12px">Run separate training sessions per role &mdash; don't mix admins and hiring managers in the same session. Keep it practical, hands-on, and recorded where possible.</p>
           <ul class="checklist">
             <li>Schedule Admin training session (90 mins recommended)</li>
             <li>Schedule Recruiter training session (60 mins recommended)</li>
@@ -1363,11 +1363,11 @@ app.get('/consultant', (req, res) => {
         <div class="phase-header" onclick="togglePhase(this)">
           <div class="phase-num">6</div>
           <div class="phase-title">Go-Live & Hypercare</div>
-          <div class="phase-weeks">Weeks 8â€“12</div>
+          <div class="phase-weeks">Weeks 8&ndash;12</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
         <div class="phase-body">
-          <p style="font-size:13px;color:#555;margin-top:12px">Go-live day is just the beginning. The hypercare period (2â€“4 weeks of close support) is where most issues surface. Be proactive â€” check in daily in the first week.</p>
+          <p style="font-size:13px;color:#555;margin-top:12px">Go-live day is just the beginning. The hypercare period (2&ndash;4 weeks of close support) is where most issues surface. Be proactive &mdash; check in daily in the first week.</p>
           <ul class="checklist">
             <li>Confirm go-live date with client at least 2 weeks in advance</li>
             <li>Complete final production environment check</li>
@@ -1375,7 +1375,7 @@ app.get('/consultant', (req, res) => {
             <li>Send go-live communication to all users</li>
             <li>Be on standby on go-live day</li>
             <li>Daily check-in calls for first week post go-live</li>
-            <li>Weekly check-ins for weeks 2â€“4</li>
+            <li>Weekly check-ins for weeks 2&ndash;4</li>
             <li>Log and resolve all post go-live issues</li>
             <li>Handover to support team with full documentation</li>
             <li>Conduct project retrospective with client</li>
@@ -1405,7 +1405,7 @@ app.get('/consultant', (req, res) => {
 
       <div class="sow-box">
         <h2>2. In Scope</h2>
-        <div class="sub">What EX3 will deliver â€” use this as your standard scope</div>
+        <div class="sub">What EX3 will deliver &mdash; use this as your standard scope</div>
         <div class="sow-section">
           <h3>Platform Configuration</h3>
           <ul>
@@ -1476,7 +1476,7 @@ app.get('/consultant', (req, res) => {
 
       <div class="sow-box">
         <h2>4. Client Responsibilities</h2>
-        <div class="sub">What the client must provide â€” critical to include</div>
+        <div class="sub">What the client must provide &mdash; critical to include</div>
         <div class="sow-section">
           <ul>
             <li>Appoint an internal project owner with authority to make decisions</li>
@@ -1493,15 +1493,15 @@ app.get('/consultant', (req, res) => {
 
       <div class="sow-box">
         <h2>5. Assumptions</h2>
-        <div class="sub">Protect yourself â€” state what you're assuming to be true</div>
+        <div class="sub">Protect yourself &mdash; state what you're assuming to be true</div>
         <div class="sow-section">
           <ul>
             <li>The client holds a valid SAP SuccessFactors Recruiting licence for the duration of the project</li>
             <li>A named internal project owner will be available throughout the engagement</li>
             <li>Client feedback and approvals will be provided within 3 business days of request</li>
-            <li>All integrations use standard SAP SuccessFactors Recruiting connectors â€” no custom development required</li>
+            <li>All integrations use standard SAP SuccessFactors Recruiting connectors &mdash; no custom development required</li>
             <li>The number of users, templates, and workflows does not exceed the quantities stated above</li>
-            <li>Go-live will occur within [X] weeks of project start â€” delays caused by the client may impact timelines and costs</li>
+            <li>Go-live will occur within [X] weeks of project start &mdash; delays caused by the client may impact timelines and costs</li>
           </ul>
         </div>
       </div>
@@ -1526,13 +1526,13 @@ app.get('/consultant', (req, res) => {
         <h2 class="section-title">EX3 Consultant</h2>
         <p class="section-sub">Your responsibilities across the implementation.</p>
         <table><tr><th>Responsibility</th><th>When</th></tr>
-          <tr><td>Lead discovery sessions and gather requirements</td><td>Week 1â€“2</td></tr>
+          <tr><td>Lead discovery sessions and gather requirements</td><td>Week 1&ndash;2</td></tr>
           <tr><td>Own and maintain the project plan</td><td>Throughout</td></tr>
-          <tr><td>Configure the SAP SuccessFactors Recruiting platform</td><td>Week 2â€“4</td></tr>
-          <tr><td>Set up and test all integrations</td><td>Week 3â€“5</td></tr>
-          <tr><td>Facilitate UAT and manage issue log</td><td>Week 5â€“7</td></tr>
-          <tr><td>Deliver training sessions</td><td>Week 6â€“8</td></tr>
-          <tr><td>Support go-live and hypercare period</td><td>Week 8â€“12</td></tr>
+          <tr><td>Configure the SAP SuccessFactors Recruiting platform</td><td>Week 2&ndash;4</td></tr>
+          <tr><td>Set up and test all integrations</td><td>Week 3&ndash;5</td></tr>
+          <tr><td>Facilitate UAT and manage issue log</td><td>Week 5&ndash;7</td></tr>
+          <tr><td>Deliver training sessions</td><td>Week 6&ndash;8</td></tr>
+          <tr><td>Support go-live and hypercare period</td><td>Week 8&ndash;12</td></tr>
           <tr><td>Produce handover documentation</td><td>End of project</td></tr>
         </table>
       </div>
@@ -1543,22 +1543,22 @@ app.get('/consultant', (req, res) => {
         <table><tr><th>Responsibility</th><th>When</th></tr>
           <tr><td>Sign off project scope and SOW</td><td>Before kickoff</td></tr>
           <tr><td>Attend kickoff and key milestone sessions</td><td>Week 1, 7, go-live</td></tr>
-          <tr><td>Make decisions on hiring process design</td><td>Week 1â€“3</td></tr>
-          <tr><td>Approve offer templates and approval chains</td><td>Week 3â€“4</td></tr>
-          <tr><td>Provide UAT sign-off</td><td>Week 5â€“7</td></tr>
+          <tr><td>Make decisions on hiring process design</td><td>Week 1&ndash;3</td></tr>
+          <tr><td>Approve offer templates and approval chains</td><td>Week 3&ndash;4</td></tr>
+          <tr><td>Provide UAT sign-off</td><td>Week 5&ndash;7</td></tr>
           <tr><td>Champion the system internally</td><td>Throughout</td></tr>
         </table>
       </div>
 
       <div class="role-content" id="role-it">
         <h2 class="section-title">IT / System Administrator</h2>
-        <p class="section-sub">Needed mainly for integrations and SSO. Engage them early â€” they're often the bottleneck.</p>
+        <p class="section-sub">Needed mainly for integrations and SSO. Engage them early &mdash; they're often the bottleneck.</p>
         <table><tr><th>Responsibility</th><th>When</th></tr>
           <tr><td>Provide HRIS credentials and integration access</td><td>Week 3</td></tr>
-          <tr><td>Configure SSO (if required)</td><td>Week 3â€“4</td></tr>
+          <tr><td>Configure SSO (if required)</td><td>Week 3&ndash;4</td></tr>
           <tr><td>Whitelist SAP SuccessFactors Recruiting domains on firewall</td><td>Week 2</td></tr>
-          <tr><td>Support data migration (if applicable)</td><td>Week 7â€“8</td></tr>
-          <tr><td>Attend integration testing sessions</td><td>Week 4â€“5</td></tr>
+          <tr><td>Support data migration (if applicable)</td><td>Week 7&ndash;8</td></tr>
+          <tr><td>Attend integration testing sessions</td><td>Week 4&ndash;5</td></tr>
         </table>
       </div>
 
@@ -1566,10 +1566,10 @@ app.get('/consultant', (req, res) => {
         <h2 class="section-title">Lead Recruiter</h2>
         <p class="section-sub">Your day-to-day contact. They know the current process better than anyone.</p>
         <table><tr><th>Responsibility</th><th>When</th></tr>
-          <tr><td>Map current recruitment process during discovery</td><td>Week 1â€“2</td></tr>
-          <tr><td>Review and approve hiring process configuration</td><td>Week 3â€“4</td></tr>
-          <tr><td>Lead UAT testing for recruiter workflows</td><td>Week 5â€“6</td></tr>
-          <tr><td>Attend recruiter training session</td><td>Week 6â€“8</td></tr>
+          <tr><td>Map current recruitment process during discovery</td><td>Week 1&ndash;2</td></tr>
+          <tr><td>Review and approve hiring process configuration</td><td>Week 3&ndash;4</td></tr>
+          <tr><td>Lead UAT testing for recruiter workflows</td><td>Week 5&ndash;6</td></tr>
+          <tr><td>Attend recruiter training session</td><td>Week 6&ndash;8</td></tr>
           <tr><td>Become internal super-user post go-live</td><td>Week 8+</td></tr>
         </table>
       </div>
@@ -1578,8 +1578,8 @@ app.get('/consultant', (req, res) => {
         <h2 class="section-title">Hiring Manager</h2>
         <p class="section-sub">Often the hardest to engage. Keep their involvement minimal and targeted.</p>
         <table><tr><th>Responsibility</th><th>When</th></tr>
-          <tr><td>Attend hiring manager training session</td><td>Week 6â€“8</td></tr>
-          <tr><td>Complete UAT for hiring manager workflows</td><td>Week 5â€“7</td></tr>
+          <tr><td>Attend hiring manager training session</td><td>Week 6&ndash;8</td></tr>
+          <tr><td>Complete UAT for hiring manager workflows</td><td>Week 5&ndash;7</td></tr>
           <tr><td>Provide feedback on job approval workflow</td><td>Week 3</td></tr>
         </table>
       </div>
@@ -1643,7 +1643,7 @@ app.get('/consultant', (req, res) => {
           <div class="phase-title">How long should a SAP SuccessFactors Recruiting implementation take?</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
-        <div class="phase-body"><p style="font-size:13px;padding-top:12px">For a standard mid-size company (50â€“500 employees, no complex integrations), expect 8â€“10 weeks. Larger organisations or those requiring HRIS integrations, SSO, or data migration should plan for 10â€“16 weeks. The biggest variable is client responsiveness â€” decisions that take a week instead of a day add up fast.</p></div>
+        <div class="phase-body"><p style="font-size:13px;padding-top:12px">For a standard mid-size company (50&ndash;500 employees, no complex integrations), expect 8&ndash;10 weeks. Larger organisations or those requiring HRIS integrations, SSO, or data migration should plan for 10&ndash;16 weeks. The biggest variable is client responsiveness &mdash; decisions that take a week instead of a day add up fast.</p></div>
       </div>
       <div class="phase">
         <div class="phase-header" onclick="togglePhase(this)">
@@ -1657,7 +1657,7 @@ app.get('/consultant', (req, res) => {
           <div class="phase-title">What should go in the SOW scope?</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
-        <div class="phase-body"><p style="font-size:13px;padding-top:12px">The scope should cover: platform configuration, user setup, integrations (list each one explicitly), career page setup, UAT facilitation, training sessions (specify how many and which roles), go-live support, and hypercare duration. Always include an Out of Scope section â€” data migration, custom development, and additional training are common areas where clients assume it's included when it isn't.</p></div>
+        <div class="phase-body"><p style="font-size:13px;padding-top:12px">The scope should cover: platform configuration, user setup, integrations (list each one explicitly), career page setup, UAT facilitation, training sessions (specify how many and which roles), go-live support, and hypercare duration. Always include an Out of Scope section &mdash; data migration, custom development, and additional training are common areas where clients assume it's included when it isn't.</p></div>
       </div>
       <div class="phase">
         <div class="phase-header" onclick="togglePhase(this)">
@@ -1668,10 +1668,10 @@ app.get('/consultant', (req, res) => {
       </div>
       <div class="phase">
         <div class="phase-header" onclick="togglePhase(this)">
-          <div class="phase-title">Client wants to change scope mid-project â€” what do I do?</div>
+          <div class="phase-title">Client wants to change scope mid-project &mdash; what do I do?</div>
           <svg class="phase-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </div>
-        <div class="phase-body"><p style="font-size:13px;padding-top:12px">Raise a Change Request. Never agree to scope changes verbally. Document what's being added, the impact on timeline and cost, and get it signed off before doing the work. If the change is minor (e.g. one extra email template), use your judgement â€” but anything that adds meaningful effort should go through a formal change request.</p></div>
+        <div class="phase-body"><p style="font-size:13px;padding-top:12px">Raise a Change Request. Never agree to scope changes verbally. Document what's being added, the impact on timeline and cost, and get it signed off before doing the work. If the change is minor (e.g. one extra email template), use your judgement &mdash; but anything that adds meaningful effort should go through a formal change request.</p></div>
       </div>
     </div>
 
@@ -1767,12 +1767,12 @@ const dpSteps = [
   {
     tag: 'Consultant Portal',
     title: 'The Implementation Command Centre',
-    subtitle: 'Everything an EX3 consultant needs to run a flawless implementation â€” in one place.',
+    subtitle: 'Everything an EX3 consultant needs to run a flawless implementation &mdash; in one place.',
     points: [
       'Covers every phase of a SAP SuccessFactors Recruiting implementation end to end',
-      'Built from real EX3 project experience â€” not generic advice',
+      'Built from real EX3 project experience &mdash; not generic advice',
       'Role matrix, UAT checklist, and FAQ all in one place',
-      'Accessible anywhere â€” consultants use this live on client calls',
+      'Accessible anywhere &mdash; consultants use this live on client calls',
     ],
     note: 'Open with the overview visible. Let them read the phase list before you start clicking.',
   },
@@ -1784,7 +1784,7 @@ const dpSteps = [
       'Map the client hiring process end-to-end before touching the platform',
       'Run a structured discovery session using the EX3 questionnaire',
       'Identify integrations, job boards, and data migration requirements upfront',
-      'Agreeing scope here prevents scope creep later â€” this phase is critical',
+      'Agreeing scope here prevents scope creep later &mdash; this phase is critical',
     ],
     note: 'Click into the Discovery phase card. Walk through the key activities listed.',
   },
@@ -1793,7 +1793,7 @@ const dpSteps = [
     title: 'Phase 2: Configuration',
     subtitle: 'This is where SAP SuccessFactors Recruiting is built out to match what was agreed in discovery.',
     points: [
-      'Users, roles, and permissions set up first â€” everything else depends on this',
+      'Users, roles, and permissions set up first &mdash; everything else depends on this',
       'Hiring workflows built to match each job type the client uses',
       'Email templates, offer letters, and job templates configured to their brand',
       'Every config decision is documented for the handover pack',
@@ -1805,10 +1805,10 @@ const dpSteps = [
     title: 'Phase 3: Integrations',
     subtitle: 'Connecting SAP SuccessFactors Recruiting to the rest of the client tech stack.',
     points: [
-      'HRIS, SSO, background screening, DocuSign â€” all require IT involvement from the client',
-      'Engage the client IT team at kickoff â€” do not wait until integration phase starts',
+      'HRIS, SSO, background screening, DocuSign &mdash; all require IT involvement from the client',
+      'Engage the client IT team at kickoff &mdash; do not wait until integration phase starts',
       'Each integration is tested end-to-end before UAT begins',
-      'Standard marketplace connectors only â€” custom dev is out of scope unless agreed',
+      'Standard marketplace connectors only &mdash; custom dev is out of scope unless agreed',
     ],
     note: 'Show the integrations section. Highlight the note about engaging IT early.',
   },
@@ -1817,9 +1817,9 @@ const dpSteps = [
     title: 'Phase 4: User Acceptance Testing',
     subtitle: 'The client signs off before we go anywhere near go-live.',
     points: [
-      'UAT is run by the client, supported by EX3 â€” not the other way around',
+      'UAT is run by the client, supported by EX3 &mdash; not the other way around',
       'Test scripts provided covering every hiring workflow and user role',
-      'Critical issues must be resolved before go-live â€” no exceptions',
+      'Critical issues must be resolved before go-live &mdash; no exceptions',
       'Written sign-off obtained from the project owner before the go-live date is confirmed',
     ],
     note: 'Click on the UAT checklist. Show how each item is tracked.',
@@ -1827,7 +1827,7 @@ const dpSteps = [
   {
     tag: 'Training Phase',
     title: 'Phase 5: Training',
-    subtitle: 'Separate sessions per role â€” never mix admins and hiring managers in the same room.',
+    subtitle: 'Separate sessions per role &mdash; never mix admins and hiring managers in the same room.',
     points: [
       'Admin training: 90 mins covering configuration, user management, and reporting',
       'Recruiter training: 60 mins covering end-to-end hiring and candidate management',
@@ -1839,14 +1839,14 @@ const dpSteps = [
   {
     tag: 'Go-Live & Hypercare',
     title: 'Phase 6: Go-Live',
-    subtitle: "The moment the client goes live â€” and when the real work begins.",
+    subtitle: "The moment the client goes live &mdash; and when the real work begins.",
     points: [
       'Go-live readiness review with the client project owner the day before',
-      'EX3 consultant on call on go-live day â€” available for any critical issues',
+      'EX3 consultant on call on go-live day &mdash; available for any critical issues',
       'Hypercare period: daily check-ins week one, weekly thereafter',
       'Formal handover pack and close-out documentation delivered at end of hypercare',
     ],
-    note: 'End on this slide. The hypercare point is a differentiator â€” competitors often disappear post go-live.',
+    note: 'End on this slide. The hypercare point is a differentiator &mdash; competitors often disappear post go-live.',
   },
 ];
 
@@ -1880,7 +1880,7 @@ function dpRender() {
   document.getElementById('dp-prev').disabled = dpCur === 0;
   document.getElementById('dp-next').textContent = dpCur === dpSteps.length - 1 ? 'Finish âœ“' : 'Next â†’';
   document.getElementById('dp-body').innerHTML =
-    '<div class="dp-tag">' + String(dpCur+1).padStart(2,'0') + ' / ' + String(dpSteps.length).padStart(2,'0') + ' â€” ' + s.tag + '</div>' +
+    '<div class="dp-tag">' + String(dpCur+1).padStart(2,'0') + ' / ' + String(dpSteps.length).padStart(2,'0') + ' &mdash; ' + s.tag + '</div>' +
     '<div class="dp-title">' + s.title + '</div>' +
     '<div class="dp-sub">' + s.subtitle + '</div>' +
     '<ul class="dp-points">' + s.points.map(p => '<li><span class="dp-dot"></span><span>' + p + '</span></li>').join('') + '</ul>' +
@@ -1945,7 +1945,7 @@ Project timeline: ${answers.timeline}
 
 Write a complete SOW with these sections: 1. Project Overview, 2. In Scope (with subsections), 3. Out of Scope, 4. Client Responsibilities, 5. Assumptions, 6. Change Request Process.
 
-Use formal, specific, commercial language. Be concrete â€” include the exact numbers, integrations, and timelines provided. Make it ready to send directly to the client. Do not use placeholder text.`;
+Use formal, specific, commercial language. Be concrete &mdash; include the exact numbers, integrations, and timelines provided. Make it ready to send directly to the client. Do not use placeholder text.`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -2233,21 +2233,21 @@ app.post('/consultant/sow-export', async (req, res) => {
 
   // â”€â”€ SCOPE OF WORK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   children.push(h1('Scope of Work'));
-  children.push(h2('SAP SuccessFactors Recruiting Recruiting Management Scope â€” EXcelerate Deployment'));
+  children.push(h2('SAP SuccessFactors Recruiting Recruiting Management Scope &mdash; EXcelerate Deployment'));
 
   children.push(h3('Route Maps (Hiring Workflows)'));
-  children.push(bullet('Configuration of ' + (a.numProcesses || '6â€“8') + ' route maps aligned to ' + clientName + ' hiring workflows'));
+  children.push(bullet('Configuration of ' + (a.numProcesses || '6&ndash;8') + ' route maps aligned to ' + clientName + ' hiring workflows'));
   children.push(bullet('Stage and status configuration per agreed route map design'));
   children.push(bullet('Rejection reason configuration'));
   children.push(bullet('Route map design to be confirmed and signed off during the Examine Phase'));
 
   children.push(h3('Job Templates'));
-  children.push(bullet('Configuration of ' + (a.numTemplates || '5â€“8') + ' job templates with custom fields'));
+  children.push(bullet('Configuration of ' + (a.numTemplates || '5&ndash;8') + ' job templates with custom fields'));
   children.push(bullet('Department and location hierarchy setup'));
   children.push(bullet('Template structure and field requirements to be confirmed during Examine Phase'));
 
   children.push(h3('Application Template'));
-  children.push(bullet('1 Application Template [Single Stage only â€” up to 3 fields additional or amended]'));
+  children.push(bullet('1 Application Template [Single Stage only &mdash; up to 3 fields additional or amended]'));
   if (a.screening && a.screening.indexOf('not required') < 0) {
     children.push(bullet('Knockout / screening questions: ' + a.screening));
   } else {
@@ -2259,8 +2259,8 @@ app.post('/consultant/sow-export', async (req, res) => {
   if (hasOfferMgmt) {
     children.push(bullet('1 Offer Detail Template'));
     children.push(bullet('1 Offer Letter Template'));
-    children.push(bullet('Offer approval workflow configuration â€” approval chain to be confirmed during Examine Phase'));
-    if (hasDocuSign) children.push(bullet('E-signature integration (DocuSign) â€” subject to integration scope below'));
+    children.push(bullet('Offer approval workflow configuration &mdash; approval chain to be confirmed during Examine Phase'));
+    if (hasDocuSign) children.push(bullet('E-signature integration (DocuSign) &mdash; subject to integration scope below'));
   } else {
     children.push(bullet('Offer management is not in scope for this engagement'));
   }
@@ -2268,7 +2268,7 @@ app.post('/consultant/sow-export', async (req, res) => {
   children.push(h3('Approval Workflows'));
   children.push(bullet('Requisition approval: ' + (a.reqApproval || 'multi-level approval chain (e.g. Line Manager â†’ HR â†’ Finance)')));
   children.push(bullet('Exact approval chain structure to be confirmed and signed off during Examine Phase before Adopt commences'));
-  children.push(bullet('Up to ' + (a.numProcesses || '6â€“8') + ' approval workflow configurations'));
+  children.push(bullet('Up to ' + (a.numProcesses || '6&ndash;8') + ' approval workflow configurations'));
 
   children.push(h3('Candidate Profile & Status Pipeline'));
   children.push(bullet('1 Candidate Profile'));
@@ -2307,9 +2307,9 @@ app.post('/consultant/sow-export', async (req, res) => {
   if (jobBoardsList.length > 0) {
     children.push(bullet('Up to ' + Math.min(jobBoardsList.length, 5) + ' job boards: ' + jobBoardsList.slice(0, 5).join(', ')));
   } else {
-    children.push(bullet('Up to 5 job boards (to be confirmed during Examine Phase â€” e.g. LinkedIn, Indeed, Bayt)'));
+    children.push(bullet('Up to 5 job boards (to be confirmed during Examine Phase &mdash; e.g. LinkedIn, Indeed, Bayt)'));
   }
-  children.push(bullet('Basic field mapping â€” 5 key fields'));
+  children.push(bullet('Basic field mapping &mdash; 5 key fields'));
   children.push(bullet('Internal posting configuration'));
   children.push(bullet('Standard Internal Careers options'));
 
@@ -2329,7 +2329,7 @@ app.post('/consultant/sow-export', async (req, res) => {
   }
 
   if (hasCareerPage) {
-    children.push(h2('Recruiting Marketing / Career Site Scope â€” EXcelerate Deployment'));
+    children.push(h2('Recruiting Marketing / Career Site Scope &mdash; EXcelerate Deployment'));
     children.push(bullet('Integration of Recruiting Management and Career Site'));
     children.push(bullet('Field mapping between Recruiting Management and Career Site'));
     children.push(bullet('1 Brand'));
@@ -2337,20 +2337,20 @@ app.post('/consultant/sow-export', async (req, res) => {
     children.push(bullet('1 Career Site Homepage'));
     children.push(bullet('Up to 8 Category Pages'));
     children.push(bullet('Up to 3 Content Pages'));
-    children.push(bullet('Standard career site builder components only â€” bespoke front-end development is out of scope'));
+    children.push(bullet('Standard career site builder components only &mdash; bespoke front-end development is out of scope'));
     children.push(bullet('Standard job search and apply flow'));
     children.push(bullet('Mobile-responsive career site validation'));
-    children.push(bullet('Brand application (logo, colours, imagery) â€” Client to provide all assets prior to configuration'));
+    children.push(bullet('Brand application (logo, colours, imagery) &mdash; Client to provide all assets prior to configuration'));
   }
 
-  children.push(h2('Integrations Scope â€” EXcelerate Deployment'));
+  children.push(h2('Integrations Scope &mdash; EXcelerate Deployment'));
   children.push(body('The following standard integrations are in scope:'));
   if (integrationsList.length > 0) {
     integrationsList.forEach(i => children.push(bullet(i)));
   } else if (hasSFEC || isMiddleEast) {
     children.push(bullet('Recruitment to Onboarding to Employee Central'));
-    children.push(bullet('Integration to Position Management (EC) â€” requisition creation from approved positions'));
-    children.push(bullet('E-signature / DocuSign â€” to be confirmed during Examine Phase'));
+    children.push(bullet('Integration to Position Management (EC) &mdash; requisition creation from approved positions'));
+    children.push(bullet('E-signature / DocuSign &mdash; to be confirmed during Examine Phase'));
   } else {
     children.push(bullet('No third-party integrations in scope for this engagement'));
   }
@@ -2384,9 +2384,9 @@ app.post('/consultant/sow-export', async (req, res) => {
   if (trainingList.length > 0) {
     trainingList.forEach(t => children.push(bullet(t)));
   } else {
-    children.push(bullet('1 Recruiter training session (up to 60 minutes â€” end-to-end hiring workflow, candidate management, communication tools)'));
-    children.push(bullet('1 Administrator training session (up to 90 minutes â€” system configuration, user management, reporting)'));
-    children.push(bullet('1 Hiring Manager training session (up to 45 minutes â€” job approval, candidate review, interview scheduling)'));
+    children.push(bullet('1 Recruiter training session (up to 60 minutes &mdash; end-to-end hiring workflow, candidate management, communication tools)'));
+    children.push(bullet('1 Administrator training session (up to 90 minutes &mdash; system configuration, user management, reporting)'));
+    children.push(bullet('1 Hiring Manager training session (up to 45 minutes &mdash; job approval, candidate review, interview scheduling)'));
   }
   children.push(bullet('All users receive access to the EX3 SAP SF Recruiting Enablement Guide'));
   children.push(bullet('Sessions recorded and shared with Client for future reference'));
@@ -2519,7 +2519,7 @@ app.post('/consultant/sow-email', async (req, res) => {
       body: JSON.stringify({
         from: 'EX3 Consulting <onboarding@resend.dev>',
         to: [toEmail],
-        subject: 'Statement of Work â€” SAP SuccessFactors Recruiting Implementation â€” ' + (clientName || 'Client'),
+        subject: 'Statement of Work &mdash; SAP SuccessFactors Recruiting Implementation &mdash; ' + (clientName || 'Client'),
         text: content,
         html: '<pre style="font-family:Arial,sans-serif;font-size:14px;line-height:1.7;white-space:pre-wrap">' + content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>',
       }),
@@ -2541,7 +2541,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SOW Builder â€” EX3</title>
+  <title>SOW Builder &mdash; EX3</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2644,10 +2644,10 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>How large is the organisation?</h2>
           <p>This helps set expectations on implementation complexity.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'orgSize','Small (under 100 employees)')"><span class="opt-icon">ðŸ¢</span>Small â€” under 100 employees</div>
-            <div class="opt" onclick="selectOpt(this,'orgSize','Mid-size (100â€“500 employees)')"><span class="opt-icon">ðŸ¬</span>Mid-size â€” 100 to 500 employees</div>
-            <div class="opt" onclick="selectOpt(this,'orgSize','Large (500â€“2,000 employees)')"><span class="opt-icon">ðŸ­</span>Large â€” 500 to 2,000 employees</div>
-            <div class="opt" onclick="selectOpt(this,'orgSize','Enterprise (2,000+ employees)')"><span class="opt-icon">ðŸŒ</span>Enterprise â€” 2,000+ employees</div>
+            <div class="opt" onclick="selectOpt(this,'orgSize','Small (under 100 employees)')"><span class="opt-icon">ðŸ¢</span>Small &mdash; under 100 employees</div>
+            <div class="opt" onclick="selectOpt(this,'orgSize','Mid-size (100&ndash;500 employees)')"><span class="opt-icon">ðŸ¬</span>Mid-size &mdash; 100 to 500 employees</div>
+            <div class="opt" onclick="selectOpt(this,'orgSize','Large (500&ndash;2,000 employees)')"><span class="opt-icon">ðŸ­</span>Large &mdash; 500 to 2,000 employees</div>
+            <div class="opt" onclick="selectOpt(this,'orgSize','Enterprise (2,000+ employees)')"><span class="opt-icon">ðŸŒ</span>Enterprise &mdash; 2,000+ employees</div>
           </div>
         </div>
 
@@ -2658,8 +2658,8 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <p>Include all recruiters, hiring managers, and admins.</p>
           <div class="options">
             <div class="opt" onclick="selectOpt(this,'numUsers','up to 25 users')"><span class="opt-icon">ðŸ‘¤</span>Up to 25 users</div>
-            <div class="opt" onclick="selectOpt(this,'numUsers','25â€“50 users')"><span class="opt-icon">ðŸ‘¥</span>25 to 50 users</div>
-            <div class="opt" onclick="selectOpt(this,'numUsers','50â€“100 users')"><span class="opt-icon">ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦</span>50 to 100 users</div>
+            <div class="opt" onclick="selectOpt(this,'numUsers','25&ndash;50 users')"><span class="opt-icon">ðŸ‘¥</span>25 to 50 users</div>
+            <div class="opt" onclick="selectOpt(this,'numUsers','50&ndash;100 users')"><span class="opt-icon">ðŸ‘¨&rsquo;ðŸ‘©&rsquo;ðŸ‘§&rsquo;ðŸ‘¦</span>50 to 100 users</div>
             <div class="opt" onclick="selectOpt(this,'numUsers','over 100 users')"><span class="opt-icon">ðŸŸï¸</span>Over 100 users</div>
             <div class="opt" onclick="selectCustom(this,'numUsers-custom')"><span class="opt-icon">âœï¸</span>Custom number</div>
           </div>
@@ -2674,9 +2674,9 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>How many hiring process workflows are needed?</h2>
           <p>Different job types often have different hiring stages (e.g. office vs warehouse vs graduate).</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'numProcesses','1â€“2 hiring process workflows')"><span class="opt-icon">1ï¸âƒ£</span>1 to 2 workflows</div>
-            <div class="opt" onclick="selectOpt(this,'numProcesses','3â€“5 hiring process workflows')"><span class="opt-icon">3ï¸âƒ£</span>3 to 5 workflows</div>
-            <div class="opt" onclick="selectOpt(this,'numProcesses','6â€“10 hiring process workflows')"><span class="opt-icon">ðŸ”¢</span>6 to 10 workflows</div>
+            <div class="opt" onclick="selectOpt(this,'numProcesses','1&ndash;2 hiring process workflows')"><span class="opt-icon">1ï¸âƒ£</span>1 to 2 workflows</div>
+            <div class="opt" onclick="selectOpt(this,'numProcesses','3&ndash;5 hiring process workflows')"><span class="opt-icon">3ï¸âƒ£</span>3 to 5 workflows</div>
+            <div class="opt" onclick="selectOpt(this,'numProcesses','6&ndash;10 hiring process workflows')"><span class="opt-icon">ðŸ”¢</span>6 to 10 workflows</div>
             <div class="opt" onclick="selectCustom(this,'numProcesses-custom')"><span class="opt-icon">âœï¸</span>Custom number</div>
           </div>
           <div class="custom-input" id="numProcesses-custom">
@@ -2691,8 +2691,8 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <p>Job templates speed up requisition creation for common roles.</p>
           <div class="options">
             <div class="opt" onclick="selectOpt(this,'numTemplates','up to 5 job templates')"><span class="opt-icon">ðŸ“„</span>Up to 5 templates</div>
-            <div class="opt" onclick="selectOpt(this,'numTemplates','5â€“10 job templates')"><span class="opt-icon">ðŸ“‹</span>5 to 10 templates</div>
-            <div class="opt" onclick="selectOpt(this,'numTemplates','10â€“20 job templates')"><span class="opt-icon">ðŸ“š</span>10 to 20 templates</div>
+            <div class="opt" onclick="selectOpt(this,'numTemplates','5&ndash;10 job templates')"><span class="opt-icon">ðŸ“‹</span>5 to 10 templates</div>
+            <div class="opt" onclick="selectOpt(this,'numTemplates','10&ndash;20 job templates')"><span class="opt-icon">ðŸ“š</span>10 to 20 templates</div>
             <div class="opt" onclick="selectOpt(this,'numTemplates','no job templates required at this stage')"><span class="opt-icon">âŒ</span>None required</div>
             <div class="opt" onclick="selectCustom(this,'numTemplates-custom')"><span class="opt-icon">âœï¸</span>Custom number</div>
           </div>
@@ -2707,9 +2707,9 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>Which integrations are required?</h2>
           <p>Select all that apply. Each integration adds complexity and time.</p>
           <div class="options opt-multi" id="integrations-options">
-            <div class="opt" onclick="toggleMulti(this,'integrations','SAP SuccessFactors Employee Central (EC) integration â€” recruitment to onboarding to EC')">ðŸ”— SAP SuccessFactors EC</div>
-            <div class="opt" onclick="toggleMulti(this,'integrations','Position Management (EC) integration â€” requisition creation from approved positions')">ðŸ“‹ Position Management (EC)</div>
-            <div class="opt" onclick="toggleMulti(this,'integrations','Onboarding integration â€” hired candidate data passed to onboarding system')">ðŸš€ Onboarding integration</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','SAP SuccessFactors Employee Central (EC) integration &mdash; recruitment to onboarding to EC')">ðŸ”— SAP SuccessFactors EC</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','Position Management (EC) integration &mdash; requisition creation from approved positions')">ðŸ“‹ Position Management (EC)</div>
+            <div class="opt" onclick="toggleMulti(this,'integrations','Onboarding integration &mdash; hired candidate data passed to onboarding system')">ðŸš€ Onboarding integration</div>
             <div class="opt" onclick="toggleMulti(this,'integrations','DocuSign / e-signature integration')">âœï¸ DocuSign / e-signature</div>
             <div class="opt" onclick="toggleMulti(this,'integrations','HRIS integration (e.g. Workday, SAP, BambooHR)')">ðŸ—„ï¸ Other HRIS System</div>
             <div class="opt" onclick="toggleMulti(this,'integrations','Single Sign-On (SSO)')">ðŸ” SSO</div>
@@ -2721,7 +2721,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
             <div class="opt" onclick="toggleCustomMulti(this,'integrations','integrations-other-input')">âœï¸ Other / not listed</div>
           </div>
           <div class="custom-input" id="integrations-other-input">
-            <input type="text" placeholder="e.g. Greenhouse, Workable, Microsoft Teamsâ€¦" oninput="setCustomMulti('integrations','integrations-other-val',this.value)">
+            <input type="text" placeholder="e.g. Greenhouse, Workable, Microsoft Teams&hellip;" oninput="setCustomMulti('integrations','integrations-other-val',this.value)">
           </div>
         </div>
 
@@ -2745,7 +2745,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
             <div class="opt" onclick="toggleCustomMulti(this,'jobBoards','jobboards-other-input')">âœï¸ Other / not listed</div>
           </div>
           <div class="custom-input" id="jobboards-other-input">
-            <input type="text" placeholder="e.g. Bayt, Naukri Gulf, Wuzzuf, Monsterâ€¦" oninput="setCustomMulti('jobBoards','jobboards-other-val',this.value)">
+            <input type="text" placeholder="e.g. Bayt, Naukri Gulf, Wuzzuf, Monster&hellip;" oninput="setCustomMulti('jobBoards','jobboards-other-val',this.value)">
           </div>
         </div>
 
@@ -2755,9 +2755,9 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>Is career page branding in scope?</h2>
           <p>This covers setting up the SAP SuccessFactors Recruiting hosted careers page with the client's logo, colours, and imagery.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'careerPage','Configuration and branding of the SAP SuccessFactors Recruiting careers page is included in scope. The client will provide brand assets (logo, colour palette, imagery) prior to configuration.')">âœ… Yes â€” brand and configure the careers page</div>
-            <div class="opt" onclick="selectOpt(this,'careerPage','Career page setup is not in scope for this engagement.')">âŒ No â€” out of scope</div>
-            <div class="opt" onclick="selectOpt(this,'careerPage','Basic career page configuration is included (logo and colour only). Full creative design is out of scope.')">ðŸŽ¨ Basic only â€” logo and colours only</div>
+            <div class="opt" onclick="selectOpt(this,'careerPage','Configuration and branding of the SAP SuccessFactors Recruiting careers page is included in scope. The client will provide brand assets (logo, colour palette, imagery) prior to configuration.')">âœ… Yes &mdash; brand and configure the careers page</div>
+            <div class="opt" onclick="selectOpt(this,'careerPage','Career page setup is not in scope for this engagement.')">âŒ No &mdash; out of scope</div>
+            <div class="opt" onclick="selectOpt(this,'careerPage','Basic career page configuration is included (logo and colour only). Full creative design is out of scope.')">ðŸŽ¨ Basic only &mdash; logo and colours only</div>
           </div>
         </div>
 
@@ -2792,9 +2792,9 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>How long is the hypercare period?</h2>
           <p>Hypercare is the close-support window immediately after go-live where your team is on hand to resolve issues quickly.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'hypercare','2 weeks')">âš¡ 2 weeks â€” standard</div>
-            <div class="opt" onclick="selectOpt(this,'hypercare','4 weeks')">ðŸ›¡ï¸ 4 weeks â€” recommended for larger orgs</div>
-            <div class="opt" onclick="selectOpt(this,'hypercare','6 weeks')">ðŸ”’ 6 weeks â€” enterprise / complex implementations</div>
+            <div class="opt" onclick="selectOpt(this,'hypercare','2 weeks')">âš¡ 2 weeks &mdash; standard</div>
+            <div class="opt" onclick="selectOpt(this,'hypercare','4 weeks')">ðŸ›¡ï¸ 4 weeks &mdash; recommended for larger orgs</div>
+            <div class="opt" onclick="selectOpt(this,'hypercare','6 weeks')">ðŸ”’ 6 weeks &mdash; enterprise / complex implementations</div>
             <div class="opt" onclick="selectCustom(this,'hypercare-custom')">âœï¸ Custom</div>
           </div>
           <div class="custom-input" id="hypercare-custom">
@@ -2808,10 +2808,10 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>What is the expected project timeline?</h2>
           <p>From kickoff to go-live. This will appear in the SOW assumptions.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'timeline','8 weeks')">ðŸš€ 8 weeks â€” small / simple implementation</div>
-            <div class="opt" onclick="selectOpt(this,'timeline','10 weeks')">ðŸ“… 10 weeks â€” standard implementation</div>
-            <div class="opt" onclick="selectOpt(this,'timeline','12 weeks')">ðŸ—“ï¸ 12 weeks â€” larger or more complex</div>
-            <div class="opt" onclick="selectOpt(this,'timeline','16 weeks')">ðŸ“† 16 weeks â€” enterprise / heavily integrated</div>
+            <div class="opt" onclick="selectOpt(this,'timeline','8 weeks')">ðŸš€ 8 weeks &mdash; small / simple implementation</div>
+            <div class="opt" onclick="selectOpt(this,'timeline','10 weeks')">ðŸ“… 10 weeks &mdash; standard implementation</div>
+            <div class="opt" onclick="selectOpt(this,'timeline','12 weeks')">ðŸ—“ï¸ 12 weeks &mdash; larger or more complex</div>
+            <div class="opt" onclick="selectOpt(this,'timeline','16 weeks')">ðŸ“† 16 weeks &mdash; enterprise / heavily integrated</div>
             <div class="opt" onclick="selectCustom(this,'timeline-custom')">âœï¸ Custom</div>
           </div>
           <div class="custom-input" id="timeline-custom">
@@ -2825,7 +2825,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>How are job requisitions approved before posting?</h2>
           <p>Defines the approval chain a recruiter must go through before a job goes live.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'reqApproval','No approval workflow required â€” recruiters can post jobs directly without sign-off.')"><span class="opt-icon">âš¡</span>No approval â€” post directly</div>
+            <div class="opt" onclick="selectOpt(this,'reqApproval','No approval workflow required &mdash; recruiters can post jobs directly without sign-off.')"><span class="opt-icon">âš¡</span>No approval &mdash; post directly</div>
             <div class="opt" onclick="selectOpt(this,'reqApproval','A single-level approval workflow is required (e.g. line manager or HR Director approves each requisition before posting).')"><span class="opt-icon">1ï¸âƒ£</span>Single approver (e.g. HR Director)</div>
             <div class="opt" onclick="selectOpt(this,'reqApproval','A multi-level approval workflow is required (e.g. Line Manager â†’ HR â†’ Finance). The exact approval chain will be confirmed during discovery.')"><span class="opt-icon">ðŸ”—</span>Multi-level (e.g. Manager â†’ HR â†’ Finance)</div>
             <div class="opt" onclick="selectOpt(this,'reqApproval','Approval workflows vary by role type or department. Configuration of multiple approval chains is in scope, subject to discovery.')"><span class="opt-icon">ðŸ—‚ï¸</span>Different chains per department/role type</div>
@@ -2836,15 +2836,15 @@ app.get('/consultant/sow-builder', (_req, res) => {
         <div class="step" id="step-14">
           <div class="step-num">Step 14 of 19</div>
           <h2>Is offer management in scope?</h2>
-          <p>SAP SuccessFactors Recruiting can manage the full offer lifecycle â€” templates, approval, e-signature, and candidate acceptance â€” all in-platform.</p>
+          <p>SAP SuccessFactors Recruiting can manage the full offer lifecycle &mdash; templates, approval, e-signature, and candidate acceptance &mdash; all in-platform.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'offerMgmt','Offer management is not in scope for this engagement. Offers will be managed outside of SAP SuccessFactors Recruiting.')"><span class="opt-icon">âŒ</span>Not in scope â€” offers managed externally</div>
+            <div class="opt" onclick="selectOpt(this,'offerMgmt','Offer management is not in scope for this engagement. Offers will be managed outside of SAP SuccessFactors Recruiting.')"><span class="opt-icon">âŒ</span>Not in scope &mdash; offers managed externally</div>
             <div class="opt" onclick="selectOpt(this,'offerMgmt','Configuration of offer letter templates is included in scope. Approval and e-signature are not required.')"><span class="opt-icon">ðŸ“„</span>Offer templates only</div>
-            <div class="opt" onclick="selectOpt(this,'offerMgmt','Full offer management is in scope: offer letter templates, an offer approval workflow, and integration with e-signature (DocuSign or equivalent).')"><span class="opt-icon">âœ…</span>Full â€” templates + approval + e-signature</div>
-            <div class="opt" onclick="selectCustom(this,'offerMgmt-custom')"><span class="opt-icon">âœï¸</span>Custom â€” describe below</div>
+            <div class="opt" onclick="selectOpt(this,'offerMgmt','Full offer management is in scope: offer letter templates, an offer approval workflow, and integration with e-signature (DocuSign or equivalent).')"><span class="opt-icon">âœ…</span>Full &mdash; templates + approval + e-signature</div>
+            <div class="opt" onclick="selectCustom(this,'offerMgmt-custom')"><span class="opt-icon">âœï¸</span>Custom &mdash; describe below</div>
           </div>
           <div class="custom-input" id="offerMgmt-custom">
-            <textarea placeholder="Describe the offer management requirementsâ€¦" rows="3" oninput="answers.offerMgmt=this.value"></textarea>
+            <textarea placeholder="Describe the offer management requirements&hellip;" rows="3" oninput="answers.offerMgmt=this.value"></textarea>
           </div>
         </div>
 
@@ -2852,7 +2852,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
         <div class="step" id="step-15">
           <div class="step-num">Step 15 of 19</div>
           <h2>Are pre-screening or knockout questions required?</h2>
-          <p>These are questions candidates must answer when applying â€” wrong answers can auto-reject them before a recruiter reviews.</p>
+          <p>These are questions candidates must answer when applying &mdash; wrong answers can auto-reject them before a recruiter reviews.</p>
           <div class="options">
             <div class="opt" onclick="selectOpt(this,'screening','No pre-screening or knockout questions are required at this stage.')"><span class="opt-icon">âŒ</span>Not required</div>
             <div class="opt" onclick="selectOpt(this,'screening','Basic knockout questions are required (e.g. right to work, minimum qualifications). Configuration of up to 5 standard screening questions per workflow is in scope.')"><span class="opt-icon">âœ…</span>Basic knockout questions (right to work, qualifications)</div>
@@ -2900,10 +2900,10 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <h2>What is the geographic scope of the implementation?</h2>
           <p>Multi-country or multilingual setups require additional configuration time.</p>
           <div class="options">
-            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is for a single country with a single language (English). No multi-country or multi-language configuration is required.');hideGeoCustom()"><span class="opt-icon">ðŸ¢</span>Single country â€” English only</div>
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is for a single country with a single language (English). No multi-country or multi-language configuration is required.');hideGeoCustom()"><span class="opt-icon">ðŸ¢</span>Single country &mdash; English only</div>
             <div class="opt" onclick="selectOpt(this,'geoScope','The implementation covers multiple European markets. Multi-country configuration and at least one additional language is in scope. Specific countries and languages will be confirmed during discovery.');hideGeoCustom()"><span class="opt-icon">ðŸ‡ªðŸ‡º</span>Multiple European markets</div>
-            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is global in scope. Multi-region configuration, timezone support, and multiple languages are required. Full scope will be confirmed during discovery.');hideGeoCustom()"><span class="opt-icon">ðŸŒ</span>Global â€” multiple regions and languages</div>
-            <div class="opt" id="geo-custom-trigger" onclick="selectCustomGeo(this)"><span class="opt-icon">âœï¸</span>Other / Custom â€” specify regions below</div>
+            <div class="opt" onclick="selectOpt(this,'geoScope','The implementation is global in scope. Multi-region configuration, timezone support, and multiple languages are required. Full scope will be confirmed during discovery.');hideGeoCustom()"><span class="opt-icon">ðŸŒ</span>Global &mdash; multiple regions and languages</div>
+            <div class="opt" id="geo-custom-trigger" onclick="selectCustomGeo(this)"><span class="opt-icon">âœï¸</span>Other / Custom &mdash; specify regions below</div>
           </div>
           <div class="custom-input" id="geoScope-custom" style="margin-top:14px">
             <div id="geo-entries" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -2918,8 +2918,8 @@ app.get('/consultant/sow-builder', (_req, res) => {
           <p>SAP SuccessFactors Recruiting has a built-in vendor/agency portal for managing third-party recruiters and their submissions.</p>
           <div class="options">
             <div class="opt" onclick="selectOpt(this,'agencyPortal','No external recruitment agencies are used. Agency/vendor portal configuration is not in scope.')"><span class="opt-icon">âŒ</span>No agencies used</div>
-            <div class="opt" onclick="selectOpt(this,'agencyPortal','External agencies are used. Basic vendor portal configuration is in scope, including agency account setup and job sharing. The number of agencies will be confirmed during discovery.')"><span class="opt-icon">ðŸ¤</span>Yes â€” basic agency portal setup</div>
-            <div class="opt" onclick="selectOpt(this,'agencyPortal','External agencies are a core part of the hiring strategy. Full vendor management configuration is in scope: agency tiers, submission rules, fee agreements, and communication workflows.')"><span class="opt-icon">ðŸ¢</span>Yes â€” full vendor management (tiers, fees, rules)</div>
+            <div class="opt" onclick="selectOpt(this,'agencyPortal','External agencies are used. Basic vendor portal configuration is in scope, including agency account setup and job sharing. The number of agencies will be confirmed during discovery.')"><span class="opt-icon">ðŸ¤</span>Yes &mdash; basic agency portal setup</div>
+            <div class="opt" onclick="selectOpt(this,'agencyPortal','External agencies are a core part of the hiring strategy. Full vendor management configuration is in scope: agency tiers, submission rules, fee agreements, and communication workflows.')"><span class="opt-icon">ðŸ¢</span>Yes &mdash; full vendor management (tiers, fees, rules)</div>
           </div>
         </div>
 
@@ -2981,14 +2981,14 @@ app.get('/consultant/sow-builder', (_req, res) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:6px;align-items:center';
     const placeholders = [
-      'e.g. Middle East (UAE, KSA, Oman, Jordan, Lebanon, Iraq) â€” English only, UAE PDPL & Saudi PDPPL apply',
-      'e.g. UK & Ireland â€” English only',
-      'e.g. Germany â€” German + English, GDPR applies',
-      'e.g. APAC â€” Singapore, Australia, Hong Kong',
+      'e.g. Middle East (UAE, KSA, Oman, Jordan, Lebanon, Iraq) &mdash; English only, UAE PDPL & Saudi PDPPL apply',
+      'e.g. UK & Ireland &mdash; English only',
+      'e.g. Germany &mdash; German + English, GDPR applies',
+      'e.g. APAC &mdash; Singapore, Australia, Hong Kong',
     ];
     const inp = document.createElement('input');
     inp.type = 'text';
-    inp.placeholder = placeholders[idx] || 'e.g. Country / region â€” language, compliance notes';
+    inp.placeholder = placeholders[idx] || 'e.g. Country / region &mdash; language, compliance notes';
     inp.style.cssText = 'flex:1;padding:10px 14px;border:1.5px solid #e4e2dc;border-radius:8px;font-family:inherit;font-size:13px;color:#0f0f0f;outline:none';
     inp.onfocus = function(){ this.style.borderColor='#0f0f0f'; };
     inp.onblur  = function(){ this.style.borderColor='#e4e2dc'; };
@@ -3134,13 +3134,13 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('deployment.');
     add('');
     add('The modules in scope for this workstream are:');
-    add('  â€¢ SAP SuccessFactors Recruiting Recruiting Management (SMRC)');
-    if (hasCareerPage) add('  â€¢ Career Site / Recruiting Marketing configuration');
-    if (integrationsList.length > 0) add('  â€¢ Integration to ' + (hasSFEC ? 'Employee Central (EC), Position Management, and Onboarding' : integrationsList.join('; ')));
+    add('  &bull; SAP SuccessFactors Recruiting Recruiting Management (SMRC)');
+    if (hasCareerPage) add('  &bull; Career Site / Recruiting Marketing configuration');
+    if (integrationsList.length > 0) add('  &bull; Integration to ' + (hasSFEC ? 'Employee Central (EC), Position Management, and Onboarding' : integrationsList.join('; ')));
     add('');
     if (isMiddleEast) {
       add('The countries in scope are:');
-      add('  â€¢ United Arab Emirates, Saudi Arabia, Oman, Jordan, Lebanon and Iraq');
+      add('  &bull; United Arab Emirates, Saudi Arabia, Oman, Jordan, Lebanon and Iraq');
       add('');
     } else if (a.geoScope) {
       add('Geography: ' + a.geoScope);
@@ -3162,10 +3162,10 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('with the broader implementation.');
     add('');
     add('Organisation profile:');
-    add('  â€¢ Organisation size: ' + (a.orgSize || 'To be confirmed'));
-    add('  â€¢ Geography: ' + (a.geoScope ? a.geoScope.split('.')[0] : 'To be confirmed'));
-    add('  â€¢ Platform language: English only');
-    add('  â€¢ Users in scope: ' + (a.numUsers || 'To be confirmed'));
+    add('  &bull; Organisation size: ' + (a.orgSize || 'To be confirmed'));
+    add('  &bull; Geography: ' + (a.geoScope ? a.geoScope.split('.')[0] : 'To be confirmed'));
+    add('  &bull; Platform language: English only');
+    add('  &bull; Users in scope: ' + (a.numUsers || 'To be confirmed'));
     add('');
 
     // â”€â”€ ENGAGEMENT RESOURCES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -3177,12 +3177,12 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('enterprise talent acquisition implementations.');
     add('');
     add('Key information on our resources:');
-    add('  â€¢ All resources have worked effectively as remote resources on projects');
+    add('  &bull; All resources have worked effectively as remote resources on projects');
     add('    scaling from small to very large global implementations');
-    add('  â€¢ Resources will have experience of the SAP SuccessFactors Recruiting platform and');
+    add('  &bull; Resources will have experience of the SAP SuccessFactors Recruiting platform and');
     add('    relevant TA processes');
-    add('  â€¢ Resources have global and Middle East regional experience');
-    add('  â€¢ Resources and responsibilities are subject to change throughout the project');
+    add('  &bull; Resources have global and Middle East regional experience');
+    add('  &bull; Resources and responsibilities are subject to change throughout the project');
     add('');
     add('The EX3 implementation team shall engage with the Customer no later than');
     add('four (4) weeks from SOW execution. Delivery dates for tasks included in this');
@@ -3333,173 +3333,173 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('Scope of Work');
     add('â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
     add('');
-    add('SAP SuccessFactors Recruiting Recruiting Management Scope â€” EXcelerate Deployment');
+    add('SAP SuccessFactors Recruiting Recruiting Management Scope &mdash; EXcelerate Deployment');
     add('');
 
     // Route Maps
     add('Route Maps (Hiring Workflows)');
-    add('  â€¢ Configuration of ' + (a.numProcesses || '6â€“8') + ' route maps aligned to ' + clientName + ' hiring workflows');
-    add('  â€¢ Stage and status configuration per agreed route map design');
-    add('  â€¢ Rejection reason configuration');
-    add('  â€¢ Route map design to be confirmed and signed off during the Examine Phase');
+    add('  &bull; Configuration of ' + (a.numProcesses || '6&ndash;8') + ' route maps aligned to ' + clientName + ' hiring workflows');
+    add('  &bull; Stage and status configuration per agreed route map design');
+    add('  &bull; Rejection reason configuration');
+    add('  &bull; Route map design to be confirmed and signed off during the Examine Phase');
     add('');
 
     // Job Templates
     add('Job Templates');
-    add('  â€¢ Configuration of ' + (a.numTemplates || '5â€“8') + ' job templates with custom fields');
-    add('  â€¢ Department and location hierarchy setup');
-    add('  â€¢ Template structure and field requirements to be confirmed during Examine Phase');
+    add('  &bull; Configuration of ' + (a.numTemplates || '5&ndash;8') + ' job templates with custom fields');
+    add('  &bull; Department and location hierarchy setup');
+    add('  &bull; Template structure and field requirements to be confirmed during Examine Phase');
     add('');
 
     // Application Template
     add('Application Template');
-    add('  â€¢ 1 Application Template [Single Stage only â€” up to 3 fields additional or amended]');
+    add('  &bull; 1 Application Template [Single Stage only &mdash; up to 3 fields additional or amended]');
     if (a.screening && a.screening.indexOf('not required') < 0) {
-      add('  â€¢ Knockout / screening questions: ' + a.screening);
+      add('  &bull; Knockout / screening questions: ' + a.screening);
     } else {
-      add('  â€¢ Knockout / screening questions: up to 5 standard screening questions per workflow');
+      add('  &bull; Knockout / screening questions: up to 5 standard screening questions per workflow');
       add('    (e.g. right to work, minimum qualifications)');
     }
-    add('  â€¢ Screening question content to be provided by Client prior to configuration');
+    add('  &bull; Screening question content to be provided by Client prior to configuration');
     add('');
 
     // Offer Management
     add('Offer Management');
     if (hasOfferMgmt) {
-      add('  â€¢ 1 Offer Detail Template');
-      add('  â€¢ 1 Offer Letter Template');
-      add('  â€¢ Offer approval workflow configuration â€” approval chain to be confirmed during Examine Phase');
-      if (hasDocuSign) add('  â€¢ E-signature integration (DocuSign) â€” subject to integration scope below');
+      add('  &bull; 1 Offer Detail Template');
+      add('  &bull; 1 Offer Letter Template');
+      add('  &bull; Offer approval workflow configuration &mdash; approval chain to be confirmed during Examine Phase');
+      if (hasDocuSign) add('  &bull; E-signature integration (DocuSign) &mdash; subject to integration scope below');
     } else {
-      add('  â€¢ Offer management is not in scope for this engagement');
+      add('  &bull; Offer management is not in scope for this engagement');
     }
     add('');
 
     // Approval Workflows
     add('Approval Workflows');
-    add('  â€¢ Requisition approval: ' + (a.reqApproval || 'multi-level approval chain (e.g. Line Manager â†’ HR â†’ Finance)'));
-    add('  â€¢ Exact approval chain structure to be confirmed and signed off during Examine Phase');
+    add('  &bull; Requisition approval: ' + (a.reqApproval || 'multi-level approval chain (e.g. Line Manager â†’ HR â†’ Finance)'));
+    add('  &bull; Exact approval chain structure to be confirmed and signed off during Examine Phase');
     add('    before Adopt commences');
-    add('  â€¢ Up to ' + (a.numProcesses || '6â€“8') + ' approval workflow configurations');
+    add('  &bull; Up to ' + (a.numProcesses || '6&ndash;8') + ' approval workflow configurations');
     add('');
 
     // Candidate Profile & Status Pipeline
     add('Candidate Profile & Status Pipeline');
-    add('  â€¢ 1 Candidate Profile');
-    add('  â€¢ 1 Applicant Status Pipeline');
-    add('  â€¢ Candidate profile fields and data capture configuration');
-    add('  â€¢ Status pipeline aligned to agreed route map stages');
-    add('  â€¢ Rejection reason configuration');
+    add('  &bull; 1 Candidate Profile');
+    add('  &bull; 1 Applicant Status Pipeline');
+    add('  &bull; Candidate profile fields and data capture configuration');
+    add('  &bull; Status pipeline aligned to agreed route map stages');
+    add('  &bull; Rejection reason configuration');
     add('');
 
     // Email Templates
     add('Email Templates');
-    add('  â€¢ Up to 20 recruiting email templates (e.g. application received, interview');
+    add('  &bull; Up to 20 recruiting email templates (e.g. application received, interview');
     add('    invite, rejection, offer)');
-    add('  â€¢ 1 custom declined email template linked to status');
-    add('  â€¢ Client to provide email copy and branding prior to configuration');
+    add('  &bull; 1 custom declined email template linked to status');
+    add('  &bull; Client to provide email copy and branding prior to configuration');
     add('');
 
     // Agency / Vendor Portal
     if (hasAgency) {
       add('Agency / Vendor Portal');
-      add('  â€¢ Basic vendor portal configuration including agency account setup and job sharing');
-      add('  â€¢ Agency account setup for up to 5 agreed vendors (client to provide agency list)');
+      add('  &bull; Basic vendor portal configuration including agency account setup and job sharing');
+      add('  &bull; Agency account setup for up to 5 agreed vendors (client to provide agency list)');
       add('    or training provided on how to set up additional agencies independently');
-      add('  â€¢ Agency submission workflow and visibility controls');
+      add('  &bull; Agency submission workflow and visibility controls');
       add('');
     }
 
     // Interview Scheduling
     add('Interview Scheduling');
-    add('  â€¢ Interview scheduling configuration aligned to agreed route map stages');
-    add('  â€¢ Central interview scheduling setup (no Outlook / Google Calendar integration');
+    add('  &bull; Interview scheduling configuration aligned to agreed route map stages');
+    add('  &bull; Central interview scheduling setup (no Outlook / Google Calendar integration');
     add('    unless separately scoped)');
     add('');
 
     // Referral Management
     add('Referral Management');
-    add('  â€¢ Enablement of SAP SuccessFactors Recruiting standard employee referral portal');
-    add('  â€¢ Employees can view open roles, submit referrals, and track referral status');
+    add('  &bull; Enablement of SAP SuccessFactors Recruiting standard employee referral portal');
+    add('  &bull; Employees can view open roles, submit referrals, and track referral status');
     add('    natively within the platform');
-    add('  â€¢ Advanced referral programme features (bonus tracking, leaderboards, automated');
+    add('  &bull; Advanced referral programme features (bonus tracking, leaderboards, automated');
     add('    payments) require a third-party Marketplace integration and are out of scope');
     add('');
 
     // Mobile Enablement
     add('Mobile Enablement');
-    add('  â€¢ Mobile enablement for recruiters and hiring managers via SAP SuccessFactors Recruiting');
+    add('  &bull; Mobile enablement for recruiters and hiring managers via SAP SuccessFactors Recruiting');
     add('    native mobile application (iOS and Android)');
-    add('  â€¢ Mobile-responsive career site configuration included within career site scope');
+    add('  &bull; Mobile-responsive career site configuration included within career site scope');
     add('');
 
     // Recruiting Posting
     add('Recruiting Posting');
-    add('  â€¢ 1 Posting Profile');
+    add('  &bull; 1 Posting Profile');
     if (jobBoardsList.length > 0) {
-      add('  â€¢ Up to ' + Math.min(jobBoardsList.length, 5) + ' job boards: ' + jobBoardsList.slice(0, 5).join(', '));
+      add('  &bull; Up to ' + Math.min(jobBoardsList.length, 5) + ' job boards: ' + jobBoardsList.slice(0, 5).join(', '));
     } else {
-      add('  â€¢ Up to 5 job boards (to be confirmed during Examine Phase â€” e.g. LinkedIn, Indeed, Bayt)');
+      add('  &bull; Up to 5 job boards (to be confirmed during Examine Phase &mdash; e.g. LinkedIn, Indeed, Bayt)');
     }
-    add('  â€¢ Basic field mapping â€” 5 key fields');
-    add('  â€¢ Internal posting configuration');
-    add('  â€¢ Standard Internal Careers options');
+    add('  &bull; Basic field mapping &mdash; 5 key fields');
+    add('  &bull; Internal posting configuration');
+    add('  &bull; Standard Internal Careers options');
     add('');
 
     // User Accounts & RBP
     add('User Accounts & Role-Based Permissions (RBP)');
-    add('  â€¢ Creation of ' + (a.numUsers || 'agreed number of') + ' user accounts');
-    add('  â€¢ 1 Recruiter RBP role (minimal admin permissions)');
-    add('  â€¢ RBP configuration per agreed access matrix');
-    add('  â€¢ EX3 to provide RBP design template; Client to complete and sign off before');
+    add('  &bull; Creation of ' + (a.numUsers || 'agreed number of') + ' user accounts');
+    add('  &bull; 1 Recruiter RBP role (minimal admin permissions)');
+    add('  &bull; RBP configuration per agreed access matrix');
+    add('  &bull; EX3 to provide RBP design template; Client to complete and sign off before');
     add('    Adopt commences');
     add('');
 
     // Reporting & Analytics
     add('Reporting & Analytics');
-    add('  â€¢ Standard SAP SuccessFactors Recruiting dashboards and out-of-the-box reports');
-    add('  â€¢ Configuration of agreed saved reports and scheduled report distribution');
+    add('  &bull; Standard SAP SuccessFactors Recruiting dashboards and out-of-the-box reports');
+    add('  &bull; Configuration of agreed saved reports and scheduled report distribution');
     if (a.reporting && a.reporting.indexOf('Standard') < 0 && a.reporting.indexOf('standard') < 0) {
-      add('  â€¢ ' + a.reporting);
+      add('  &bull; ' + a.reporting);
     } else {
-      add('  â€¢ No custom report development is included');
+      add('  &bull; No custom report development is included');
     }
     add('');
 
     // Career Site
     if (hasCareerPage) {
-      add('Recruiting Marketing / Career Site Scope â€” EXcelerate Deployment');
+      add('Recruiting Marketing / Career Site Scope &mdash; EXcelerate Deployment');
       add('');
-      add('  â€¢ Integration of Recruiting Management and Career Site');
-      add('  â€¢ Field mapping between Recruiting Management and Career Site');
-      add('  â€¢ 1 Brand');
-      add('  â€¢ 1 Locale (English only)');
-      add('  â€¢ 1 Career Site Homepage');
-      add('  â€¢ Up to 8 Category Pages');
-      add('  â€¢ Up to 3 Content Pages');
-      add('  â€¢ Standard career site builder components only â€” bespoke front-end development');
+      add('  &bull; Integration of Recruiting Management and Career Site');
+      add('  &bull; Field mapping between Recruiting Management and Career Site');
+      add('  &bull; 1 Brand');
+      add('  &bull; 1 Locale (English only)');
+      add('  &bull; 1 Career Site Homepage');
+      add('  &bull; Up to 8 Category Pages');
+      add('  &bull; Up to 3 Content Pages');
+      add('  &bull; Standard career site builder components only &mdash; bespoke front-end development');
       add('    is out of scope');
-      add('  â€¢ Standard job search and apply flow');
-      add('  â€¢ Mobile-responsive career site validation');
-      add('  â€¢ Brand application (logo, colours, imagery) â€” Client to provide all assets');
+      add('  &bull; Standard job search and apply flow');
+      add('  &bull; Mobile-responsive career site validation');
+      add('  &bull; Brand application (logo, colours, imagery) &mdash; Client to provide all assets');
       add('    prior to configuration');
       add('');
     }
 
     // Integrations
-    add('Integrations Scope â€” EXcelerate Deployment');
+    add('Integrations Scope &mdash; EXcelerate Deployment');
     add('');
     if (integrationsList.length > 0) {
       add('The following standard integrations are in scope:');
-      integrationsList.forEach(function(i){ add('  â€¢ ' + i); });
+      integrationsList.forEach(function(i){ add('  &bull; ' + i); });
     } else {
       add('The following standard integrations are in scope:');
       if (hasSFEC || (!integrationsList.length && isMiddleEast)) {
-        add('  â€¢ Recruitment to Onboarding to Employee Central');
-        add('  â€¢ Integration to Position Management (EC) â€” requisition creation from approved positions');
-        add('  â€¢ E-signature / DocuSign â€” to be confirmed during Examine Phase');
+        add('  &bull; Recruitment to Onboarding to Employee Central');
+        add('  &bull; Integration to Position Management (EC) &mdash; requisition creation from approved positions');
+        add('  &bull; E-signature / DocuSign &mdash; to be confirmed during Examine Phase');
       } else {
-        add('  â€¢ No third-party integrations in scope for this engagement');
+        add('  &bull; No third-party integrations in scope for this engagement');
       }
     }
     add('');
@@ -3511,36 +3511,36 @@ app.get('/consultant/sow-builder', (_req, res) => {
     // Data Privacy & Compliance
     add('Data Privacy & Compliance');
     add('');
-    add('  â€¢ Candidate consent and privacy notice configuration');
-    add('  â€¢ Data retention policy configuration (automated deletion schedules for');
+    add('  &bull; Candidate consent and privacy notice configuration');
+    add('  &bull; Data retention policy configuration (automated deletion schedules for');
     add('    candidate records)');
     if (isMiddleEast || complianceList.some(function(c){ return c.indexOf('PDPL') >= 0 || c.indexOf('PDPPL') >= 0; })) {
-      add('  â€¢ Compliance configuration aligned to applicable regional requirements including');
+      add('  &bull; Compliance configuration aligned to applicable regional requirements including');
       add('    UAE Personal Data Protection Law (PDPL), Saudi Arabia Personal Data Protection');
       add('    Law (PDPPL), and GDPR where relevant');
     } else if (complianceList.length > 0) {
-      complianceList.forEach(function(c){ add('  â€¢ ' + c); });
+      complianceList.forEach(function(c){ add('  &bull; ' + c); });
     } else {
-      add('  â€¢ Standard data privacy defaults will be applied');
+      add('  &bull; Standard data privacy defaults will be applied');
     }
-    add('  â€¢ Specific regional compliance requirements to be confirmed during Examine Phase');
+    add('  &bull; Specific regional compliance requirements to be confirmed during Examine Phase');
     add('');
 
     // Data Migration
     add('Data Migration Scope');
     add('');
     if (hasMigration) {
-      add('  â€¢ ' + a.dataMigration);
-      add('  â€¢ Data mapping document to be agreed during Examine Phase');
-      add('  â€¢ Client responsible for data extraction in the EX3-specified format');
-      add('  â€¢ Migration performed in sandbox environment first for validation before cutover');
-      add('  â€¢ Maximum of 1 test cycle and 1 production migration cycle');
+      add('  &bull; ' + a.dataMigration);
+      add('  &bull; Data mapping document to be agreed during Examine Phase');
+      add('  &bull; Client responsible for data extraction in the EX3-specified format');
+      add('  &bull; Migration performed in sandbox environment first for validation before cutover');
+      add('  &bull; Maximum of 1 test cycle and 1 production migration cycle');
     } else {
-      add('  â€¢ Migration of active job requisitions into SAP SuccessFactors Recruiting is included in scope');
-      add('  â€¢ Data mapping document to be agreed during Examine Phase');
-      add('  â€¢ Client responsible for data extraction in the EX3-specified format');
-      add('  â€¢ Migration performed in sandbox environment first for validation before cutover');
-      add('  â€¢ Maximum of 1 test cycle and 1 production migration cycle');
+      add('  &bull; Migration of active job requisitions into SAP SuccessFactors Recruiting is included in scope');
+      add('  &bull; Data mapping document to be agreed during Examine Phase');
+      add('  &bull; Client responsible for data extraction in the EX3-specified format');
+      add('  &bull; Migration performed in sandbox environment first for validation before cutover');
+      add('  &bull; Maximum of 1 test cycle and 1 production migration cycle');
     }
     add('');
 
@@ -3548,41 +3548,41 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('Training Scope');
     add('');
     if (trainingList.length > 0) {
-      trainingList.forEach(function(t){ add('  â€¢ ' + t); });
+      trainingList.forEach(function(t){ add('  &bull; ' + t); });
     } else {
-      add('  â€¢ 1 Recruiter training session (up to 60 minutes â€” end-to-end hiring workflow,');
+      add('  &bull; 1 Recruiter training session (up to 60 minutes &mdash; end-to-end hiring workflow,');
       add('    candidate management, communication tools)');
-      add('  â€¢ 1 Administrator training session (up to 90 minutes â€” system configuration,');
+      add('  &bull; 1 Administrator training session (up to 90 minutes &mdash; system configuration,');
       add('    user management, reporting)');
-      add('  â€¢ 1 Hiring Manager training session (up to 45 minutes â€” job approval, candidate');
+      add('  &bull; 1 Hiring Manager training session (up to 45 minutes &mdash; job approval, candidate');
       add('    review, interview scheduling)');
     }
-    add('  â€¢ All users receive access to the EX3 SAP SF Recruiting Enablement Guide');
-    add('  â€¢ Sessions recorded and shared with Client for future reference');
-    add('  â€¢ Training materials provided in advance for pre-reading');
+    add('  &bull; All users receive access to the EX3 SAP SF Recruiting Enablement Guide');
+    add('  &bull; Sessions recorded and shared with Client for future reference');
+    add('  &bull; Training materials provided in advance for pre-reading');
     add('');
 
     // General Scope
     add('General Scope');
     add('');
     add('Hypercare:');
-    add('  â€¢ ' + (a.hypercare ? a.hypercare + ' of Hypercare Support' : '10 hours or 20 days of Hypercare Support, whichever comes first'));
+    add('  &bull; ' + (a.hypercare ? a.hypercare + ' of Hypercare Support' : '10 hours or 20 days of Hypercare Support, whichever comes first'));
     add('');
     add('General Assumptions:');
-    add('  â€¢ A 3-tier landscape will be used for the project: DEV, STAGE (Test), and PROD');
-    add('  â€¢ ' + clientName + ' holds a valid SAP SuccessFactors Recruiting licence for the project duration');
+    add('  &bull; A 3-tier landscape will be used for the project: DEV, STAGE (Test), and PROD');
+    add('  &bull; ' + clientName + ' holds a valid SAP SuccessFactors Recruiting licence for the project duration');
     add('    including sandbox/test environments required');
-    add('  â€¢ Testing time will be allocated for both EX3 and the Client in each iteration');
+    add('  &bull; Testing time will be allocated for both EX3 and the Client in each iteration');
     add('');
     add('Module Assumptions:');
-    add('  â€¢ We assume all requirements can be met by standard SAP SuccessFactors Recruiting platform');
+    add('  &bull; We assume all requirements can be met by standard SAP SuccessFactors Recruiting platform');
     add('    functionality. Use of third-party applications not listed in scope would');
     add('    require a Change Order and may impact timelines and cost');
-    add('  â€¢ New requirements arising during the project will be considered additional');
+    add('  &bull; New requirements arising during the project will be considered additional');
     add('    scope and will require a Change Request (CR)');
-    add('  â€¢ EX3 is not responsible for managing any 3rd party vendors or issues that');
+    add('  &bull; EX3 is not responsible for managing any 3rd party vendors or issues that');
     add('    can only be resolved by a 3rd party');
-    add('  â€¢ The project will be executed using EX3\\'s EXcelerate Methodology, document');
+    add('  &bull; The project will be executed using EX3\\'s EXcelerate Methodology, document');
     add('    templates, and delivery project tools (Smartsheet)');
     add('');
 
@@ -3594,34 +3594,34 @@ app.get('/consultant/sow-builder', (_req, res) => {
     add('this section is to be deemed out of scope for this SOW.');
     add('');
     add('Other examples of items excluded from scope include:');
-    add('  â€¢ SAP SuccessFactors Recruiting platform licensing fees (contracted directly between');
+    add('  &bull; SAP SuccessFactors Recruiting platform licensing fees (contracted directly between');
     add('    ' + clientName + ' and SAP SuccessFactors Recruiting)');
-    add('  â€¢ Any integrations not explicitly listed in the Integrations Scope section');
-    add('  â€¢ Custom API development, bespoke connectors, or non-standard integration builds');
-    add('  â€¢ Outlook or Google Calendar integration for interview scheduling');
-    add('  â€¢ Advanced referral programme features (bonus tracking, leaderboards,');
+    add('  &bull; Any integrations not explicitly listed in the Integrations Scope section');
+    add('  &bull; Custom API development, bespoke connectors, or non-standard integration builds');
+    add('  &bull; Outlook or Google Calendar integration for interview scheduling');
+    add('  &bull; Advanced referral programme features (bonus tracking, leaderboards,');
     add('    automated payments)');
-    add('  â€¢ Ongoing platform administration or managed services after the Hypercare period');
-    add('  â€¢ Additional training sessions beyond those listed in the Training Scope section');
-    add('  â€¢ Custom dashboards and custom reports');
-    add('  â€¢ Any Training Material beyond the EX3 SAP SF Recruiting Enablement Guide');
-    add('  â€¢ Arabic or any language configuration other than English');
-    add('  â€¢ Countries or languages beyond those agreed in scope');
-    add('  â€¢ Recruitment process design or HR consultancy beyond system configuration');
-    add('  â€¢ Content creation (job descriptions, email copy, brand assets, offer letter text)');
-    add('  â€¢ Change Management consulting, communications development, or iterative');
+    add('  &bull; Ongoing platform administration or managed services after the Hypercare period');
+    add('  &bull; Additional training sessions beyond those listed in the Training Scope section');
+    add('  &bull; Custom dashboards and custom reports');
+    add('  &bull; Any Training Material beyond the EX3 SAP SF Recruiting Enablement Guide');
+    add('  &bull; Arabic or any language configuration other than English');
+    add('  &bull; Countries or languages beyond those agreed in scope');
+    add('  &bull; Recruitment process design or HR consultancy beyond system configuration');
+    add('  &bull; Content creation (job descriptions, email copy, brand assets, offer letter text)');
+    add('  &bull; Change Management consulting, communications development, or iterative');
     add('    process mapping');
-    add('  â€¢ Management of client resources or creation of client internal project plans');
-    add('  â€¢ Changes arising from SAP SuccessFactors Recruiting vendor platform updates');
+    add('  &bull; Management of client resources or creation of client internal project plans');
+    add('  &bull; Changes arising from SAP SuccessFactors Recruiting vendor platform updates');
     add('');
 
     // â”€â”€ LANGUAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     add('Languages');
     add('â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
     add('');
-    add('  â€¢ Platform language translation: English');
-    add('  â€¢ All communications and deliverables will occur in English');
-    add('  â€¢ The SAP SuccessFactors Recruiting career site and all modules will be implemented in');
+    add('  &bull; Platform language translation: English');
+    add('  &bull; All communications and deliverables will occur in English');
+    add('  &bull; The SAP SuccessFactors Recruiting career site and all modules will be implemented in');
     add('    English only. Arabic or any additional language configuration is out of');
     add('    scope and would require a Change Order');
     add('');
@@ -3708,20 +3708,20 @@ app.get('/consultant/sow-builder', (_req, res) => {
     const hasAgency = a.agencyPortal && !a.agencyPortal.includes('No external');
     const complianceCount = Array.isArray(a.compliance) ? a.compliance.length : 0;
 
-    if (shortTimeline && hasHRIS && hasSSO) risks.push('HRIS + SSO + 8 weeks is very aggressive â€” consider extending to at least 12 weeks');
-    if (shortTimeline && hasMigration) risks.push('Data migration in 8 weeks is high risk â€” this typically adds 2â€“4 weeks');
-    if (isEnterprise && (shortTimeline || medTimeline)) risks.push('Enterprise organisations rarely complete in under 12 weeks â€” consider 16 weeks');
-    if (integrations.length >= 3 && shortTimeline) risks.push(integrations.length + ' integrations in 8 weeks is very tight â€” each integration can take 1â€“2 weeks');
-    if (isMultiCountry && shortTimeline) risks.push('Multi-country scope in 8 weeks is extremely ambitious â€” plan for at least 16 weeks');
-    if (hasMultiApproval && shortTimeline) risks.push('Complex multi-level approval chains require significant configuration time â€” 8 weeks leaves little room for iteration');
-    if (hasFullOffer && hasMigration && shortTimeline) risks.push('Full offer management + data migration + 8 weeks is very high risk â€” extend timeline or reduce scope');
-    if (hasHRIS) warnings.push('HRIS integrations require IT involvement early â€” confirm credentials are available before the build phase');
-    if (hasSSO) warnings.push("SSO setup requires the client's IT team â€” get them in the kickoff call");
-    if (isLarge && a.training && Array.isArray(a.training) && a.training.length < 2) warnings.push('A large organisation with fewer than 2 training sessions may lead to low adoption â€” consider adding more');
-    if (hasMultiApproval) warnings.push('Multi-level approval chains: map the exact approval flow in discovery before build starts â€” late changes are expensive');
-    if (isMultiCountry) warnings.push('Multi-country/language: confirm which markets are live at go-live vs phased in later â€” scope creep risk is high');
-    if (hasAgency) warnings.push('Agency portal: get a list of agencies and their contacts from the client early â€” account setup takes time');
-    if (complianceCount >= 3) warnings.push('High compliance scope (' + complianceCount + ' items) â€” involve the client\\'s DPO or legal team in discovery');
+    if (shortTimeline && hasHRIS && hasSSO) risks.push('HRIS + SSO + 8 weeks is very aggressive &mdash; consider extending to at least 12 weeks');
+    if (shortTimeline && hasMigration) risks.push('Data migration in 8 weeks is high risk &mdash; this typically adds 2&ndash;4 weeks');
+    if (isEnterprise && (shortTimeline || medTimeline)) risks.push('Enterprise organisations rarely complete in under 12 weeks &mdash; consider 16 weeks');
+    if (integrations.length >= 3 && shortTimeline) risks.push(integrations.length + ' integrations in 8 weeks is very tight &mdash; each integration can take 1&ndash;2 weeks');
+    if (isMultiCountry && shortTimeline) risks.push('Multi-country scope in 8 weeks is extremely ambitious &mdash; plan for at least 16 weeks');
+    if (hasMultiApproval && shortTimeline) risks.push('Complex multi-level approval chains require significant configuration time &mdash; 8 weeks leaves little room for iteration');
+    if (hasFullOffer && hasMigration && shortTimeline) risks.push('Full offer management + data migration + 8 weeks is very high risk &mdash; extend timeline or reduce scope');
+    if (hasHRIS) warnings.push('HRIS integrations require IT involvement early &mdash; confirm credentials are available before the build phase');
+    if (hasSSO) warnings.push("SSO setup requires the client's IT team &mdash; get them in the kickoff call");
+    if (isLarge && a.training && Array.isArray(a.training) && a.training.length < 2) warnings.push('A large organisation with fewer than 2 training sessions may lead to low adoption &mdash; consider adding more');
+    if (hasMultiApproval) warnings.push('Multi-level approval chains: map the exact approval flow in discovery before build starts &mdash; late changes are expensive');
+    if (isMultiCountry) warnings.push('Multi-country/language: confirm which markets are live at go-live vs phased in later &mdash; scope creep risk is high');
+    if (hasAgency) warnings.push('Agency portal: get a list of agencies and their contacts from the client early &mdash; account setup takes time');
+    if (complianceCount >= 3) warnings.push('High compliance scope (' + complianceCount + ' items) &mdash; involve the client\\'s DPO or legal team in discovery');
 
     const banner = document.getElementById('risk-banner');
     if (risks.length === 0 && warnings.length === 0) { banner.style.display = 'none'; return; }
@@ -3729,12 +3729,12 @@ app.get('/consultant/sow-builder', (_req, res) => {
     let html = '';
     if (risks.length) {
       html += '<div style="font-weight:700;color:#991b1b;margin-bottom:8px">ðŸ”´ Risk flags</div>';
-      html += risks.map(r => '<div style="margin-bottom:4px">â€¢ ' + r + '</div>').join('');
+      html += risks.map(r => '<div style="margin-bottom:4px">&bull; ' + r + '</div>').join('');
     }
     if (warnings.length) {
       if (risks.length) html += '<div style="margin:10px 0;border-top:1px solid #fde68a"></div>';
       html += '<div style="font-weight:700;color:#92400e;margin-bottom:8px">âš ï¸ Things to watch</div>';
-      html += warnings.map(w => '<div style="margin-bottom:4px">â€¢ ' + w + '</div>').join('');
+      html += warnings.map(w => '<div style="margin-bottom:4px">&bull; ' + w + '</div>').join('');
     }
     banner.innerHTML = html;
     banner.style.display = 'block';
@@ -3767,7 +3767,7 @@ app.get('/consultant/sow-builder', (_req, res) => {
       }
       aiStatus.style.display = 'none';
     } catch (err) {
-      aiStatus.textContent = 'AI generation failed â€” please try again.';
+      aiStatus.textContent = 'AI generation failed &mdash; please try again.';
       aiStatus.style.background = '#fef2f2';
       aiStatus.style.color = '#991b1b';
     }
@@ -4010,7 +4010,7 @@ function buildUATPage() {
 }
 
 
-// Demo presenter mode â€” automated split-screen product demo
+// Demo presenter mode &mdash; automated split-screen product demo
 app.get('/demo', (_req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -4320,7 +4320,7 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 <div id="start-screen">
   <div class="ss-logo">EX3 <em>SAP SuccessFactors Recruiting</em></div>
   <h1 class="ss-head">Everything your team needs.<br><em>On day one.</em></h1>
-  <p class="ss-sub">Training, AI assistant, WhatsApp bot, consultant portal, and SOW builder â€” the complete SAP SuccessFactors Recruiting implementation toolkit.</p>
+  <p class="ss-sub">Training, AI assistant, WhatsApp bot, consultant portal, and SOW builder &mdash; the complete SAP SuccessFactors Recruiting implementation toolkit.</p>
   <div class="ss-stats">
     <div class="ss-stat"><span class="ss-stat-n" id="stat-features">50+</span><span class="ss-stat-l">Features</span></div>
     <div class="ss-stat"><span class="ss-stat-n" id="stat-roles">4</span><span class="ss-stat-l">Roles</span></div>
@@ -4455,7 +4455,7 @@ iframe{width:100%;height:100%;border:none;display:block;background:#f8f7f4}
 var steps = [
   {
     icon:'', title:'The EX3 Platform', url:'/', auto:[],
-    voice:"Meet Sarah. She runs SAP SuccessFactors Recruiting implementations for a Big Four consulting firm. New client just signed â€” a global enterprise, twelve thousand employees, going live in sixty days. She has a kickoff call in two hours. This is everything she uses.",
+    voice:"Meet Sarah. She runs SAP SuccessFactors Recruiting implementations for a Big Four consulting firm. New client just signed &mdash; a global enterprise, twelve thousand employees, going live in sixty days. She has a kickoff call in two hours. This is everything she uses.",
     callout:null
   },
   {
@@ -4467,7 +4467,7 @@ var steps = [
       {d:9000,a:{action:'setRole',role:'adm'}}
     ],
     minHold:12000,
-    voice:"So before the call, Sarah's getting her team set up. On any SAP SuccessFactors Recruiting project you have four types of people involved â€” the recruiter, the hiring manager, the candidate, and the admin. Each one of them logs in and sees a completely different version of this platform. You can watch it switching between them now.",
+    voice:"So before the call, Sarah's getting her team set up. On any SAP SuccessFactors Recruiting project you have four types of people involved &mdash; the recruiter, the hiring manager, the candidate, and the admin. Each one of them logs in and sees a completely different version of this platform. You can watch it switching between them now.",
     callout:{label:'Role-based views',text:'Recruiter \u00b7 Hiring Manager \u00b7 Candidate \u00b7 Admin',dot:{x:50,y:14},bubble:{x:2,y:4}}
   },
   {
@@ -4476,21 +4476,21 @@ var steps = [
       {d:800,a:{action:'setRole',role:'rec'}}
     ],
     minHold:7000,
-    voice:"She clicks into the recruiter side. What you're looking at is just their stuff â€” the tasks that are relevant to them, their process, laid out in a way that makes sense for their role. It's a clean, focused view built around what a recruiter actually does day to day.",
+    voice:"She clicks into the recruiter side. What you're looking at is just their stuff &mdash; the tasks that are relevant to them, their process, laid out in a way that makes sense for their role. It's a clean, focused view built around what a recruiter actually does day to day.",
     callout:{label:'Recruiter guide',text:'Job posting \u00b7 Pipelines \u00b7 Offer management',dot:{x:50,y:14},bubble:{x:2,y:4}}
   },
   {
-    icon:'', title:'Schedule Interview â€” Step by Step', url:'/',
+    icon:'', title:'Schedule Interview &mdash; Step by Step', url:'/',
     auto:[
       {d:800, a:{action:'openTaskDetail',taskId:'sched-interview'}},
       {d:4500,a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[0]}}
     ],
     minHold:10000,
-    voice:"She opens Schedule Interview. You can see all the steps here â€” who does each one, what's involved, what order they go in. Before the client has even asked her a question about this, she's already got the full picture in front of her.",
-    callout:{label:'Process walkthrough',text:'Every step, every owner â€” no ambiguity',dot:{x:50,y:50},bubble:{x:2,y:4}}
+    voice:"She opens Schedule Interview. You can see all the steps here &mdash; who does each one, what's involved, what order they go in. Before the client has even asked her a question about this, she's already got the full picture in front of her.",
+    callout:{label:'Process walkthrough',text:'Every step, every owner &mdash; no ambiguity',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
-    icon:'', title:'Step 2 Has an Issue â€” Ask AI', url:'/',
+    icon:'', title:'Step 2 Has an Issue &mdash; Ask AI', url:'/',
     auto:[
       {d:800, a:{action:'expandTaskSteps',taskId:'sched-interview',indices:[1]}},
       {d:4000,a:{action:'openStuck',taskId:'sched-interview',stepIdx:1}},
@@ -4498,29 +4498,29 @@ var steps = [
     ],
     manual:true,
     manualHint:22000,
-    voice:"Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One click and that exact step goes to the AI â€” everything pre-loaded. Watch it answer. Click next when you are ready.",
+    voice:"Step two is where teams keep getting stuck. She flags it. EX3 surfaces the likely causes immediately. One click and that exact step goes to the AI &mdash; everything pre-loaded. Watch it answer. Click next when you are ready.",
     callout:{label:'Built-in troubleshooting',text:'Flag any step \u2014 AI answers with full context',dot:{x:80,y:20},bubble:{x:2,y:4}}
   },
   {
-    icon:'', title:'Follow-Up â€” Context Memory', url:'/',
+    icon:'', title:'Follow-Up &mdash; Context Memory', url:'/',
     auto:[
       {d:1000,a:{action:'typeAndAsk',query:'What permission level do I need to schedule on behalf of someone?'}}
     ],
     manual:true,
     manualHint:25000,
-    voice:"Now watch the follow-up. She asks a second question â€” no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.",
+    voice:"Now watch the follow-up. She asks a second question &mdash; no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.",
     callout:{label:'Context memory',text:'Follow-up questions \u2014 full conversation carried forward',dot:{x:78,y:36},bubble:{x:2,y:4}}
   },
   {
     type:'card', icon:'', title:'Ask anything.', chap:'Chapter II', headline:'Ask anything.<br><em>Get an answer.</em>', countdown:4, auto:[], callout:null,
-    voice:"And that AI you just saw â€” you can ask it literally anything. Not just the stuck steps. Any SAP SuccessFactors Recruiting question, any point in the project, any time of day."
+    voice:"And that AI you just saw &mdash; you can ask it literally anything. Not just the stuck steps. Any SAP SuccessFactors Recruiting question, any point in the project, any time of day."
   },
   {
-    icon:'', title:'Try It â€” Ask Anything', url:'/',
+    icon:'', title:'Try It &mdash; Ask Anything', url:'/',
     auto:[{d:800,a:{action:'openAI'}}],
     manual:true,
     manualHint:5000,
-    voice:"Go ahead â€” ask it anything you like. A SAP SuccessFactors Recruiting question, something about the process, whatever comes to mind. Click next whenever you are done.",
+    voice:"Go ahead &mdash; ask it anything you like. A SAP SuccessFactors Recruiting question, something about the process, whatever comes to mind. Click next whenever you are done.",
     callout:null
   },
   {
@@ -4531,13 +4531,13 @@ var steps = [
       {d:5500,a:{action:'setFlowProcesses',ids:['post-job','sched-interview','add-workflow','add-assessment'],buildNow:true}}
     ],
     minHold:13000,
-    voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click and the full sequence generates â€” post job, schedule interview, workflow automation, assessments. The whole delivery plan, structured and ready.",
+    voice:"After the call she builds the implementation runbook. Picks the exact processes the client needs. One click and the full sequence generates &mdash; post job, schedule interview, workflow automation, assessments. The whole delivery plan, structured and ready.",
     callout:{label:'One-go workflow',text:'Full implementation sequence \u2014 generated in seconds',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
     type:'card', icon:'', title:'Same AI. On WhatsApp.', chap:'Chapter III', headline:'Same AI.<br><em>On WhatsApp.</em>', auto:[], callout:null,
     voice:"No app. No login. Just WhatsApp.",
-    postVoice:"Quick one. I\\'m five minutes from the client site. Their hiring manager just messaged â€” the Send Offer button isn\\'t showing up. I need to know what\\'s blocking it before I walk in. Thanks.",
+    postVoice:"Quick one. I\\'m five minutes from the client site. Their hiring manager just messaged &mdash; the Send Offer button isn\\'t showing up. I need to know what\\'s blocking it before I walk in. Thanks.",
     postVoiceStressed:true
   },
   {
@@ -4554,14 +4554,14 @@ var steps = [
       {from:'them', text:"Go to *Admin \u2192 User Management*, find your name, and look at your assigned role.\\n\\nYou need either the *Offer Manager* role, or a custom role with the *Create Offer* permission enabled.\\n\\nIf it\\'s missing your SR admin can add it in about 2 minutes.", delay:21000, ts:'06:08'}
     ],
     auto:[],
-    voice:"Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged â€” the Send Offer button is gone. She does not type. She records a voice note on WhatsApp, presses send, and watches the answer land before she even gets out of the car. Same AI. No app. No login. Around the clock.",
+    voice:"Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged &mdash; the Send Offer button is gone. She does not type. She records a voice note on WhatsApp, presses send, and watches the answer land before she even gets out of the car. Same AI. No app. No login. Around the clock.",
     callout:{label:'WhatsApp AI bot',text:'Voice notes supported \u2014 no app, no login',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Consultant Portal', url:'/consultant',
     auto:[{d:800,a:{action:'showPhases'}},{d:1700,a:{action:'openPhase',index:0}},{d:3500,a:{action:'openPhase',index:1}},{d:5300,a:{action:'openPhase',index:2}},{d:7100,a:{action:'openPhase',index:3}}],
     minHold:9500,
-    voice:"Back at her desk, Sarah is running the engagement through the consultant portal. The EXcelerate methodology â€” four phases, each one fully structured. Examine, Adopt, Validate, Launch. Checklists, RACI, deliverables, timelines. Everything her delivery team needs to run a clean deployment.",
+    voice:"Back at her desk, Sarah is running the engagement through the consultant portal. The EXcelerate methodology &mdash; four phases, each one fully structured. Examine, Adopt, Validate, Launch. Checklists, RACI, deliverables, timelines. Everything her delivery team needs to run a clean deployment.",
     callout:{label:'EXcelerate methodology',text:'Examine \u00b7 Adopt \u00b7 Validate \u00b7 Launch',dot:{x:50,y:42},bubble:{x:2,y:4}}
   },
   {
@@ -4570,18 +4570,18 @@ var steps = [
   },
   {
     icon:'', title:'SOW Builder', url:'/consultant/sow-builder', auto:[{d:500,a:{action:'demoWalkSOW'}}], countdown:10,
-    voice:"She opens the SOW builder. Nineteen questions â€” org size, geography, integrations, approval workflows, compliance, training approach, go-live date. Every single one answered. At the end, a complete Statement of Work structured around every EXcelerate phase.",
+    voice:"She opens the SOW builder. Nineteen questions &mdash; org size, geography, integrations, approval workflows, compliance, training approach, go-live date. Every single one answered. At the end, a complete Statement of Work structured around every EXcelerate phase.",
     callout:{label:'19-step SOW wizard',text:'Every requirement captured \u2014 EXcelerate format output',dot:{x:50,y:32},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'AI SOW Rewrite', url:'/consultant/sow-builder', auto:[{d:1000,a:{action:'triggerAIRewrite'}}],
     minHold:7000,
-    voice:"One click. The AI rewrites the whole thing into polished, client-ready consulting language â€” streamed live, word by word. Boardroom-ready. Done before the afternoon stand-up.",
+    voice:"One click. The AI rewrites the whole thing into polished, client-ready consulting language &mdash; streamed live, word by word. Boardroom-ready. Done before the afternoon stand-up.",
     callout:{label:'AI rewrite',text:'Client-ready language, generated instantly',dot:{x:50,y:54},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:'Export & Email', url:'/consultant/sow-builder', auto:[{d:800,a:{action:'scrollToExport'}}],
-    voice:"She exports it as a structured Word document â€” proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page.",
+    voice:"She exports it as a structured Word document &mdash; proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page.",
     callout:{label:'One-click delivery',text:'Structured Word doc or direct email to client',dot:{x:50,y:78},bubble:{x:2,y:4}}
   },
   {
@@ -4590,12 +4590,12 @@ var steps = [
     analyticsPanel:true,
     auto:[],
     minHold:13000,
-    voice:"Three weeks in. The data tells the story. Two hundred and forty seven AI queries this week. Four point two hours saved per consultant. Twelve active engagements running clean. The platform does not just support the work â€” it measures it.",
+    voice:"Three weeks in. The data tells the story. Two hundred and forty seven AI queries this week. Four point two hours saved per consultant. Twelve active engagements running clean. The platform does not just support the work &mdash; it measures it.",
     callout:{label:'Live analytics',text:'Queries, time saved, engagement health \u2014 all tracked',dot:{x:50,y:50},bubble:{x:2,y:4}}
   },
   {
     icon:'', title:"That\\'s EX3", url:'/', auto:[{d:600,a:{action:'setRole',role:'rec'}}],
-    voice:"The kickoff went well. The SOW is signed. The team is live. Sarah has sixty days to deliver â€” and everything she needs is right here. Role training for every person. An AI that answers anything. WhatsApp, voice notes, no login. A complete SOW in forty-five seconds. That is EX3.",
+    voice:"The kickoff went well. The SOW is signed. The team is live. Sarah has sixty days to deliver &mdash; and everything she needs is right here. Role training for every person. An AI that answers anything. WhatsApp, voice notes, no login. A complete SOW in forty-five seconds. That is EX3.",
     callout:null
   }
 ];
@@ -5035,7 +5035,7 @@ function render(){
     if(s.countdown){
       startAutoAdvance(s.countdown, function(){ go(1); });
     } else if(s.manual){
-      // Wait for user to click Next Step â€” pulse the button after the AI has had time to answer
+      // Wait for user to click Next Step &mdash; pulse the button after the AI has had time to answer
       var hint = s.manualHint || 18000;
       autoTimers.push(setTimeout(function(){
         if(stepToken !== narrationStepToken) return;
@@ -5207,7 +5207,7 @@ app.get('/conversations', (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Conversation History â€” EX3</title>
+<title>Conversation History &mdash; EX3</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -5323,7 +5323,7 @@ function openThread(idx) {
   active = t.id;
   renderThreadList(filteredThreads);
 
-  const label = t.source === 'whatsapp' ? 'WhatsApp â€” ' + t.id : 'Web Chat â€” ' + t.id.slice(-12);
+  const label = t.source === 'whatsapp' ? 'WhatsApp &mdash; ' + t.id : 'Web Chat &mdash; ' + t.id.slice(-12);
   document.getElementById('chat-header').style.display = 'block';
   document.getElementById('chat-header-title').textContent = label;
   document.getElementById('chat-header-sub').textContent =
@@ -5383,7 +5383,7 @@ app.get('/demo2', (_req, res) => {
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EX3 SAP SuccessFactors Recruiting â€” Experience</title>
+<title>EX3 SAP SuccessFactors Recruiting &mdash; Experience</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5570,7 +5570,7 @@ html,body{height:100%;overflow:hidden;background:#060606;color:#fff;font-family:
     <div class="sl">
       <div class="sc-label ap2" id="s2a">The platform guide</div>
       <div class="sc-h ap" id="s2b">Four roles.<br><em>One platform.</em></div>
-      <div class="sc-sub ap" id="s2c">Every person on the project sees exactly what they need â€” and nothing they don't.</div>
+      <div class="sc-sub ap" id="s2c">Every person on the project sees exactly what they need &mdash; and nothing they don't.</div>
       <div class="role-tags ap2" id="s2d">
         <div class="rtag" id="rt-rec">Recruiter</div>
         <div class="rtag" id="rt-hm">Hiring Manager</div>
@@ -5649,7 +5649,7 @@ html,body{height:100%;overflow:hidden;background:#060606;color:#fff;font-family:
     <div class="sc-label ap2" id="s6a" style="margin-bottom:6px">SOW builder</div>
     <div class="sow-n aps" id="s6b">45</div>
     <div class="sow-w ap" id="s6c">seconds.</div>
-    <div class="sow-d ap" id="s6d">A complete Statement of Work â€” structured, professional, client-ready. Generated and delivered without leaving the page.</div>
+    <div class="sow-d ap" id="s6d">A complete Statement of Work &mdash; structured, professional, client-ready. Generated and delivered without leaving the page.</div>
   </div>
 </div>
 
@@ -5672,7 +5672,7 @@ html,body{height:100%;overflow:hidden;background:#060606;color:#fff;font-family:
   <div class="glow" style="bottom:-100px;right:-100px;animation-delay:3s"></div>
   <div style="position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px">
     <div class="cta-h ap" id="s8a">Everything your team needs.<br><em>On day one.</em></div>
-    <div class="cta-s ap" id="s8b">Training guide, AI assistant, WhatsApp bot, consultant portal, and SOW builder â€” the complete SAP SuccessFactors Recruiting implementation toolkit.</div>
+    <div class="cta-s ap" id="s8b">Training guide, AI assistant, WhatsApp bot, consultant portal, and SOW builder &mdash; the complete SAP SuccessFactors Recruiting implementation toolkit.</div>
     <div style="position:relative;margin-top:8px" class="ap" id="s8c">
       <button class="cta-b" onclick="window.location.href='mailto:hello@ex3.io'">Book a demo call</button>
     </div>
@@ -5970,14 +5970,14 @@ activateScene(0);
 });
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// /demo3  â€” Advanced guided product tour with cursor, zoom, spotlight & voice
+// /demo3  &mdash; Advanced guided product tour with cursor, zoom, spotlight & voice
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.get('/demo3', (_req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EX3 SAP SuccessFactors Recruiting â€” Platform Tour</title>
+<title>EX3 SAP SuccessFactors Recruiting &mdash; Platform Tour</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -6298,7 +6298,7 @@ var CHAPTERS = [
 ];
 
 var STEPS = [
-  // â”€â”€ 0: CARD â€“ intro â”€â”€
+  // â”€â”€ 0: CARD &ndash; intro â”€â”€
   {
     type:\'card\',
     chap:\'EX3 SAP SuccessFactors Recruiting\',
@@ -6315,14 +6315,14 @@ var STEPS = [
       {d:5800, a:{action:\'setRole\',role:\'cand\'}},
       {d:8400, a:{action:\'setRole\',role:\'adm\'}}
     ],
-    voice:\'Every person on a SAP SuccessFactors Recruiting project sees a completely different platform. Recruiter, hiring manager, candidate, admin â€” each with their own tasks, their own view, nothing extra. Watch it switch between all four.\',
+    voice:\'Every person on a SAP SuccessFactors Recruiting project sees a completely different platform. Recruiter, hiring manager, candidate, admin &mdash; each with their own tasks, their own view, nothing extra. Watch it switch between all four.\',
     minHold:11000
   },
   // â”€â”€ 2: Recruiter view â”€â”€
   {
     url:\'/\',
     role:\'rec\',
-    voice:\"Take the recruiter. Every task they'll ever perform is here â€” post jobs, manage the pipeline, schedule interviews, send offers. Searchable, step by step, before the client even needs to ask.\",
+    voice:\"Take the recruiter. Every task they'll ever perform is here &mdash; post jobs, manage the pipeline, schedule interviews, send offers. Searchable, step by step, before the client even needs to ask.\",
     cursor:[
       {x:7,y:38,d:1200},
       {x:7,y:46,d:2600},
@@ -6336,7 +6336,7 @@ var STEPS = [
   {
     url:\'/\',
     role:\'rec\',
-    voice:\'Click any task and it opens to individual steps. Who does what, in what sequence, exactly how to do it. Every interview, every offer, every system action â€” documented before the client goes live.\',
+    voice:\'Click any task and it opens to individual steps. Who does what, in what sequence, exactly how to do it. Every interview, every offer, every system action &mdash; documented before the client goes live.\',
     auto:[
       {d:800, a:{action:\'openTaskDetail\',taskId:\'sched-interview\'}},
       {d:2500,a:{action:\'expandTaskSteps\',taskId:\'sched-interview\',indices:[0,1,2]}}
@@ -6349,7 +6349,7 @@ var STEPS = [
     ],
     minHold:1000
   },
-  // â”€â”€ 4: CARD â€“ AI â”€â”€
+  // â”€â”€ 4: CARD &ndash; AI â”€â”€
   {
     type:\'card\',
     chap:\'Chapter II\',
@@ -6361,7 +6361,7 @@ var STEPS = [
   {
     url:\'/\',
     role:\'rec\',
-    voice:\"Every step has a help button. When someone gets stuck â€” mid-interview, mid-approval, mid-offer â€” they tap it. The AI has full context. It knows the step, the task, the role. Watch it answer. Click next when ready.\",
+    voice:\"Every step has a help button. When someone gets stuck &mdash; mid-interview, mid-approval, mid-offer &mdash; they tap it. The AI has full context. It knows the step, the task, the role. Watch it answer. Click next when ready.\",
     auto:[
       {d:800, a:{action:\'openTaskDetail\',taskId:\'sched-interview\'}},
       {d:2000,a:{action:\'openStuck\',taskId:\'sched-interview\',stepIdx:1}},
@@ -6376,20 +6376,20 @@ var STEPS = [
     manual:true,
     manualHint:18000
   },
-  // â”€â”€ 6: Follow-up â€“ context memory (manual) â”€â”€
+  // â”€â”€ 6: Follow-up &ndash; context memory (manual) â”€â”€
   {
     url:\'/\',
-    voice:\'Now the follow-up. She asks a second question â€” no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.\',
+    voice:\'Now the follow-up. She asks a second question &mdash; no re-explaining, no starting over. The AI carries the full conversation. That is context memory. Click next when the answer lands.\',
     auto:[
       {d:800,a:{action:\'typeAndAsk\',query:\'What permission level do I need to schedule on behalf of someone?\'}}
     ],
     manual:true,
     manualHint:22000
   },
-  // â”€â”€ 7: Try it â€” ask anything (manual) â”€â”€
+  // â”€â”€ 7: Try it &mdash; ask anything (manual) â”€â”€
   {
     url:\'/\',
-    voice:\'You can ask it anything. Not just stuck steps â€” any SAP SuccessFactors Recruiting question, any point in the project, any time of day. Go ahead, give it a go. Click next when you are done.\',
+    voice:\'You can ask it anything. Not just stuck steps &mdash; any SAP SuccessFactors Recruiting question, any point in the project, any time of day. Go ahead, give it a go. Click next when you are done.\',
     auto:[{d:600,a:{action:\'openAI\'}}],
     manual:true,
     manualHint:5000
@@ -6397,7 +6397,7 @@ var STEPS = [
   // â”€â”€ 8: Implementation runbook â”€â”€
   {
     url:\'/\',
-    voice:\'After the call she builds the implementation runbook. Picks the processes the client needs. One click and the full delivery sequence generates â€” post job, schedule interview, workflow automation, assessments. The whole plan, structured and ready.\',
+    voice:\'After the call she builds the implementation runbook. Picks the processes the client needs. One click and the full delivery sequence generates &mdash; post job, schedule interview, workflow automation, assessments. The whole plan, structured and ready.\',
     auto:[
       {d:700, a:{action:\'closeAI\'}},
       {d:1400,a:{action:\'openUnifiedFlow\'}},
@@ -6405,14 +6405,14 @@ var STEPS = [
     ],
     minHold:13000
   },
-  // â”€â”€ 9: CARD â€“ WhatsApp â”€â”€
+  // â”€â”€ 9: CARD &ndash; WhatsApp â”€â”€
   {
     type:\'card\',
     chap:\'Chapter III\',
     hl:\'Same AI.<br><em>On WhatsApp.</em>\',
     sub:\'No app. No login. Around the clock.\',
     voice:\'No app. No login. Just WhatsApp.\',
-    postVoice:\'Quick one. I\\\'m five minutes from the client site. Their hiring manager just messaged â€” the Send Offer button isn\\\'t showing up. I need to know what\\\'s blocking it before I walk in. Thanks.\',
+    postVoice:\'Quick one. I\\\'m five minutes from the client site. Their hiring manager just messaged &mdash; the Send Offer button isn\\\'t showing up. I need to know what\\\'s blocking it before I walk in. Thanks.\',
     postVoiceStressed:true,
     dur:3500
   },
@@ -6420,11 +6420,11 @@ var STEPS = [
   {
     waChat:true,
     recordingScene:true,
-    voice:\'Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged â€” the Send Offer button is gone. She records a voice note on WhatsApp. The answer lands before she gets out of the car. No app, no login, around the clock.\',
+    voice:\'Six oh seven in the morning. Sarah is in the back of a cab, five minutes from the client site. The hiring manager has messaged &mdash; the Send Offer button is gone. She records a voice note on WhatsApp. The answer lands before she gets out of the car. No app, no login, around the clock.\',
     waMessages:[
       {from:\'me\',voice:true,ts:\'06:07\',d:6000},
       {from:\'them\',text:\"The Send Offer button appears when three conditions are met:\\n\\n1\\u20e3 Candidate is in the *Offer* stage\\n2\\u20e3 Job has an active offer template\\n3\\u20e3 You have the *Offer Manager* permission\\n\\nWhich would you like me to check first?\",ts:\'06:07\',d:13000},
-      {from:\'me\',text:\'Probably permissions â€” how do I check?\',ts:\'06:08\',d:19500},
+      {from:\'me\',text:\'Probably permissions &mdash; how do I check?\',ts:\'06:08\',d:19500},
       {from:\'them\',text:\"Go to *Admin > User Management*, find your name, and check your assigned role.\\n\\nYou need the *Offer Manager* role or a custom role with *Create Offer* permission.\\n\\nYour SR admin can add it in about two minutes.\",ts:\'06:08\',d:24500}
     ],
     minHold:12000
@@ -6432,7 +6432,7 @@ var STEPS = [
   // â”€â”€ 11: Consultant portal â”€â”€
   {
     url:\'/consultant\',
-    voice:\"For the consultants running the engagement, there's a dedicated portal. EXcelerate methodology â€” four phases, each fully structured. Examine, Adopt, Validate, Launch. Checklists, deliverables, timelines. Everything the delivery team needs.\",
+    voice:\"For the consultants running the engagement, there's a dedicated portal. EXcelerate methodology &mdash; four phases, each fully structured. Examine, Adopt, Validate, Launch. Checklists, deliverables, timelines. Everything the delivery team needs.\",
     auto:[
       {d:1200,a:{action:\'openPhase\',index:0}},
       {d:3000,a:{action:\'openPhase\',index:1}},
@@ -6446,7 +6446,7 @@ var STEPS = [
     ],
     minHold:2000
   },
-  // â”€â”€ 12: CARD â€“ SOW â”€â”€
+  // â”€â”€ 12: CARD &ndash; SOW â”€â”€
   {
     type:\'card\',
     chap:\'Chapter IV\',
@@ -6457,31 +6457,31 @@ var STEPS = [
   // â”€â”€ 13: SOW Builder â”€â”€
   {
     url:\'/consultant/sow-builder\',
-    voice:\'She opens the SOW builder. Nineteen questions â€” org size, geography, integrations, approval workflows, compliance, training, go-live date. Every one answered. At the end, a complete Statement of Work structured around every EXcelerate phase.\',
+    voice:\'She opens the SOW builder. Nineteen questions &mdash; org size, geography, integrations, approval workflows, compliance, training, go-live date. Every one answered. At the end, a complete Statement of Work structured around every EXcelerate phase.\',
     auto:[{d:500,a:{action:\'demoWalkSOW\'}}],
     minHold:12000
   },
   // â”€â”€ 14: AI SOW Rewrite â”€â”€
   {
     url:\'/consultant/sow-builder\',
-    voice:\'One click. The AI rewrites the whole thing into polished, client-ready consulting language â€” streamed live, word by word. Boardroom-ready. Done before the afternoon stand-up.\',
+    voice:\'One click. The AI rewrites the whole thing into polished, client-ready consulting language &mdash; streamed live, word by word. Boardroom-ready. Done before the afternoon stand-up.\',
     auto:[{d:1000,a:{action:\'triggerAIRewrite\'}}],
     minHold:7000
   },
   // â”€â”€ 15: Export & Email â”€â”€
   {
     url:\'/consultant/sow-builder\',
-    voice:\'She exports it as a structured Word document â€” proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page.\',
+    voice:\'She exports it as a structured Word document &mdash; proper headings, phase tables, RACI matrices. Or sends it straight to the client by email. From generation to delivery, without leaving the page.\',
     auto:[{d:800,a:{action:\'scrollToExport\'}}],
     minHold:5000
   },
   // â”€â”€ 16: Analytics â”€â”€
   {
     analytics:true,
-    voice:\'Three weeks in. The data tells the story. Two hundred and forty seven AI queries this week. Four point two hours saved per consultant. Twelve active engagements running clean. The platform does not just support the work â€” it measures it.\',
+    voice:\'Three weeks in. The data tells the story. Two hundred and forty seven AI queries this week. Four point two hours saved per consultant. Twelve active engagements running clean. The platform does not just support the work &mdash; it measures it.\',
     minHold:3000
   },
-  // â”€â”€ 17: CARD â€“ CTA â”€â”€
+  // â”€â”€ 17: CARD &ndash; CTA â”€â”€
   {
     type:\'card\',
     chap:\'That\\\'s EX3\',
@@ -6645,7 +6645,7 @@ function renderWords(text, charPos){
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// TTS / SPEAK  (Web Audio API â€” bypasses HTMLAudioElement quirks)
+// TTS / SPEAK  (Web Audio API &mdash; bypasses HTMLAudioElement quirks)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 var _actx=null;
 var _sourceNode=null;
@@ -7089,7 +7089,7 @@ document.addEventListener(\'keydown\',function(e){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // WHATSAPP STEP: fix advance timing
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// Override _renderStep WA advance â€” WA messages end around 21s, hold 3s more
+// Override _renderStep WA advance &mdash; WA messages end around 21s, hold 3s more
 var _origRender = _renderStep;
 // The WA step auto-advance is handled inline above with 24000ms
 
@@ -7111,7 +7111,7 @@ document.getElementById(\'live-frame\').src=\'/\';
 
 app.listen(PORT, () => {
   if (!process.env.ASSISTANT_ID) {
-    console.warn('âš   ASSISTANT_ID not set â€” run "node setup.js" first to upload your documents.');
+    console.warn('âš   ASSISTANT_ID not set &mdash; run "node setup.js" first to upload your documents.');
   }
   console.log(`EX3 Guide running at http://localhost:${PORT}`);
 });
