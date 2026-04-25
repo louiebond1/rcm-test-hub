@@ -125,6 +125,59 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const CONSULTANT_PIN = '1703';
+function requireConsultantPin(req, res, next) {
+  if (req.cookies?.consultant_auth === CONSULTANT_PIN) return next();
+  if (req.method === 'POST' && req.body?.pin === CONSULTANT_PIN) {
+    res.setHeader('Set-Cookie', `consultant_auth=${CONSULTANT_PIN}; Path=/; HttpOnly`);
+    return res.redirect(req.path);
+  }
+  res.send(`<!DOCTYPE html><html><head><title>Consultant Access</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .box{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:40px;text-align:center;width:320px}
+    .logo{font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#6366f1;margin-bottom:24px}
+    h2{color:#f1f5f9;font-size:18px;font-weight:600;margin-bottom:8px}
+    p{color:#64748b;font-size:13px;margin-bottom:28px}
+    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+    .key{background:#0f172a;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:18px;font-weight:500;padding:16px;cursor:pointer;transition:all .15s}
+    .key:hover{background:#334155;border-color:#6366f1}
+    .key:active{transform:scale(.95)}
+    .display{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:20px;letter-spacing:.5em;font-size:22px;color:#f1f5f9;min-height:52px}
+    .btn-enter{width:100%;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:background .15s}
+    .btn-enter:hover{background:#4f46e5}
+    .error{color:#f87171;font-size:12px;margin-top:12px}
+  </style>
+</head><body>
+  <div class="box">
+    <div class="logo">EX3 Consultant</div>
+    <h2>Secure Access</h2>
+    <p>Enter your consultant PIN to continue</p>
+    <div class="display" id="disp">&#8203;</div>
+    <div class="keypad">
+      ${[1,2,3,4,5,6,7,8,9,'⌫',0,'✓'].map(k=>`<button class="key" onclick="press('${k}')">${k}</button>`).join('')}
+    </div>
+    ${req.method==='POST'?'<div class="error">Incorrect PIN — try again</div>':''}
+    <form method="post" id="f"><input type="hidden" name="pin" id="pin-inp"></form>
+  </div>
+  <script>
+    let v='';
+    function press(k){
+      if(k==='⌫'){v=v.slice(0,-1);}
+      else if(k==='✓'){if(v.length===4){document.getElementById('pin-inp').value=v;document.getElementById('f').submit();}}
+      else if(v.length<4){v+=k;}
+      document.getElementById('disp').textContent=v?'● '.repeat(v.length).trim():'';
+    }
+    document.addEventListener('keydown',e=>{
+      if(e.key>='0'&&e.key<='9')press(e.key);
+      else if(e.key==='Backspace')press('⌫');
+      else if(e.key==='Enter')press('✓');
+    });
+  </script>
+</body></html>`);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
@@ -694,7 +747,347 @@ function isUncertain(text) {
   return patterns.some(p => p.test(text));
 }
 
+// Insights data API
+app.get('/api/insights', requireConsultantPin, (req, res) => {
+  const web = (() => { try { return fs.readFileSync(WEB_LOG_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)); } catch { return []; } })();
+  const wa = (() => { try { return fs.readFileSync(LOG_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)); } catch { return []; } })();
+  const fb = (() => { try { return fs.existsSync(FEEDBACK_FILE) ? fs.readFileSync(FEEDBACK_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)) : []; } catch { return []; } })();
+
+  const byDay = {};
+  [...web,...wa].forEach(l => {
+    const d = l.ts.slice(0,10);
+    if (!byDay[d]) byDay[d] = { web:0, wa:0 };
+    if (l.threadId !== undefined) byDay[d].web++; else byDay[d].wa++;
+  });
+
+  const rtWeb = web.filter(l=>l.ms>0).map(l=>l.ms);
+  const rtWa = wa.filter(l=>l.ms>0).map(l=>l.ms);
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
+
+  const topQ = [...web,...wa].map(l=>l.question).filter(Boolean);
+  const qFreq = {};
+  topQ.forEach(q => {
+    const key = q.slice(0,60);
+    qFreq[key] = (qFreq[key]||0)+1;
+  });
+  const topQuestions = Object.entries(qFreq).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([q,c])=>({q,c}));
+
+  const recent = [...web.map(l=>({...l,src:'web'})),...wa.map(l=>({...l,src:'whatsapp'}))]
+    .sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,20);
+
+  res.json({
+    web: { total: web.length, success: web.filter(l=>l.success).length, uncertain: web.filter(l=>l.uncertain).length, avgMs: avg(rtWeb) },
+    wa: { total: wa.length, success: wa.filter(l=>l.success).length, uncertain: wa.filter(l=>l.uncertain).length, avgMs: avg(rtWa) },
+    feedback: { up: fb.filter(f=>f.rating==='up').length, down: fb.filter(f=>f.rating==='down').length },
+    byDay, topQuestions, recent,
+    sysInfo: { assistantId: process.env.ASSISTANT_ID||'—', vectorStoreId: process.env.VECTOR_STORE_ID||'—', nodeVersion: process.version, uptime: Math.round(process.uptime()) }
+  });
+});
+
+// AI summary for insights
+app.post('/api/insights-summary', requireConsultantPin, async (req, res) => {
+  const web = (() => { try { return fs.readFileSync(WEB_LOG_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)).slice(-50); } catch { return []; } })();
+  const wa = (() => { try { return fs.readFileSync(LOG_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)).slice(-50); } catch { return []; } })();
+  const combined = [...web,...wa].sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,60);
+  if (!combined.length) return res.json({ summary: 'No conversation data available yet.' });
+  const sample = combined.map(l=>`Q: ${l.question}\nA: ${(l.answer||'').slice(0,200)}`).join('\n\n');
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are an AI analytics assistant. Analyse these recent AI conversations from a SAP SuccessFactors RCM test platform and provide a concise consultant-facing summary. Cover: top topics asked, quality of AI responses, any patterns of confusion or uncertainty, and 2-3 recommendations to improve the knowledge base. Be specific and actionable. Max 250 words.' },
+        { role: 'user', content: sample }
+      ],
+      max_tokens: 400
+    });
+    res.json({ summary: completion.choices[0].message.content });
+  } catch(e) { res.status(500).json({ summary: 'Could not generate summary: ' + e.message }); }
+});
+
+// Insights page
+app.all('/insights', requireConsultantPin);
+app.get('/insights', (req, res) => {
+  res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EX3 Insights</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.topbar{background:#1e293b;border-bottom:1px solid #334155;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.tb-left{display:flex;align-items:center;gap:16px}
+.tb-logo{font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#6366f1}
+.tb-title{font-size:15px;font-weight:600;color:#f1f5f9}
+.tb-nav{display:flex;gap:4px}
+.tb-nav a{color:#94a3b8;text-decoration:none;font-size:13px;padding:6px 12px;border-radius:6px;transition:all .15s}
+.tb-nav a:hover{color:#f1f5f9;background:#334155}
+.tb-nav a.active{color:#6366f1;background:#1e1b4b}
+.content{max-width:1400px;margin:0 auto;padding:28px 24px}
+.page-title{font-size:22px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+.page-sub{font-size:13px;color:#64748b;margin-bottom:28px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.blue::before{background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+.stat-card.green::before{background:linear-gradient(90deg,#10b981,#059669)}
+.stat-card.amber::before{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.stat-card.red::before{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.stat-card.purple::before{background:linear-gradient(90deg,#8b5cf6,#7c3aed)}
+.stat-card.teal::before{background:linear-gradient(90deg,#14b8a6,#0d9488)}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:8px}
+.stat-value{font-size:30px;font-weight:700;color:#f1f5f9;line-height:1}
+.stat-sub{font-size:12px;color:#64748b;margin-top:6px}
+.stat-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:20px;margin-top:8px}
+.badge-green{background:#052e16;color:#4ade80}
+.badge-red{background:#450a0a;color:#f87171}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:28px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:24px}
+.card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.card-title span{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-blue{background:#6366f1} .dot-green{background:#10b981} .dot-amber{background:#f59e0b} .dot-purple{background:#8b5cf6}
+.chart-wrap{position:relative;height:220px}
+.summary-box{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:16px;font-size:13px;line-height:1.7;color:#cbd5e1;min-height:80px}
+.btn-summary{background:#6366f1;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;cursor:pointer;transition:background .15s;margin-bottom:16px}
+.btn-summary:hover{background:#4f46e5}
+.btn-summary:disabled{opacity:.5;cursor:not-allowed}
+.top-q-list{display:flex;flex-direction:column;gap:8px}
+.top-q-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0f172a;border-radius:8px;border:1px solid #1e293b}
+.top-q-bar-wrap{flex:1;background:#1e293b;border-radius:4px;height:4px;overflow:hidden}
+.top-q-bar{height:4px;background:#6366f1;border-radius:4px;transition:width .5s}
+.top-q-text{font-size:12px;color:#cbd5e1;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-q-count{font-size:12px;font-weight:700;color:#6366f1;flex-shrink:0}
+.feed{display:flex;flex-direction:column;gap:10px}
+.feed-item{background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.feed-item:hover{border-color:#334155}
+.feed-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.src-badge{font-size:10px;font-weight:700;letter-spacing:.08em;padding:2px 8px;border-radius:20px}
+.src-web{background:#1e1b4b;color:#818cf8}
+.src-wa{background:#052e16;color:#4ade80}
+.src-flagged{background:#450a0a;color:#f87171}
+.feed-time{font-size:11px;color:#475569}
+.feed-q{font-size:13px;color:#e2e8f0;font-weight:500;margin-bottom:4px}
+.feed-a{font-size:12px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sys-row{background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:12px 14px}
+.sys-label{font-size:11px;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.sys-val{font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all}
+.loading{display:flex;align-items:center;gap:8px;color:#64748b;font-size:13px}
+.spin{width:16px;height:16px;border:2px solid #334155;border-top-color:#6366f1;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.section-divider{border:none;border-top:1px solid #1e293b;margin:8px 0 20px}
+.fb-row-ins{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0f172a;border-radius:8px;margin-bottom:8px}
+.fb-ins-q{font-size:12px;color:#e2e8f0;flex:1}
+.fb-ins-r{font-size:16px;flex-shrink:0}
+.empty-state{color:#475569;font-size:13px;padding:20px 0;text-align:center}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+</style></head><body>
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">EX3</div>
+    <div class="tb-title">Insights</div>
+  </div>
+  <nav class="tb-nav">
+    <a href="/insights" class="active">📊 Analytics</a>
+    <a href="/consultant">🛠 Consultant</a>
+    <a href="/">← Site</a>
+  </nav>
+</div>
+<div class="content">
+  <div class="page-title">Platform Insights</div>
+  <div class="page-sub" id="last-updated">Loading data…</div>
+
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card blue"><div class="stat-label">Total Conversations</div><div class="stat-value" id="s-total">—</div><div class="stat-sub">Web + WhatsApp</div></div>
+    <div class="stat-card green"><div class="stat-label">Web Chat</div><div class="stat-value" id="s-web">—</div><div class="stat-sub" id="s-web-sub">questions</div></div>
+    <div class="stat-card teal"><div class="stat-label">WhatsApp</div><div class="stat-value" id="s-wa">—</div><div class="stat-sub" id="s-wa-sub">messages</div></div>
+    <div class="stat-card amber"><div class="stat-label">Avg Response</div><div class="stat-value" id="s-rt">—</div><div class="stat-sub">milliseconds</div></div>
+    <div class="stat-card purple"><div class="stat-label">Feedback Score</div><div class="stat-value" id="s-fb">—</div><div class="stat-sub" id="s-fb-sub">ratings</div></div>
+    <div class="stat-card red"><div class="stat-label">Flagged</div><div class="stat-value" id="s-flag">—</div><div class="stat-sub">needs review</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot-blue"></span>Questions Per Day</div>
+      <div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot-purple"></span>Source Breakdown</div>
+      <div class="chart-wrap"><canvas id="chart-source"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title"><span class="dot-amber"></span>Top Questions</div>
+      <div class="top-q-list" id="top-q-list"><div class="loading"><div class="spin"></div>Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot-green"></span>System Info</div>
+      <div class="sys-grid" id="sys-grid"><div class="loading"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title"><span class="dot-purple"></span>AI Conversation Summary</div>
+    <button class="btn-summary" id="btn-summary" onclick="loadSummary()">✨ Generate AI Summary</button>
+    <div class="summary-box" id="summary-box">Click the button above to generate an AI-powered analysis of recent conversations, patterns, and recommendations.</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot-blue"></span>Recent Conversations</div>
+      <div class="feed" id="feed-recent"><div class="loading"><div class="spin"></div>Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot-amber"></span>👎 Flagged Responses</div>
+      <div id="feed-flagged"><div class="loading"><div class="spin"></div>Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let chartDaily, chartSource;
+
+async function loadData() {
+  const r = await fetch('/api/insights');
+  const d = await r.json();
+
+  const total = d.web.total + d.wa.total;
+  document.getElementById('last-updated').textContent = 'Last updated ' + new Date().toLocaleTimeString() + ' · ' + total + ' total interactions';
+  document.getElementById('s-total').textContent = total.toLocaleString();
+  document.getElementById('s-web').textContent = d.web.total.toLocaleString();
+  document.getElementById('s-web-sub').textContent = d.web.success + ' successful';
+  document.getElementById('s-wa').textContent = d.wa.total.toLocaleString();
+  document.getElementById('s-wa-sub').textContent = d.wa.success + ' successful';
+  const avgRt = Math.round((d.web.avgMs * d.web.total + d.wa.avgMs * d.wa.total) / Math.max(total,1));
+  document.getElementById('s-rt').textContent = avgRt || '—';
+  const fbTotal = d.feedback.up + d.feedback.down;
+  const fbPct = fbTotal ? Math.round(d.feedback.up / fbTotal * 100) : null;
+  document.getElementById('s-fb').textContent = fbPct !== null ? fbPct + '%' : '—';
+  document.getElementById('s-fb-sub').textContent = fbTotal + ' ratings · ' + d.feedback.up + ' 👍 ' + d.feedback.down + ' 👎';
+  document.getElementById('s-flag').textContent = d.feedback.down;
+
+  // Daily chart
+  const days = Object.keys(d.byDay).sort().slice(-14);
+  const webData = days.map(k => d.byDay[k]?.web || 0);
+  const waData = days.map(k => d.byDay[k]?.wa || 0);
+  const labels = days.map(k => { const dt = new Date(k); return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); });
+  if (chartDaily) chartDaily.destroy();
+  chartDaily = new Chart(document.getElementById('chart-daily'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Web', data: webData, backgroundColor: '#6366f1', borderRadius: 4 },
+        { label: 'WhatsApp', data: waData, backgroundColor: '#10b981', borderRadius: 4 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } }, scales: { x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } }, y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true } } }
+  });
+
+  // Source donut
+  if (chartSource) chartSource.destroy();
+  chartSource = new Chart(document.getElementById('chart-source'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Web Chat', 'WhatsApp'],
+      datasets: [{ data: [d.web.total, d.wa.total], backgroundColor: ['#6366f1','#10b981'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 }, padding: 16 } } } }
+  });
+
+  // Top questions
+  const maxC = d.topQuestions[0]?.c || 1;
+  document.getElementById('top-q-list').innerHTML = d.topQuestions.length
+    ? d.topQuestions.map(({q,c}) => \`<div class="top-q-item">
+        <span class="top-q-count">\${c}x</span>
+        <div style="flex:1;min-width:0">
+          <div class="top-q-text">\${q}</div>
+          <div class="top-q-bar-wrap"><div class="top-q-bar" style="width:\${Math.round(c/maxC*100)}%"></div></div>
+        </div>
+      </div>\`).join('')
+    : '<div class="empty-state">No questions yet</div>';
+
+  // System info
+  const si = d.sysInfo;
+  document.getElementById('sys-grid').innerHTML = [
+    ['Assistant ID', si.assistantId],
+    ['Vector Store', si.vectorStoreId],
+    ['Node Version', si.nodeVersion],
+    ['Uptime', Math.floor(si.uptime/3600) + 'h ' + Math.floor((si.uptime%3600)/60) + 'm'],
+    ['Web Success Rate', d.web.total ? Math.round(d.web.success/d.web.total*100)+'%' : '—'],
+    ['WA Success Rate', d.wa.total ? Math.round(d.wa.success/d.wa.total*100)+'%' : '—'],
+  ].map(([l,v]) => \`<div class="sys-row"><div class="sys-label">\${l}</div><div class="sys-val">\${v}</div></div>\`).join('');
+
+  // Recent feed
+  document.getElementById('feed-recent').innerHTML = d.recent.length
+    ? d.recent.slice(0,10).map(l => \`<div class="feed-item">
+        <div class="feed-meta">
+          <span class="src-badge \${l.src==='web'?'src-web':'src-wa'}">\${l.src==='web'?'WEB':'WHATSAPP'}</span>
+          <span class="feed-time">\${l.ts.replace('T',' ').slice(0,16)}</span>
+          \${l.uncertain?'<span class="src-badge src-flagged">UNCERTAIN</span>':''}
+        </div>
+        <div class="feed-q">\${l.question||'—'}</div>
+        <div class="feed-a">\${(l.answer||'').slice(0,120)}\${(l.answer||'').length>120?'…':''}</div>
+      </div>\`).join('')
+    : '<div class="empty-state">No conversations yet</div>';
+
+  // Flagged
+  fetch('/analytics/feedback?json=1').catch(()=>{});
+  const fbLines = await fetch('/api/insights').then(r=>r.json()).then(d=>d).catch(()=>({feedback:{}}));
+  // Load flagged from feedback file via insights
+  loadFlagged();
+}
+
+async function loadFlagged() {
+  const r = await fetch('/api/insights');
+  // We already have the data — just re-read feedback from server
+  const resp = await fetch('/api/feedback-list');
+  if (!resp.ok) { document.getElementById('feed-flagged').innerHTML = '<div class="empty-state">No flagged responses yet</div>'; return; }
+  const flagged = await resp.json();
+  document.getElementById('feed-flagged').innerHTML = flagged.length
+    ? flagged.slice(0,8).map(f => \`<div class="fb-row-ins">
+        <div class="fb-ins-q">
+          <div style="font-size:11px;color:#475569;margin-bottom:3px">\${f.ts.replace('T',' ').slice(0,16)}</div>
+          \${f.question}
+        </div>
+        <div class="fb-ins-r">👎</div>
+      </div>\`).join('')
+    : '<div class="empty-state">No flagged responses yet — great sign!</div>';
+}
+
+async function loadSummary() {
+  const btn = document.getElementById('btn-summary');
+  const box = document.getElementById('summary-box');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  box.innerHTML = '<div class="loading"><div class="spin"></div>Analysing recent conversations…</div>';
+  try {
+    const r = await fetch('/api/insights-summary', { method: 'POST' });
+    const d = await r.json();
+    box.textContent = d.summary;
+  } catch(e) {
+    box.textContent = 'Could not generate summary. Please try again.';
+  }
+  btn.disabled = false;
+  btn.textContent = '✨ Regenerate';
+}
+
+loadData();
+setInterval(loadData, 60000);
+</script>
+</body></html>`);
+});
+
+// Feedback list API for insights page
+app.get('/api/feedback-list', requireConsultantPin, (req, res) => {
+  const lines = fs.existsSync(FEEDBACK_FILE) ? fs.readFileSync(FEEDBACK_FILE,'utf8').trim().split('\n').filter(Boolean) : [];
+  const all = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  res.json(all.filter(f => f.rating === 'down').reverse().slice(0, 20));
+});
+
 // Consultant Portal
+app.all('/consultant', requireConsultantPin);
 app.get('/consultant', (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -2141,6 +2534,7 @@ app.post('/consultant/sow-email', async (req, res) => {
 });
 
 // SOW Builder
+app.all('/consultant/sow-builder', requireConsultantPin);
 app.get('/consultant/sow-builder', (_req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
