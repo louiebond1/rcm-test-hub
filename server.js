@@ -14,6 +14,32 @@ const WEB_LOG_FILE = path.join(LOGS_DIR, 'web.jsonl');
 const THREADS_FILE = path.join(LOGS_DIR, 'threads.json');
 const FEEDBACK_FILE = path.join(LOGS_DIR, 'feedback.jsonl');
 
+// Upstash Redis persistence — falls back to local files if not configured
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+async function redisCmd(...args) {
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) return null;
+  try {
+    const res = await fetch(`${UPSTASH_URL}/${args.map(a => encodeURIComponent(a)).join('/')}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
+    });
+    return await res.json();
+  } catch { return null; }
+}
+
+async function persistLog(key, entry) {
+  await redisCmd('rpush', key, JSON.stringify(entry));
+}
+
+async function readPersistedLogs(key) {
+  const res = await redisCmd('lrange', key, '0', '-1');
+  if (!res || !Array.isArray(res.result)) return null;
+  return res.result.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+}
+
+const redisEnabled = () => !!(UPSTASH_URL && UPSTASH_TOKEN);
+
 function getUserData(phone) {
   if (!fs.existsSync(THREADS_FILE)) return null;
   const threads = JSON.parse(fs.readFileSync(THREADS_FILE, 'utf8'));
@@ -60,6 +86,7 @@ const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_A
 
 function logMessage(entry) {
   fs.appendFileSync(LOG_FILE, JSON.stringify(entry) + '\n');
+  persistLog('logs:whatsapp', entry).catch(() => {});
 }
 
 function readLogs() {
@@ -72,6 +99,7 @@ function readLogs() {
 
 function logWebMessage(entry) {
   fs.appendFileSync(WEB_LOG_FILE, JSON.stringify(entry) + '\n');
+  persistLog('logs:web', entry).catch(() => {});
 }
 
 function readWebLogs() {
@@ -334,6 +362,7 @@ app.post('/api/feedback', express.json(), (req, res) => {
   if (!rating || !question) return res.status(400).json({ error: 'Missing fields' });
   const entry = { ts: new Date().toISOString(), threadId: threadId || null, question, answer, rating };
   fs.appendFileSync(FEEDBACK_FILE, JSON.stringify(entry) + '\n');
+  persistLog('logs:feedback', entry).catch(() => {});
   res.json({ ok: true });
 });
 
@@ -748,10 +777,23 @@ function isUncertain(text) {
 }
 
 // Insights data API
-app.get('/api/insights', requireConsultantPin, (req, res) => {
-  const web = (() => { try { return fs.readFileSync(WEB_LOG_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)); } catch { return []; } })();
-  const wa = (() => { try { return fs.readFileSync(LOG_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)); } catch { return []; } })();
-  const fb = (() => { try { return fs.existsSync(FEEDBACK_FILE) ? fs.readFileSync(FEEDBACK_FILE,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)) : []; } catch { return []; } })();
+app.get('/api/insights', requireConsultantPin, async (req, res) => {
+  const readLocal = (file) => { try { return fs.readFileSync(file,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)); } catch { return []; } };
+  let web, wa, fb;
+  if (redisEnabled()) {
+    const [rWeb, rWa, rFb] = await Promise.all([
+      readPersistedLogs('logs:web'),
+      readPersistedLogs('logs:whatsapp'),
+      readPersistedLogs('logs:feedback')
+    ]);
+    web = rWeb || readLocal(WEB_LOG_FILE);
+    wa = rWa || readLocal(LOG_FILE);
+    fb = rFb || readLocal(FEEDBACK_FILE);
+  } else {
+    web = readLocal(WEB_LOG_FILE);
+    wa = readLocal(LOG_FILE);
+    fb = readLocal(FEEDBACK_FILE);
+  }
 
   const byDay = {};
   [...web,...wa].forEach(l => {
@@ -1080,9 +1122,16 @@ setInterval(loadData, 60000);
 });
 
 // Feedback list API for insights page
-app.get('/api/feedback-list', requireConsultantPin, (req, res) => {
-  const lines = fs.existsSync(FEEDBACK_FILE) ? fs.readFileSync(FEEDBACK_FILE,'utf8').trim().split('\n').filter(Boolean) : [];
-  const all = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+app.get('/api/feedback-list', requireConsultantPin, async (req, res) => {
+  let all;
+  if (redisEnabled()) {
+    const rFb = await readPersistedLogs('logs:feedback');
+    if (rFb) all = rFb;
+  }
+  if (!all) {
+    const lines = fs.existsSync(FEEDBACK_FILE) ? fs.readFileSync(FEEDBACK_FILE,'utf8').trim().split('\n').filter(Boolean) : [];
+    all = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  }
   res.json(all.filter(f => f.rating === 'down').reverse().slice(0, 20));
 });
 
