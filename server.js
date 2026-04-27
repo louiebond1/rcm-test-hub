@@ -930,7 +930,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
   </div>
   <nav class="tb-nav">
     <a href="/insights" class="active">📊 Analytics</a>
-    <a href="/consultant">🛠 Consultant</a>
     <a href="/">← Site</a>
   </nav>
 </div>
