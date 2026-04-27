@@ -500,43 +500,27 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     return;
   }
 
-  const MENU = 'Hi! Which system do you need help with?\n\n1 - SmartRecruiters\n2 - SAP SuccessFactors RCM\n\nJust reply with 1 or 2.';
   const ASSISTANT_RCM = process.env.ASSISTANT_ID;
-  const ASSISTANT_SR  = process.env.ASSISTANT_ID_SR;
 
-  const userData = getUserData(from);
-  const existingSystem = (userData && typeof userData === 'object') ? userData.system : null;
-
-  // Reset/menu command
-  if (/^(reset|menu|change|switch|back)$/i.test(userMsg)) {
+  // Reset command - clears thread for a fresh conversation
+  if (/^(reset|restart)$/i.test(userMsg)) {
     const allThreads = fs.existsSync(THREADS_FILE) ? JSON.parse(fs.readFileSync(THREADS_FILE, 'utf8')) : {};
     delete allThreads[from];
     fs.writeFileSync(THREADS_FILE, JSON.stringify(allThreads, null, 2));
-    twiml.message(MENU);
-    return res.type('text/xml').send(twiml.toString());
-  }
-
-  // User picking from menu
-  if (userMsg === '1' || userMsg === '2') {
-    const chosen = userMsg === '1' ? 'sr' : 'rcm';
-    const label = chosen === 'sr' ? 'SmartRecruiters' : 'SAP SuccessFactors RCM';
-    const newThread = await openai.beta.threads.create();
-    saveUserThread(from, newThread.id, chosen);
-    twiml.message('Got it - switching to ' + label + '. Go ahead and ask your question.');
+    twiml.message('Conversation reset. Go ahead and ask your SAP SuccessFactors RCM question!');
     return res.type('text/xml').send(twiml.toString());
   }
 
   const isGreeting = /^(hi|hey|hello|hiya|howdy|good (morning|afternoon|evening)|sup|yo|helo|hii+)[\s!?.]*$/i.test(userMsg);
 
-  // No system selected yet - show menu
-  if (!existingSystem || isGreeting || !userMsg) {
-    twiml.message(MENU);
+  if (isGreeting || !userMsg) {
+    twiml.message('Hi! Ask me anything about SAP SuccessFactors RCM — positions, requisitions, offer management, interviews, and more.');
     return res.type('text/xml').send(twiml.toString());
   }
 
-  const assistantId = existingSystem === 'sr' ? ASSISTANT_SR : ASSISTANT_RCM;
+  const assistantId = ASSISTANT_RCM;
   if (!assistantId) {
-    twiml.message('Assistant not configured for that system. Please contact support.');
+    twiml.message('Assistant not configured. Please contact support.');
     return res.type('text/xml').send(twiml.toString());
   }
 
@@ -554,7 +538,7 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     const thread = existingThreadId
       ? { id: existingThreadId }
       : await openai.beta.threads.create();
-    saveUserThread(from, thread.id, existingSystem);
+    saveUserThread(from, thread.id, 'rcm');
 
     await openai.beta.threads.messages.create(thread.id, {
       role: 'user',
