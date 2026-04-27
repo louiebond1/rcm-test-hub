@@ -471,7 +471,8 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
       const messages = await openai.beta.threads.messages.list(thread.id);
       let answer = messages.data[0]?.content[0]?.text?.value || '';
       answer = answer.replace(/\u3010[^\u3011]*\u3011/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
-      if (answer.length > 1580) answer = answer.slice(0, 1577) + '&hellip;';
+      answer = answer.replace(/\*\*(.+?)\*\*/g, '$1').replace(/__(.+?)__/g, '$1');
+      if (answer.length > 1580) answer = answer.slice(0, 1577) + '...';
 
       await twilioClient.messages.create({
         from: 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER,
@@ -560,8 +561,10 @@ app.post('/whatsapp', express.urlencoded({ extended: false }), async (req, res) 
     const messages = await openai.beta.threads.messages.list(thread.id);
     answer = messages.data[0]?.content[0]?.text?.value || '';
     answer = answer.replace(/\u3010[^\u3011]*\u3011/g, '').replace(/FOLLOWUPS:.*$/ms, '').trim();
+    // Strip markdown bold/italic for WhatsApp plain text
+    answer = answer.replace(/\*\*(.+?)\*\*/g, '$1').replace(/__(.+?)__/g, '$1');
 
-    if (answer.length > 1580) answer = answer.slice(0, 1577) + '&hellip;';
+    if (answer.length > 1580) answer = answer.slice(0, 1577) + '...';
 
     success = true;
     const uncertain = isUncertain(answer);
