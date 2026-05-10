@@ -384,6 +384,15 @@ a { text-decoration: none; color: inherit; }
   font-size: var(--f-sm); color: var(--ink-2); background: var(--canvas); outline: none;
 }
 .gen-select:focus { border-color: var(--blue); }
+.sow-check {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border: 1px solid var(--border-2); border-radius: 20px;
+  font-size: var(--f-sm); color: var(--ink-2); background: var(--white);
+  cursor: pointer; transition: all .15s; user-select: none;
+}
+.sow-check:hover { border-color: var(--blue); color: var(--blue); }
+.sow-check input[type=checkbox] { accent-color: var(--blue); width: 13px; height: 13px; cursor: pointer; }
+.sow-check:has(input:checked) { background: var(--blue-soft); border-color: var(--blue-border); color: var(--blue); font-weight: 600; }
 .gen-output {
   margin-top: 20px; border: 1px solid var(--ai-border);
   border-radius: var(--r-sm); background: var(--ai-soft); padding: 16px 18px;
@@ -667,6 +676,14 @@ a { text-decoration: none; color: inherit; }
     </div>
   </div>
 
+  <div class="sb-section sb-ai-tools">
+    <div class="sb-section-label">Implementation</div>
+    <div class="sb-link" data-view="implementation" onclick="showView('implementation',this)">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      SOW Builder
+    </div>
+  </div>
+
   <div class="sb-footer">
     <div class="sb-footer-text">EX3 · SAP SuccessFactors RCM<br>Client: veritasp01T2</div>
     <a href="mailto:louie@jbnd.co.uk" style="display:inline-block;margin-top:10px;font-size:11px;color:#94a3b8;text-decoration:underline;">Contact Us</a>
@@ -873,6 +890,138 @@ a { text-decoration: none; color: inherit; }
           Find Coverage Gaps
         </button>
         <div class="gen-output" id="gaps-output" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <!-- ── IMPLEMENTATION / SOW BUILDER VIEW ── -->
+    <div id="view-implementation" class="view">
+      <div class="page-hdr-row">
+        <div class="page-hdr">
+          <h1>SOW Builder</h1>
+          <p>Generate a professional Statement of Work for a SAP SuccessFactors RCM implementation — ready to send to the client</p>
+        </div>
+      </div>
+
+      <!-- Form card -->
+      <div class="gen-card" id="sow-form-card">
+        <h3>Project Details</h3>
+        <p>Fill in the key project parameters and AI will draft a complete, client-ready SOW based on the EX3 implementation knowledge base and all reference documents.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+          <div>
+            <div class="gen-label">Client name</div>
+            <input id="sow-client" class="gen-input" style="min-height:0;padding:10px 14px;" placeholder="e.g. Acme Corp" />
+          </div>
+          <div>
+            <div class="gen-label">Organisation size</div>
+            <select id="sow-orgsize" class="gen-select" style="width:100%;padding:10px 14px;">
+              <option value="SMB (under 500 employees)">SMB — under 500</option>
+              <option value="Mid-market (500–2,000 employees)" selected>Mid-market — 500–2,000</option>
+              <option value="Enterprise (2,000–10,000 employees)">Enterprise — 2,000–10,000</option>
+              <option value="Large enterprise (10,000+ employees)">Large enterprise — 10,000+</option>
+            </select>
+          </div>
+          <div>
+            <div class="gen-label">Number of users</div>
+            <input id="sow-users" class="gen-input" style="min-height:0;padding:10px 14px;" placeholder="e.g. 150" />
+          </div>
+          <div>
+            <div class="gen-label">Hiring workflows / processes</div>
+            <input id="sow-processes" class="gen-input" style="min-height:0;padding:10px 14px;" placeholder="e.g. 3 (standard, executive, grad)" />
+          </div>
+          <div>
+            <div class="gen-label">Job requisition templates</div>
+            <input id="sow-templates" class="gen-input" style="min-height:0;padding:10px 14px;" placeholder="e.g. 2" />
+          </div>
+          <div>
+            <div class="gen-label">Project timeline</div>
+            <input id="sow-timeline" class="gen-input" style="min-height:0;padding:10px 14px;" placeholder="e.g. 12 weeks" />
+          </div>
+          <div>
+            <div class="gen-label">Hypercare period</div>
+            <input id="sow-hypercare" class="gen-input" style="min-height:0;padding:10px 14px;" placeholder="e.g. 4 weeks post go-live" />
+          </div>
+          <div>
+            <div class="gen-label">Career site / job page</div>
+            <select id="sow-career" class="gen-select" style="width:100%;padding:10px 14px;">
+              <option value="SAP Career Site Builder (CSB)">SAP Career Site Builder (CSB)</option>
+              <option value="Existing customer website integration">Existing website integration</option>
+              <option value="Not in scope">Not in scope</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="gen-label">Integrations required</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="sow-integrations">
+            <label class="sow-check"><input type="checkbox" value="HRIS (SAP SuccessFactors EC)"> HRIS / EC</label>
+            <label class="sow-check"><input type="checkbox" value="Payroll"> Payroll</label>
+            <label class="sow-check"><input type="checkbox" value="Background screening"> Background screening</label>
+            <label class="sow-check"><input type="checkbox" value="Assessment / testing tools"> Assessments</label>
+            <label class="sow-check"><input type="checkbox" value="SSO / identity provider"> SSO</label>
+            <label class="sow-check"><input type="checkbox" value="HRIS data migration"> Data migration</label>
+            <label class="sow-check"><input type="checkbox" value="None"> None</label>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="gen-label">Job board posting</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="sow-jobboards">
+            <label class="sow-check"><input type="checkbox" value="Indeed"> Indeed</label>
+            <label class="sow-check"><input type="checkbox" value="LinkedIn"> LinkedIn</label>
+            <label class="sow-check"><input type="checkbox" value="Glassdoor"> Glassdoor</label>
+            <label class="sow-check"><input type="checkbox" value="Reed"> Reed</label>
+            <label class="sow-check"><input type="checkbox" value="Totaljobs"> Totaljobs</label>
+            <label class="sow-check"><input type="checkbox" value="Internal job board only"> Internal only</label>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="gen-label">Training approach</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="sow-training">
+            <label class="sow-check"><input type="checkbox" value="Train the Trainer (TTT)" checked> Train the Trainer</label>
+            <label class="sow-check"><input type="checkbox" value="Recruiter live training sessions"> Recruiter sessions</label>
+            <label class="sow-check"><input type="checkbox" value="Admin / HRIS team training"> Admin training</label>
+            <label class="sow-check"><input type="checkbox" value="Hiring Manager training"> Hiring Manager training</label>
+            <label class="sow-check"><input type="checkbox" value="E-learning / recorded sessions"> E-learning</label>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="gen-label">Data migration</div>
+          <select id="sow-datamigration" class="gen-select" style="width:100%;padding:10px 14px;">
+            <option value="Not required">Not required</option>
+            <option value="Historical requisitions only">Historical requisitions only</option>
+            <option value="Active candidates and requisitions">Active candidates and requisitions</option>
+            <option value="Full historical data migration">Full historical data</option>
+          </select>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="gen-label">Additional notes / custom scope <span style="color:var(--ink-4);font-weight:400;">(optional)</span></div>
+          <textarea id="sow-notes" class="gen-input" rows="3" placeholder="Any specific requirements, constraints, out-of-scope items, or context the AI should factor in…"></textarea>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px;align-items:center;">
+          <button class="btn btn-ai" onclick="generateSOW()" id="sow-gen-btn">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Generate SOW
+          </button>
+          <span id="sow-gen-status" style="font-size:12px;color:var(--ink-3);"></span>
+        </div>
+      </div>
+
+      <!-- Output card -->
+      <div class="gen-card" id="sow-output-card" style="display:none;margin-top:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3 style="margin:0;">Generated SOW</h3>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm" onclick="copySOW()" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:white;">Copy</button>
+            <button class="btn btn-sm btn-ai" onclick="exportSOW()" style="font-size:12px;padding:6px 14px;">Download .docx</button>
+            <button class="btn btn-sm" onclick="document.getElementById('sow-output-card').style.display='none';document.getElementById('sow-form-card').scrollIntoView({behavior:'smooth'})" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:white;">Edit inputs</button>
+          </div>
+        </div>
+        <div id="sow-output" style="background:var(--gray-soft);border:1px solid var(--border);border-radius:8px;padding:28px 32px;font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--ink);font-family:'IBM Plex Mono',monospace;max-height:70vh;overflow-y:auto;"></div>
       </div>
     </div>
 
@@ -1802,6 +1951,132 @@ const RECORDINGS = {
   }
   setTimeout(injectButtons, 2000);
 })();
+
+// ═══════════════════════════════════════════════════
+//  SOW BUILDER
+// ═══════════════════════════════════════════════════
+let _sowText = '';
+
+function _sowChecked(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} input[type=checkbox]:checked`)).map(c => c.value);
+}
+
+async function generateSOW() {
+  const clientName = document.getElementById('sow-client').value.trim();
+  if (!clientName) { document.getElementById('sow-client').focus(); return; }
+
+  const answers = {
+    clientName,
+    orgSize:       document.getElementById('sow-orgsize').value,
+    numUsers:      document.getElementById('sow-users').value || 'not specified',
+    numProcesses:  document.getElementById('sow-processes').value || 'not specified',
+    numTemplates:  document.getElementById('sow-templates').value || 'not specified',
+    timeline:      document.getElementById('sow-timeline').value || 'to be agreed',
+    hypercare:     document.getElementById('sow-hypercare').value || '4 weeks',
+    careerPage:    document.getElementById('sow-career').value,
+    dataMigration: document.getElementById('sow-datamigration').value,
+    integrations:  _sowChecked('sow-integrations'),
+    jobBoards:     _sowChecked('sow-jobboards'),
+    training:      _sowChecked('sow-training'),
+    notes:         document.getElementById('sow-notes').value.trim(),
+  };
+
+  const btn = document.getElementById('sow-gen-btn');
+  const status = document.getElementById('sow-gen-status');
+  const outputCard = document.getElementById('sow-output-card');
+  const outputEl = document.getElementById('sow-output');
+
+  btn.disabled = true;
+  status.textContent = 'Generating…';
+  outputCard.style.display = 'none';
+  _sowText = '';
+
+  try {
+    const res = await fetch('/consultant/sow-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers }),
+    });
+
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+
+    outputCard.style.display = 'block';
+    outputEl.textContent = '';
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      _sowText += chunk;
+      outputEl.textContent = _sowText;
+      outputEl.scrollTop = outputEl.scrollHeight;
+    }
+
+    status.textContent = 'Done';
+    outputCard.scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    status.textContent = 'Error — is the server running?';
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function copySOW() {
+  if (!_sowText) return;
+  navigator.clipboard.writeText(_sowText).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+
+async function exportSOW() {
+  if (!_sowText) return;
+  const clientName = document.getElementById('sow-client').value.trim() || 'Client';
+  const answers = {
+    clientName,
+    orgSize:       document.getElementById('sow-orgsize').value,
+    numUsers:      document.getElementById('sow-users').value,
+    numProcesses:  document.getElementById('sow-processes').value,
+    numTemplates:  document.getElementById('sow-templates').value,
+    timeline:      document.getElementById('sow-timeline').value,
+    hypercare:     document.getElementById('sow-hypercare').value,
+    careerPage:    document.getElementById('sow-career').value,
+    dataMigration: document.getElementById('sow-datamigration').value,
+    integrations:  _sowChecked('sow-integrations'),
+    jobBoards:     _sowChecked('sow-jobboards'),
+    training:      _sowChecked('sow-training'),
+    sowText:       _sowText,
+  };
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+
+  try {
+    const res = await fetch('/consultant/sow-export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers, clientName }),
+    });
+    if (!res.ok) throw new Error('Export failed');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SOW - ${clientName} - SuccessFactors RCM.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Export failed — is the server running?');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Download .docx';
+  }
+}
 </script>
 </body>
 </html>
