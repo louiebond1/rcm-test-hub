@@ -1016,8 +1016,8 @@ a { text-decoration: none; color: inherit; }
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <h3 style="margin:0;">Generated SOW</h3>
           <div style="display:flex;gap:8px;">
-            <button class="btn btn-sm" onclick="copySOW()" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:white;">Copy</button>
-            <button class="btn btn-sm btn-ai" onclick="exportSOW()" style="font-size:12px;padding:6px 14px;">Download .docx</button>
+            <button class="btn btn-sm" onclick="copySOW(this)" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:white;">Copy</button>
+            <button class="btn btn-sm btn-ai" onclick="exportSOW(this)" style="font-size:12px;padding:6px 14px;">Download .docx</button>
             <button class="btn btn-sm" onclick="document.getElementById('sow-output-card').style.display='none';document.getElementById('sow-form-card').scrollIntoView({behavior:'smooth'})" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:white;">Edit inputs</button>
           </div>
         </div>
@@ -1725,19 +1725,32 @@ async function sendMessage() {
   aiLoading = true;
   document.getElementById('ai-send-btn').disabled = true;
 
+  const controller = new AbortController();
+  const fetchTimeout = setTimeout(() => controller.abort(), 65000);
   try {
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question: q, threadId: aiThreadId }),
+      signal: controller.signal,
     });
+    clearTimeout(fetchTimeout);
     const data = await res.json();
     removeThinking(thinkId);
-    aiThreadId = data.threadId;
-    appendMessage('ai', data.answer, data.followUps);
+    if (data.answer) {
+      aiThreadId = data.threadId;
+      appendMessage('ai', data.answer, data.followUps);
+    } else {
+      appendMessage('ai', data.error || 'Something went wrong. Please try again.');
+    }
   } catch (e) {
+    clearTimeout(fetchTimeout);
     removeThinking(thinkId);
-    appendMessage('ai', 'Sorry, I could not reach the AI service. Please check that the server is running.');
+    if (e.name === 'AbortError') {
+      appendMessage('ai', 'The request is taking too long. Please try again.');
+    } else {
+      appendMessage('ai', 'Sorry, I could not reach the AI service. Please try again.');
+    }
   }
   aiLoading = false;
   document.getElementById('ai-send-btn').disabled = false;
@@ -2024,16 +2037,17 @@ async function generateSOW() {
   }
 }
 
-function copySOW() {
+function copySOW(btnEl) {
   if (!_sowText) return;
   navigator.clipboard.writeText(_sowText).then(() => {
-    const btn = event.target;
+    const btn = btnEl || document.activeElement;
+    if (!btn) return;
     btn.textContent = 'Copied!';
     setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
   });
 }
 
-async function exportSOW() {
+async function exportSOW(btnEl) {
   if (!_sowText) return;
   const clientName = document.getElementById('sow-client').value.trim() || 'Client';
   const answers = {
@@ -2052,7 +2066,8 @@ async function exportSOW() {
     sowText:       _sowText,
   };
 
-  const btn = event.target;
+  const btn = btnEl || document.activeElement;
+  if (!btn) return;
   btn.disabled = true;
   btn.textContent = 'Generating…';
 

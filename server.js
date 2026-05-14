@@ -292,9 +292,9 @@ app.post('/api/ask', async (req, res) => {
       assistant_id: process.env.ASSISTANT_ID,
     });
 
-    // Poll until complete (with 30s timeout)
+    // Poll until complete (with 60s timeout)
     while (run.status === 'in_progress' || run.status === 'queued') {
-      if (Date.now() - start > 30000) throw new Error('Request timed out.');
+      if (Date.now() - start > 60000) throw new Error('Request timed out.');
       await new Promise(r => setTimeout(r, 1000));
       run = await openai.beta.threads.runs.retrieve(thread.id, run.id);
     }
@@ -1226,14 +1226,14 @@ app.get('/consultant', (req, res) => {
       Back to main guide
     </a>
     <div class="sb-section">Implementation</div>
-    <div class="sb-item active" onclick="showPage('overview')">Overview & Timeline</div>
-    <div class="sb-item" onclick="showPage('phases')">Phase Guide</div>
-    <div class="sb-item" onclick="showPage('sow')">SOW Template</div>
+    <div class="sb-item active" data-page="overview" onclick="showPage('overview', this)">Overview & Timeline</div>
+    <div class="sb-item" data-page="phases" onclick="showPage('phases', this)">Phase Guide</div>
+    <div class="sb-item" data-page="sow" onclick="showPage('sow', this)">SOW Template</div>
     <div class="sb-section">Stakeholders</div>
-    <div class="sb-item" onclick="showPage('roles')">Roles & Responsibilities</div>
+    <div class="sb-item" data-page="roles" onclick="showPage('roles', this)">Roles & Responsibilities</div>
     <div class="sb-section">Resources</div>
-    <div class="sb-item" onclick="showPage('checklists')">Checklists</div>
-    <div class="sb-item" onclick="showPage('faq')">FAQ & Troubleshooting</div>
+    <div class="sb-item" data-page="checklists" onclick="showPage('checklists', this)">Checklists</div>
+    <div class="sb-item" data-page="faq" onclick="showPage('faq', this)">FAQ & Troubleshooting</div>
     <div class="sb-section">Tools</div>
     <a href="/consultant/sow-builder" style="display:block;padding:9px 20px;font-size:13px;color:#aaa;transition:all .15s;border-left:2px solid transparent;background:#1a3a1a;border-left-color:#4ade80;color:#4ade80;font-weight:600">âœ¨ SOW Builder</a>
   </nav>
@@ -1714,11 +1714,12 @@ app.get('/consultant', (req, res) => {
 </div>
 
 <script>
-  function showPage(id) {
+  function showPage(id, itemEl) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
-    event.target.classList.add('active');
+    const activeItem = itemEl || document.querySelector('.sb-item[data-page="' + id + '"]');
+    if (activeItem) activeItem.classList.add('active');
   }
   function togglePhase(header) {
     const body = header.nextElementSibling;
